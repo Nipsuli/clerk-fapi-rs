@@ -10,7 +10,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
-use std::time::Duration;
 
 pub type Listener =
     Box<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
@@ -80,44 +79,15 @@ impl Clerk {
             if let Ok(environment) = serde_json::from_value::<Environment>(stored_env) {
                 // Update state and store using update_environment
                 self.update_environment(environment)?;
-
-                // Clone what we need for background task
-                let api_client = self.api_client.clone();
-                let this = self.clone();
-
-                // Spawn background task to update environment
-                tokio::task::spawn(async move {
-                    const RETRY_INTERVAL: Duration = Duration::from_secs(15 * 60); // 15 minutes
-
-                    loop {
-                        // Try to fetch fresh environment
-                        match api_client.get_environment().await {
-                            Ok(fresh_env) => {
-                                // Update state and store using update_environment
-                                if let Err(e) = this.update_environment(fresh_env) {
-                                    eprintln!(
-                                        "Failed to update environment in background task: {}",
-                                        e
-                                    );
-                                    continue;
-                                }
-                                // Success - break the retry loop
-                                break;
-                            }
-                            Err(_) => {
-                                // Failed to fetch - wait before retrying
-                                tokio::time::sleep(RETRY_INTERVAL).await;
-                                continue;
-                            }
-                        }
-                    }
-                });
-
                 return Ok(());
             }
         }
 
-        // If no valid environment in store, fetch from API
+        self.reload_environment().await
+    }
+
+    pub async fn reload_environment(&self) -> Result<(), String> {
+        // Fetch environment from API
         let environment = self
             .api_client
             .get_environment()
@@ -126,7 +96,6 @@ impl Clerk {
 
         // Update state and store using update_environment
         self.update_environment(environment)?;
-
         Ok(())
     }
 
@@ -138,41 +107,6 @@ impl Clerk {
             if let Ok(client) = serde_json::from_value::<Client>(stored_client) {
                 // Update state with stored client
                 self.update_client(client)?;
-
-                // Clone what we need for background task
-                let api_client = self.api_client.clone();
-                let mut this = self.clone();
-
-                // Spawn background task to update client
-                tokio::task::spawn(async move {
-                    const RETRY_INTERVAL: Duration = Duration::from_secs(15 * 60); // 15 minutes
-
-                    loop {
-                        // Try to fetch fresh client
-                        match api_client.get_client().await {
-                            Ok(fresh_client_response) => {
-                                if let Some(fresh_client) = fresh_client_response.response {
-                                    // Update state and store using update_client
-                                    if let Err(e) = this.update_client(*fresh_client) {
-                                        eprintln!(
-                                            "Failed to update client in background task: {}",
-                                            e
-                                        );
-                                        continue;
-                                    }
-                                    // Success - break the retry loop
-                                    break;
-                                }
-                            }
-                            Err(_) => {
-                                // Failed to fetch - wait before retrying
-                                tokio::time::sleep(RETRY_INTERVAL).await;
-                                continue;
-                            }
-                        }
-                    }
-                });
-
                 return Ok(());
             }
         }
@@ -207,12 +141,8 @@ impl Clerk {
         let mut mut_self = self.clone();
 
         // Load environment and client concurrently
-        let (env_result, client_result) =
-            tokio::join!(self.load_environment(), mut_self.load_client());
-
-        // Check results
-        env_result?;
-        client_result?;
+        self.load_environment().await?;
+        mut_self.load_client().await?;
 
         // Set loaded flag
         {
@@ -1073,7 +1003,7 @@ mod tests {
 
         // Mock failed environment endpoint with /v1 prefix
         let env_mock = server
-            .mock("GET", "/v1/client?_is_native=1")
+            .mock("GET", "/v1/environment?_is_native=1")
             .with_status(500)
             .create_async()
             .await;
