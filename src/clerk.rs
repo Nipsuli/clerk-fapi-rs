@@ -56,7 +56,6 @@ impl Clerk {
         // Create and set the callback
         let clerk_ref = clerk.clone();
         api_client.set_update_client_callback(move |client| {
-            let mut clerk_ref = clerk_ref.clone();
             let _ = clerk_ref.update_client(client);
         });
 
@@ -115,7 +114,7 @@ impl Clerk {
     }
 
     /// Helper function to load and set the client
-    async fn load_client(&mut self) -> Result<(), String> {
+    async fn load_client(&self) -> Result<(), String> {
         // First check if client exists in store
         if let Some(stored_client) = self.config.get_store_value("client") {
             // Try to deserialize the stored client
@@ -157,11 +156,9 @@ impl Clerk {
         if self.state.read().loaded {
             return Ok(self.clone());
         }
-        let mut mut_self = self.clone();
 
-        // Load environment and client concurrently
         self.load_environment().await?;
-        mut_self.load_client().await?;
+        self.load_client().await?;
 
         // Set loaded flag
         {
@@ -272,7 +269,7 @@ impl Clerk {
     ///
     /// # Errors
     /// Returns an error if serialization of client data fails
-    pub fn update_client(&mut self, client: Client) -> Result<(), String> {
+    pub fn update_client(&self, client: Client) -> Result<(), String> {
         // Get the active session from the sessions list
         let client_clone = client.clone();
         let active_session = client_clone.last_active_session_id.as_ref().and_then(|id| {
@@ -283,11 +280,8 @@ impl Clerk {
                 .cloned()
         });
 
-        // Update state and save client first
         {
             let mut state = self.state.write();
-
-            // Update client state
             state.client = Some(client.clone());
 
             // Remove mut self requirement from set_accessors
@@ -302,9 +296,7 @@ impl Clerk {
                 .map_err(|e| format!("Failed to serialize client: {}", e))?,
         );
 
-        // Notify listeners using the new method (after the lock is dropped)
         self.notify_listeners();
-
         Ok(())
     }
 
@@ -615,16 +607,12 @@ impl Clerk {
     /// * `callback` - A function that takes the client, session, user, and organization as parameters
     pub fn add_listener<F>(&self, callback: F)
     where
-        F: Fn(Client, Option<Session>, Option<User>, Option<Organization>)
-            + Send
-            + Sync
-            + Clone
-            + 'static,
+        F: Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync + 'static,
     {
-        // First add the listener
+        let listener = Arc::new(callback);
         {
             let mut listeners = self.listeners.write();
-            listeners.push(Arc::new(callback.clone()));
+            listeners.push(listener.clone());
         }
 
         // Then separately call the callback if we have a loaded client
@@ -645,7 +633,7 @@ impl Clerk {
 
         // Call the callback if we have a client
         if let Some(client) = maybe_client {
-            callback(client, maybe_session, maybe_user, maybe_organization);
+            listener(client, maybe_session, maybe_user, maybe_organization);
         }
     }
 }
@@ -1829,7 +1817,7 @@ mod tests {
         };
 
         // Update client which should trigger listener
-        let mut clerk = clerk.clone();
+        let clerk = clerk.clone();
         clerk.update_client(test_client).unwrap();
 
         // Verify listener was called
@@ -1857,7 +1845,7 @@ mod tests {
         };
 
         // Update client before adding listener
-        let mut clerk = clerk.clone();
+        let clerk = clerk.clone();
         clerk.update_client(test_client).unwrap();
 
         let was_called = Arc::new(AtomicBool::new(false));
