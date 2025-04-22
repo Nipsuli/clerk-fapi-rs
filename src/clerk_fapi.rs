@@ -187,13 +187,13 @@ impl ClerkFapiClient {
         &self,
         session_id: &str,
         clerk_session_id: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSession, Error<active_sessions_api::RevokeSessionError>>
+    ) -> Result<ClientPeriodClientWrappedSession, Error<active_sessions_api::RevokeSessionError>>
     {
         let response =
             active_sessions_api::revoke_session(&self.config, session_id, clerk_session_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
@@ -214,47 +214,52 @@ impl ClerkFapiClient {
         &self,
     ) -> Result<ClientPeriodDeleteSession, Error<client_api::DeleteClientSessionsError>> {
         let response = client_api::delete_client_sessions(&self.config).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.response.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
     pub async fn get_client(
         &self,
-    ) -> Result<GetClient200Response, Error<client_api::GetClientError>> {
+    ) -> Result<ClientPeriodClientWrappedClient, Error<client_api::GetClientError>> {
         client_api::get_client(&self.config).await
     }
 
     pub async fn handshake_client(
         &self,
+        clerk_proxy_url: Option<&str>,
+        clerk_secret_key: Option<&str>,
         redirect_url: Option<&str>,
         organization_id: Option<&str>,
+        satellite_fapi: Option<&str>,
     ) -> Result<(), Error<client_api::HandshakeClientError>> {
-        client_api::handshake_client(&self.config, redirect_url, organization_id).await
+        client_api::handshake_client(
+            &self.config,
+            clerk_proxy_url,
+            clerk_secret_key,
+            redirect_url,
+            organization_id,
+            satellite_fapi,
+        )
+        .await
     }
 
     pub async fn post_client(
         &self,
-    ) -> Result<GetClient200Response, Error<client_api::PostClientError>> {
+    ) -> Result<ClientPeriodClientWrappedClient, Error<client_api::PostClientError>> {
         client_api::post_client(&self.config).await
     }
 
     pub async fn put_client(
         &self,
-    ) -> Result<GetClient200Response, Error<client_api::PutClientError>> {
+    ) -> Result<ClientPeriodClientWrappedClient, Error<client_api::PutClientError>> {
         client_api::put_client(&self.config).await
     }
 
     // Default API methods
     pub async fn clear_site_data(&self) -> Result<(), Error<default_api::ClearSiteDataError>> {
         default_api::clear_site_data(&self.config).await
-    }
-
-    pub async fn create_service_token(
-        &self,
-    ) -> Result<Token, Error<default_api::CreateServiceTokenError>> {
-        default_api::create_service_token(&self.config).await
     }
 
     pub async fn get_account_portal(
@@ -265,14 +270,26 @@ impl ClerkFapiClient {
 
     pub async fn get_dev_browser_init(
         &self,
+        origin: Option<&str>,
     ) -> Result<(), Error<default_api::GetDevBrowserInitError>> {
-        default_api::get_dev_browser_init(&self.config).await
+        default_api::get_dev_browser_init(&self.config, origin).await
     }
 
     pub async fn get_proxy_health(
         &self,
+        domain_id: &str,
+        clerk_proxy_url: &str,
+        clerk_secret_key: &str,
+        x_forwarded_for: &str,
     ) -> Result<GetProxyHealth200Response, Error<default_api::GetProxyHealthError>> {
-        default_api::get_proxy_health(&self.config).await
+        default_api::get_proxy_health(
+            &self.config,
+            domain_id,
+            clerk_proxy_url,
+            clerk_secret_key,
+            x_forwarded_for,
+        )
+        .await
     }
 
     pub async fn link_client(
@@ -308,7 +325,7 @@ impl ClerkFapiClient {
         &self,
         organization_id: &str,
         domain_id: &str,
-        code: Option<&str>,
+        code: &str,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationDomain,
         Error<domains_api::AttemptOrganizationDomainVerificationError>,
@@ -329,7 +346,7 @@ impl ClerkFapiClient {
     pub async fn create_organization_domain(
         &self,
         organization_id: &str,
-        name: Option<&str>,
+        name: &str,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationDomain,
         Error<domains_api::CreateOrganizationDomainError>,
@@ -353,9 +370,8 @@ impl ClerkFapiClient {
         let response =
             domains_api::delete_organization_domain(&self.config, organization_id, domain_id)
                 .await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -364,14 +380,12 @@ impl ClerkFapiClient {
         &self,
         organization_id: &str,
         domain_id: &str,
-        name: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationDomain,
         Error<domains_api::GetOrganizationDomainError>,
     > {
         let response =
-            domains_api::get_organization_domain(&self.config, organization_id, domain_id, name)
-                .await?;
+            domains_api::get_organization_domain(&self.config, organization_id, domain_id).await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -381,15 +395,23 @@ impl ClerkFapiClient {
     pub async fn list_organization_domains(
         &self,
         organization_id: &str,
-        limit: Option<f64>,
-        offset: Option<f64>,
+        limit: Option<i32>,
+        offset: Option<i32>,
+        verified: Option<bool>,
+        enrollment_mode: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationDomains,
         Error<domains_api::ListOrganizationDomainsError>,
     > {
-        let response =
-            domains_api::list_organization_domains(&self.config, organization_id, limit, offset)
-                .await?;
+        let response = domains_api::list_organization_domains(
+            &self.config,
+            organization_id,
+            limit,
+            offset,
+            verified,
+            enrollment_mode,
+        )
+        .await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -400,7 +422,7 @@ impl ClerkFapiClient {
         &self,
         organization_id: &str,
         domain_id: &str,
-        affiliation_email_address: Option<&str>,
+        affiliation_email_address: &str,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationDomain,
         Error<domains_api::PrepareOrganizationDomainVerificationError>,
@@ -422,7 +444,7 @@ impl ClerkFapiClient {
         &self,
         organization_id: &str,
         domain_id: &str,
-        enrollment_mode: Option<&str>,
+        enrollment_mode: &str,
         delete_pending: Option<bool>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationDomain,
@@ -445,16 +467,16 @@ impl ClerkFapiClient {
     // Email Addresses API methods
     pub async fn create_email_addresses(
         &self,
-        clerk_session_id: Option<&str>,
-        email_address: Option<&str>,
+        email_address: &str,
+        _clerk_session_id: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedEmailAddress,
         Error<email_addresses_api::CreateEmailAddressesError>,
     > {
         let response = email_addresses_api::create_email_addresses(
             &self.config,
-            clerk_session_id,
             email_address,
+            _clerk_session_id,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -474,9 +496,8 @@ impl ClerkFapiClient {
         let response =
             email_addresses_api::delete_email_address(&self.config, email_id, clerk_session_id)
                 .await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -509,9 +530,10 @@ impl ClerkFapiClient {
     pub async fn send_verification_email(
         &self,
         email_id: &str,
-        clerk_session_id: Option<&str>,
-        strategy: Option<&str>,
+        strategy: &str,
+        _clerk_session_id: Option<&str>,
         redirect_url: Option<&str>,
+        action_complete_redirect_url: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedEmailAddress,
         Error<email_addresses_api::SendVerificationEmailError>,
@@ -519,9 +541,10 @@ impl ClerkFapiClient {
         let response = email_addresses_api::send_verification_email(
             &self.config,
             email_id,
-            clerk_session_id,
             strategy,
+            _clerk_session_id,
             redirect_url,
+            action_complete_redirect_url,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -533,8 +556,8 @@ impl ClerkFapiClient {
     pub async fn verify_email_address(
         &self,
         email_id: &str,
-        clerk_session_id: Option<&str>,
-        code: Option<&str>,
+        code: &str,
+        _clerk_session_id: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedEmailAddress,
         Error<email_addresses_api::VerifyEmailAddressError>,
@@ -542,8 +565,8 @@ impl ClerkFapiClient {
         let response = email_addresses_api::verify_email_address(
             &self.config,
             email_id,
-            clerk_session_id,
             code,
+            _clerk_session_id,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -561,8 +584,9 @@ impl ClerkFapiClient {
 
     pub async fn update_environment(
         &self,
+        origin: &str,
     ) -> Result<ClientPeriodEnvironment, Error<environment_api::UpdateEnvironmentError>> {
-        environment_api::update_environment(&self.config).await
+        environment_api::update_environment(&self.config, origin).await
     }
 
     // External Accounts API methods
@@ -576,20 +600,23 @@ impl ClerkFapiClient {
         let response =
             external_accounts_api::delete_external_account(&self.config, external_account_id)
                 .await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
 
     pub async fn post_o_auth_accounts(
         &self,
-        strategy: Option<&str>,
+        strategy: &str,
+        origin: Option<&str>,
         redirect_url: Option<&str>,
         action_complete_redirect_url: Option<&str>,
+        additional_scope: Option<&str>,
         code: Option<&str>,
         token: Option<&str>,
+        oidc_login_hint: Option<&str>,
+        oidc_prompt: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedExternalAccount,
         Error<external_accounts_api::PostOAuthAccountsError>,
@@ -597,10 +624,14 @@ impl ClerkFapiClient {
         let response = external_accounts_api::post_o_auth_accounts(
             &self.config,
             strategy,
+            origin,
             redirect_url,
             action_complete_redirect_url,
+            additional_scope,
             code,
             token,
+            oidc_login_hint,
+            oidc_prompt,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -612,9 +643,11 @@ impl ClerkFapiClient {
     pub async fn reauthorize_external_account(
         &self,
         external_account_id: &str,
+        redirect_url: &str,
         additional_scope: Option<Vec<String>>,
-        redirect_url: Option<&str>,
         action_complete_redirect_url: Option<&str>,
+        oidc_login_hint: Option<&str>,
+        oidc_prompt: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedExternalAccount,
         Error<external_accounts_api::ReauthorizeExternalAccountError>,
@@ -622,9 +655,11 @@ impl ClerkFapiClient {
         let response = external_accounts_api::reauthorize_external_account(
             &self.config,
             external_account_id,
-            additional_scope,
             redirect_url,
+            additional_scope,
             action_complete_redirect_url,
+            oidc_login_hint,
+            oidc_prompt,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -652,7 +687,9 @@ impl ClerkFapiClient {
     }
 
     // Health API methods
-    pub async fn get_health(&self) -> Result<serde_json::Value, Error<health_api::GetHealthError>> {
+    pub async fn get_health(
+        &self,
+    ) -> Result<GetHealth200Response, Error<health_api::GetHealthError>> {
         health_api::get_health(&self.config).await
     }
 
@@ -660,8 +697,8 @@ impl ClerkFapiClient {
     pub async fn bulk_create_organization_invitations(
         &self,
         organization_id: &str,
-        email_addresses: Option<Vec<String>>,
-        role: Option<&str>,
+        email_address: Vec<String>,
+        role: &str,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationInvitations,
         Error<invitations_api::BulkCreateOrganizationInvitationsError>,
@@ -669,7 +706,7 @@ impl ClerkFapiClient {
         let response = invitations_api::bulk_create_organization_invitations(
             &self.config,
             organization_id,
-            email_addresses,
+            email_address,
             role,
         )
         .await?;
@@ -682,10 +719,8 @@ impl ClerkFapiClient {
     pub async fn create_organization_invitations(
         &self,
         organization_id: &str,
-        user_id: Option<&str>,
-        role: Option<&str>,
-        email_address: Option<&str>,
-        role2: Option<&str>,
+        email_address: &str,
+        role: &str,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationInvitation,
         Error<invitations_api::CreateOrganizationInvitationsError>,
@@ -693,10 +728,8 @@ impl ClerkFapiClient {
         let response = invitations_api::create_organization_invitations(
             &self.config,
             organization_id,
-            user_id,
-            role,
             email_address,
-            role2,
+            role,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -726,8 +759,8 @@ impl ClerkFapiClient {
     pub async fn get_organization_invitations(
         &self,
         organization_id: &str,
-        limit: Option<f64>,
-        offset: Option<f64>,
+        limit: Option<i32>,
+        offset: Option<i32>,
         status: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationInvitations,
@@ -773,8 +806,6 @@ impl ClerkFapiClient {
         organization_id: &str,
         user_id: Option<&str>,
         role: Option<&str>,
-        email_address: Option<&str>,
-        role2: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationMembership,
         Error<members_api::CreateOrganizationMembershipError>,
@@ -784,8 +815,6 @@ impl ClerkFapiClient {
             organization_id,
             user_id,
             role,
-            email_address,
-            role2,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -797,8 +826,11 @@ impl ClerkFapiClient {
     pub async fn list_organization_memberships(
         &self,
         organization_id: &str,
-        limit: Option<f64>,
-        offset: Option<f64>,
+        limit: Option<i32>,
+        offset: Option<i32>,
+        paginated: Option<bool>,
+        query: Option<&str>,
+        role: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationMemberships,
         Error<members_api::ListOrganizationMembershipsError>,
@@ -808,6 +840,9 @@ impl ClerkFapiClient {
             organization_id,
             limit,
             offset,
+            paginated,
+            query,
+            role,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -878,8 +913,8 @@ impl ClerkFapiClient {
     pub async fn list_organization_membership_requests(
         &self,
         organization_id: &str,
-        limit: Option<f64>,
-        offset: Option<f64>,
+        limit: Option<i32>,
+        offset: Option<i32>,
         status: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationMembershipRequests,
@@ -925,16 +960,19 @@ impl ClerkFapiClient {
         scope: Option<&str>,
         code: Option<&str>,
         state: Option<&str>,
+        error: Option<&str>,
     ) -> Result<(), Error<o_auth2_callbacks_api::GetOauthCallbackError>> {
-        o_auth2_callbacks_api::get_oauth_callback(&self.config, scope, code, state).await
+        o_auth2_callbacks_api::get_oauth_callback(&self.config, scope, code, state, error).await
     }
 
     pub async fn post_oauth_callback(
         &self,
         code: Option<&str>,
+        scope: Option<&str>,
         state: Option<&str>,
+        error: Option<&str>,
     ) -> Result<(), Error<o_auth2_callbacks_api::PostOauthCallbackError>> {
-        o_auth2_callbacks_api::post_oauth_callback(&self.config, code, state).await
+        o_auth2_callbacks_api::post_oauth_callback(&self.config, code, scope, state, error).await
     }
 
     // OAuth2 Identity Provider API methods
@@ -980,9 +1018,8 @@ impl ClerkFapiClient {
         Error<organization_api::DeleteOrganizationError>,
     > {
         let response = organization_api::delete_organization(&self.config, organization_id).await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -996,9 +1033,8 @@ impl ClerkFapiClient {
     > {
         let response =
             organization_api::delete_organization_logo(&self.config, organization_id).await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -1098,9 +1134,8 @@ impl ClerkFapiClient {
             organization_id,
         )
         .await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -1109,6 +1144,7 @@ impl ClerkFapiClient {
         &self,
         limit: Option<i32>,
         offset: Option<i32>,
+        paginated: Option<bool>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationMemberships,
         Error<organizations_memberships_api::GetOrganizationMembershipsError>,
@@ -1117,6 +1153,7 @@ impl ClerkFapiClient {
             &self.config,
             limit,
             offset,
+            paginated,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -1151,6 +1188,7 @@ impl ClerkFapiClient {
         &self,
         limit: Option<i32>,
         offset: Option<i32>,
+        status: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedOrganizationInvitationsUserContext,
         Error<organizations_memberships_api::GetUsersOrganizationInvitationsError>,
@@ -1159,6 +1197,7 @@ impl ClerkFapiClient {
             &self.config,
             limit,
             offset,
+            status,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -1171,11 +1210,21 @@ impl ClerkFapiClient {
     pub async fn attempt_passkey_verification(
         &self,
         passkey_id: &str,
+        origin: Option<&str>,
+        strategy: Option<&str>,
+        public_key_credential: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedPasskey,
         Error<passkeys_api::AttemptPasskeyVerificationError>,
     > {
-        let response = passkeys_api::attempt_passkey_verification(&self.config, passkey_id).await?;
+        let response = passkeys_api::attempt_passkey_verification(
+            &self.config,
+            passkey_id,
+            origin,
+            strategy,
+            public_key_credential,
+        )
+        .await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -1188,9 +1237,8 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedDeletedObject, Error<passkeys_api::DeletePasskeyError>>
     {
         let response = passkeys_api::delete_passkey(&self.config, passkey_id).await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -1209,9 +1257,13 @@ impl ClerkFapiClient {
 
     pub async fn post_passkey(
         &self,
-        clerk_session_id: Option<&str>,
+        _clerk_session_id: Option<&str>,
+        origin: Option<&str>,
+        x_original_host: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedPasskey, Error<passkeys_api::PostPasskeyError>> {
-        let response = passkeys_api::post_passkey(&self.config, clerk_session_id).await?;
+        let response =
+            passkeys_api::post_passkey(&self.config, _clerk_session_id, origin, x_original_host)
+                .await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -1241,9 +1293,8 @@ impl ClerkFapiClient {
         let response =
             phone_numbers_api::delete_phone_number(&self.config, phone_number_id, clerk_session_id)
                 .await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -1257,13 +1308,18 @@ impl ClerkFapiClient {
 
     pub async fn post_phone_numbers(
         &self,
-        clerk_session_id: Option<&str>,
-        phone_number: Option<&str>,
+        phone_number: &str,
+        _clerk_session_id: Option<&str>,
+        reserved_for_second_factor: Option<bool>,
     ) -> Result<ClientPeriodClientWrappedPhoneNumber, Error<phone_numbers_api::PostPhoneNumbersError>>
     {
-        let response =
-            phone_numbers_api::post_phone_numbers(&self.config, clerk_session_id, phone_number)
-                .await?;
+        let response = phone_numbers_api::post_phone_numbers(
+            &self.config,
+            phone_number,
+            _clerk_session_id,
+            reserved_for_second_factor,
+        )
+        .await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -1288,8 +1344,8 @@ impl ClerkFapiClient {
     pub async fn send_verification_sms(
         &self,
         phone_number_id: &str,
-        clerk_session_id: Option<&str>,
-        strategy: Option<&str>,
+        strategy: &str,
+        _clerk_session_id: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedPhoneNumber,
         Error<phone_numbers_api::SendVerificationSmsError>,
@@ -1297,8 +1353,8 @@ impl ClerkFapiClient {
         let response = phone_numbers_api::send_verification_sms(
             &self.config,
             phone_number_id,
-            clerk_session_id,
             strategy,
+            _clerk_session_id,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -1334,8 +1390,8 @@ impl ClerkFapiClient {
     pub async fn verify_phone_number(
         &self,
         phone_number_id: &str,
-        clerk_session_id: Option<&str>,
-        code: Option<&str>,
+        code: &str,
+        _clerk_session_id: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedPhoneNumber,
         Error<phone_numbers_api::VerifyPhoneNumberError>,
@@ -1343,8 +1399,8 @@ impl ClerkFapiClient {
         let response = phone_numbers_api::verify_phone_number(
             &self.config,
             phone_number_id,
-            clerk_session_id,
             code,
+            _clerk_session_id,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -1357,8 +1413,8 @@ impl ClerkFapiClient {
     pub async fn list_organization_roles(
         &self,
         organization_id: &str,
-        limit: Option<f64>,
-        offset: Option<f64>,
+        limit: Option<i32>,
+        offset: Option<i32>,
     ) -> Result<ClientPeriodClientWrappedRoles, Error<roles_api::ListOrganizationRolesError>> {
         let response =
             roles_api::list_organization_roles(&self.config, organization_id, limit, offset)
@@ -1405,22 +1461,22 @@ impl ClerkFapiClient {
     pub async fn end_session(
         &self,
         session_id: &str,
-    ) -> Result<ResponsesPeriodClientPeriodSession, Error<sessions_api::EndSessionError>> {
+    ) -> Result<ClientPeriodClientWrappedSession, Error<sessions_api::EndSessionError>> {
         let response = sessions_api::end_session(&self.config, session_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
     pub async fn get_session(
         &self,
         session_id: &str,
-    ) -> Result<ResponsesPeriodClientPeriodSession, Error<sessions_api::GetSessionError>> {
+    ) -> Result<ClientPeriodClientWrappedSession, Error<sessions_api::GetSessionError>> {
         let response = sessions_api::get_session(&self.config, session_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
@@ -1431,20 +1487,20 @@ impl ClerkFapiClient {
         Error<sessions_api::RemoveClientSessionsAndRetainCookieError>,
     > {
         let response = sessions_api::remove_client_sessions_and_retain_cookie(&self.config).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.response.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
     pub async fn remove_session(
         &self,
         session_id: &str,
-    ) -> Result<ResponsesPeriodClientPeriodSession, Error<sessions_api::RemoveSessionError>> {
+    ) -> Result<ClientPeriodClientWrappedSession, Error<sessions_api::RemoveSessionError>> {
         let response = sessions_api::remove_session(&self.config, session_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
@@ -1452,12 +1508,12 @@ impl ClerkFapiClient {
         &self,
         session_id: &str,
         active_organization_id: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSession, Error<sessions_api::TouchSessionError>> {
+    ) -> Result<ClientPeriodClientWrappedSession, Error<sessions_api::TouchSessionError>> {
         let response =
             sessions_api::touch_session(&self.config, session_id, active_organization_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
@@ -1472,30 +1528,32 @@ impl ClerkFapiClient {
     pub async fn attempt_sign_in_factor_one(
         &self,
         sign_in_id: &str,
-        strategy: Option<&str>,
+        strategy: &str,
+        origin: Option<&str>,
         code: Option<&str>,
         password: Option<&str>,
         signature: Option<&str>,
-        redirect_url: Option<&str>,
-        action_complete_redirect_url: Option<&str>,
+        token: Option<&str>,
         ticket: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSignIn, Error<sign_ins_api::AttemptSignInFactorOneError>>
+        public_key_credential: Option<&str>,
+    ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::AttemptSignInFactorOneError>>
     {
         let response = sign_ins_api::attempt_sign_in_factor_one(
             &self.config,
             sign_in_id,
             strategy,
+            origin,
             code,
             password,
             signature,
-            redirect_url,
-            action_complete_redirect_url,
+            token,
             ticket,
+            public_key_credential,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
@@ -1504,19 +1562,21 @@ impl ClerkFapiClient {
         sign_in_id: &str,
         strategy: Option<&str>,
         code: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSignIn, Error<sign_ins_api::AttemptSignInFactorTwoError>>
+    ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::AttemptSignInFactorTwoError>>
     {
         let response =
             sign_ins_api::attempt_sign_in_factor_two(&self.config, sign_in_id, strategy, code)
                 .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn create_sign_in(
         &self,
+        origin: Option<&str>,
         strategy: Option<&str>,
         identifier: Option<&str>,
         password: Option<&str>,
@@ -1526,9 +1586,12 @@ impl ClerkFapiClient {
         transfer: Option<bool>,
         code: Option<&str>,
         token: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSignIn, Error<sign_ins_api::CreateSignInError>> {
+        oidc_login_hint: Option<&str>,
+        oidc_prompt: Option<&str>,
+    ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::CreateSignInError>> {
         let response = sign_ins_api::create_sign_in(
             &self.config,
+            origin,
             strategy,
             identifier,
             password,
@@ -1538,52 +1601,60 @@ impl ClerkFapiClient {
             transfer,
             code,
             token,
+            oidc_login_hint,
+            oidc_prompt,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn get_sign_in(
         &self,
         sign_in_id: &str,
-    ) -> Result<ResponsesPeriodClientPeriodSignIn, Error<sign_ins_api::GetSignInError>> {
+    ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::GetSignInError>> {
         let response = sign_ins_api::get_sign_in(&self.config, sign_in_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn prepare_sign_in_factor_one(
         &self,
         sign_in_id: &str,
-        strategy: Option<&str>,
+        strategy: &str,
+        origin: Option<&str>,
         email_address_id: Option<&str>,
         phone_number_id: Option<&str>,
         web3_wallet_id: Option<&str>,
         passkey_id: Option<&str>,
         redirect_url: Option<&str>,
         action_complete_redirect_url: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSignIn, Error<sign_ins_api::PrepareSignInFactorOneError>>
+        oidc_login_hint: Option<&str>,
+        oidc_prompt: Option<&str>,
+    ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::PrepareSignInFactorOneError>>
     {
         let response = sign_ins_api::prepare_sign_in_factor_one(
             &self.config,
             sign_in_id,
             strategy,
+            origin,
             email_address_id,
             phone_number_id,
             web3_wallet_id,
             passkey_id,
             redirect_url,
             action_complete_redirect_url,
+            oidc_login_hint,
+            oidc_prompt,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
@@ -1592,7 +1663,7 @@ impl ClerkFapiClient {
         sign_in_id: &str,
         strategy: Option<&str>,
         phone_number_id: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSignIn, Error<sign_ins_api::PrepareSignInFactorTwoError>>
+    ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::PrepareSignInFactorTwoError>>
     {
         let response = sign_ins_api::prepare_sign_in_factor_two(
             &self.config,
@@ -1601,18 +1672,18 @@ impl ClerkFapiClient {
             phone_number_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn reset_password(
         &self,
         sign_in_id: &str,
-        password: Option<&str>,
+        password: &str,
         sign_out_of_other_sessions: Option<bool>,
-    ) -> Result<ResponsesPeriodClientPeriodSignIn, Error<sign_ins_api::ResetPasswordError>> {
+    ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::ResetPasswordError>> {
         let response = sign_ins_api::reset_password(
             &self.config,
             sign_in_id,
@@ -1620,9 +1691,9 @@ impl ClerkFapiClient {
             sign_out_of_other_sessions,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
@@ -1633,30 +1704,33 @@ impl ClerkFapiClient {
     // Sign Ups API methods
     pub async fn attempt_sign_ups_verification(
         &self,
-        id: &str,
+        sign_up_id: &str,
+        origin: Option<&str>,
         strategy: Option<&str>,
         code: Option<&str>,
         signature: Option<&str>,
-    ) -> Result<
-        ResponsesPeriodClientPeriodSignUp,
-        Error<sign_ups_api::AttemptSignUpsVerificationError>,
-    > {
+        token: Option<&str>,
+    ) -> Result<ClientPeriodClientWrappedSignUp, Error<sign_ups_api::AttemptSignUpsVerificationError>>
+    {
         let response = sign_ups_api::attempt_sign_ups_verification(
             &self.config,
-            id,
+            sign_up_id,
+            origin,
             strategy,
             code,
             signature,
+            token,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn create_sign_ups(
         &self,
+        origin: Option<&str>,
         transfer: Option<bool>,
         password: Option<&str>,
         first_name: Option<&str>,
@@ -1671,13 +1745,18 @@ impl ClerkFapiClient {
         redirect_url: Option<&str>,
         ticket: Option<&str>,
         web3_wallet: Option<&str>,
+        token: Option<&str>,
+        code: Option<&str>,
         captcha_token: Option<&str>,
         captcha_error: Option<&str>,
-        code: Option<&str>,
-        token: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSignUp, Error<sign_ups_api::CreateSignUpsError>> {
+        captcha_widget_type: Option<&str>,
+        legal_accepted: Option<bool>,
+        oidc_login_hint: Option<&str>,
+        oidc_prompt: Option<&str>,
+    ) -> Result<ClientPeriodClientWrappedSignUp, Error<sign_ups_api::CreateSignUpsError>> {
         let response = sign_ups_api::create_sign_ups(
             &self.config,
+            origin,
             transfer,
             password,
             first_name,
@@ -1692,48 +1771,65 @@ impl ClerkFapiClient {
             redirect_url,
             ticket,
             web3_wallet,
+            token,
+            code,
             captcha_token,
             captcha_error,
-            code,
-            token,
+            captcha_widget_type,
+            legal_accepted,
+            oidc_login_hint,
+            oidc_prompt,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn get_sign_ups(
         &self,
-        id: &str,
-    ) -> Result<ResponsesPeriodClientPeriodSignUp, Error<sign_ups_api::GetSignUpsError>> {
-        let response = sign_ups_api::get_sign_ups(&self.config, id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        sign_up_id: &str,
+    ) -> Result<ClientPeriodClientWrappedSignUp, Error<sign_ups_api::GetSignUpsError>> {
+        let response = sign_ups_api::get_sign_ups(&self.config, sign_up_id).await?;
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn prepare_sign_ups_verification(
         &self,
-        id: &str,
+        sign_up_id: &str,
+        origin: Option<&str>,
         strategy: Option<&str>,
-    ) -> Result<
-        ResponsesPeriodClientPeriodSignUp,
-        Error<sign_ups_api::PrepareSignUpsVerificationError>,
-    > {
-        let response =
-            sign_ups_api::prepare_sign_ups_verification(&self.config, id, strategy).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        redirect_url: Option<&str>,
+        action_complete_redirect_url: Option<&str>,
+        oidc_login_hint: Option<&str>,
+        oidc_prompt: Option<&str>,
+    ) -> Result<ClientPeriodClientWrappedSignUp, Error<sign_ups_api::PrepareSignUpsVerificationError>>
+    {
+        let response = sign_ups_api::prepare_sign_ups_verification(
+            &self.config,
+            sign_up_id,
+            origin,
+            strategy,
+            redirect_url,
+            action_complete_redirect_url,
+            oidc_login_hint,
+            oidc_prompt,
+        )
+        .await?;
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
     pub async fn update_sign_ups(
         &self,
-        id: &str,
+        sign_up_id: &str,
+        origin: Option<&str>,
         password: Option<&str>,
         first_name: Option<&str>,
         last_name: Option<&str>,
@@ -1747,12 +1843,16 @@ impl ClerkFapiClient {
         action_complete_redirect_url: Option<&str>,
         ticket: Option<&str>,
         web3_wallet: Option<&str>,
-        code: Option<&str>,
         token: Option<&str>,
-    ) -> Result<ResponsesPeriodClientPeriodSignUp, Error<sign_ups_api::UpdateSignUpsError>> {
+        code: Option<&str>,
+        legal_accepted: Option<bool>,
+        oidc_login_hint: Option<&str>,
+        oidc_prompt: Option<&str>,
+    ) -> Result<ClientPeriodClientWrappedSignUp, Error<sign_ups_api::UpdateSignUpsError>> {
         let response = sign_ups_api::update_sign_ups(
             &self.config,
-            id,
+            sign_up_id,
+            origin,
             password,
             first_name,
             last_name,
@@ -1766,13 +1866,16 @@ impl ClerkFapiClient {
             action_complete_redirect_url,
             ticket,
             web3_wallet,
-            code,
             token,
+            code,
+            legal_accepted,
+            oidc_login_hint,
+            oidc_prompt,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        };
         Ok(response)
     }
 
@@ -1781,9 +1884,8 @@ impl ClerkFapiClient {
         &self,
     ) -> Result<ClientPeriodClientWrappedDeletedObject, Error<totp_api::DeleteTotpError>> {
         let response = totp_api::delete_totp(&self.config).await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -1810,16 +1912,26 @@ impl ClerkFapiClient {
     }
 
     // User API methods
+    pub async fn create_service_token(
+        &self,
+        service: &str,
+        _clerk_session_id: Option<&str>,
+    ) -> Result<Token, Error<user_api::CreateServiceTokenError>> {
+        user_api::create_service_token(&self.config, service, _clerk_session_id).await
+    }
+
     pub async fn change_password(
         &self,
+        new_password: &str,
+        _clerk_session_id: Option<&str>,
         current_password: Option<&str>,
-        new_password: Option<&str>,
         sign_out_of_other_sessions: Option<bool>,
     ) -> Result<ClientPeriodClientWrappedUser, Error<user_api::ChangePasswordError>> {
         let response = user_api::change_password(
             &self.config,
-            current_password,
             new_password,
+            _clerk_session_id,
+            current_password,
             sign_out_of_other_sessions,
         )
         .await?;
@@ -1831,31 +1943,32 @@ impl ClerkFapiClient {
 
     pub async fn delete_profile_image(
         &self,
+        _clerk_session_id: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedDeletedObject, Error<user_api::DeleteProfileImageError>>
     {
-        let response = user_api::delete_profile_image(&self.config).await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        let response = user_api::delete_profile_image(&self.config, _clerk_session_id).await?;
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
 
     pub async fn delete_user(
         &self,
+        _clerk_session_id: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedDeletedObject, Error<user_api::DeleteUserError>> {
-        let response = user_api::delete_user(&self.config).await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            _ => (),
+        let response = user_api::delete_user(&self.config, _clerk_session_id).await?;
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
 
     pub async fn get_user(
         &self,
+        _clerk_session_id: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedUser, Error<user_api::GetUserError>> {
-        let response = user_api::get_user(&self.config).await?;
+        let response = user_api::get_user(&self.config, _clerk_session_id).await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -1864,23 +1977,33 @@ impl ClerkFapiClient {
 
     pub async fn patch_user(
         &self,
-        username: Option<&str>,
+        _clerk_session_id: Option<&str>,
         first_name: Option<&str>,
         last_name: Option<&str>,
+        username: Option<&str>,
+        password: Option<&str>,
         primary_email_address_id: Option<&str>,
         primary_phone_number_id: Option<&str>,
         primary_web3_wallet_id: Option<&str>,
+        public_metadata: Option<&str>,
+        private_metadata: Option<&str>,
         unsafe_metadata: Option<&str>,
+        profile_image_id: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedUser, Error<user_api::PatchUserError>> {
         let response = user_api::patch_user(
             &self.config,
-            username,
+            _clerk_session_id,
             first_name,
             last_name,
+            username,
+            password,
             primary_email_address_id,
             primary_phone_number_id,
             primary_web3_wallet_id,
+            public_metadata,
+            private_metadata,
             unsafe_metadata,
+            profile_image_id,
         )
         .await?;
         self.handle_client_update(*response.client.clone())
@@ -1891,26 +2014,28 @@ impl ClerkFapiClient {
 
     pub async fn remove_password(
         &self,
-        current_password: Option<&str>,
+        current_password: &str,
+        _clerk_session_id: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedUser, Error<user_api::RemovePasswordError>> {
-        let response = user_api::remove_password(&self.config, current_password).await?;
+        let response =
+            user_api::remove_password(&self.config, current_password, _clerk_session_id).await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
         Ok(response)
     }
 
+    /// Does not work, file upload not implemented yet
     pub async fn update_profile_image(
         &self,
-        file: Option<std::path::PathBuf>,
-    ) -> Result<
-        ResponsesPeriodClientPeriodClientWrappedImage,
-        Error<user_api::UpdateProfileImageError>,
-    > {
-        let response = user_api::update_profile_image(&self.config, file).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        _clerk_session_id: Option<&str>,
+        _file: Option<std::path::PathBuf>,
+    ) -> Result<ClientPeriodClientWrappedImage, Error<user_api::UpdateProfileImageError>> {
+        let response =
+            user_api::update_profile_image(&self.config, _clerk_session_id, _file).await?;
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap();
+        }
         Ok(response)
     }
 
@@ -1918,13 +2043,19 @@ impl ClerkFapiClient {
     pub async fn attempt_web3_wallet_verification(
         &self,
         web3_wallet_id: &str,
+        signature: &str,
+        origin: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedWeb3Wallet,
         Error<web3_wallets_api::AttemptWeb3WalletVerificationError>,
     > {
-        let response =
-            web3_wallets_api::attempt_web3_wallet_verification(&self.config, web3_wallet_id)
-                .await?;
+        let response = web3_wallets_api::attempt_web3_wallet_verification(
+            &self.config,
+            web3_wallet_id,
+            signature,
+            origin,
+        )
+        .await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -1939,9 +2070,8 @@ impl ClerkFapiClient {
         Error<web3_wallets_api::DeleteWeb3WalletError>,
     > {
         let response = web3_wallets_api::delete_web3_wallet(&self.config, web3_wallet_id).await?;
-        match response.client.clone() {
-            Some(client) => self.handle_client_update(*client).await.unwrap(),
-            None => (),
+        if let Some(client) = response.client.clone() {
+            self.handle_client_update(*client).await.unwrap()
         }
         Ok(response)
     }
@@ -1955,18 +2085,13 @@ impl ClerkFapiClient {
 
     pub async fn post_web3_wallets(
         &self,
-        clerk_session_id: Option<&str>,
-        strategy: Option<&str>,
-        redirect_url: Option<&str>,
+        web3_wallet: &str,
+        _clerk_session_id: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedWeb3Wallet, Error<web3_wallets_api::PostWeb3WalletsError>>
     {
-        let response = web3_wallets_api::post_web3_wallets(
-            &self.config,
-            clerk_session_id,
-            strategy,
-            redirect_url,
-        )
-        .await?;
+        let response =
+            web3_wallets_api::post_web3_wallets(&self.config, web3_wallet, _clerk_session_id)
+                .await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -1976,13 +2101,21 @@ impl ClerkFapiClient {
     pub async fn prepare_web3_wallet_verification(
         &self,
         web3_wallet_id: &str,
+        strategy: &str,
+        origin: Option<&str>,
+        redirect_url: Option<&str>,
     ) -> Result<
         ClientPeriodClientWrappedWeb3Wallet,
         Error<web3_wallets_api::PrepareWeb3WalletVerificationError>,
     > {
-        let response =
-            web3_wallets_api::prepare_web3_wallet_verification(&self.config, web3_wallet_id)
-                .await?;
+        let response = web3_wallets_api::prepare_web3_wallet_verification(
+            &self.config,
+            web3_wallet_id,
+            strategy,
+            origin,
+            redirect_url,
+        )
+        .await?;
         self.handle_client_update(*response.client.clone())
             .await
             .unwrap();
@@ -2010,7 +2143,10 @@ impl ClerkFapiClient {
 
     pub async fn get_apple_app_site_association(
         &self,
-    ) -> Result<(), Error<well_known_api::GetAppleAppSiteAssociationError>> {
+    ) -> Result<
+        WellKnownPeriodAppleAppSiteAssociation,
+        Error<well_known_api::GetAppleAppSiteAssociationError>,
+    > {
         well_known_api::get_apple_app_site_association(&self.config).await
     }
 
@@ -2055,7 +2191,7 @@ mod tests {
     fn test_default_client() {
         let client = ClerkFapiClient::default();
         assert_eq!(client.config.base_path, "");
-        assert!(!client.config.user_agent.is_none());
+        assert!(client.config.user_agent.is_some());
         assert!(client.update_client_callback.is_none());
     }
 }
