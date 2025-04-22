@@ -53,9 +53,7 @@ impl Clerk {
         let clerk_ref = clerk.clone();
         api_client.set_update_client_callback(move |client| {
             let mut clerk_ref = clerk_ref.clone();
-            async move {
-                let _ = clerk_ref.update_client(client).await;
-            }
+            let _ = clerk_ref.update_client(client);
         });
 
         // Now wrap the configured api_client in Arc
@@ -81,7 +79,7 @@ impl Clerk {
             // Try to deserialize the stored environment
             if let Ok(environment) = serde_json::from_value::<Environment>(stored_env) {
                 // Update state and store using update_environment
-                self.update_environment(environment).await?;
+                self.update_environment(environment)?;
 
                 // Clone what we need for background task
                 let api_client = self.api_client.clone();
@@ -96,7 +94,7 @@ impl Clerk {
                         match api_client.get_environment().await {
                             Ok(fresh_env) => {
                                 // Update state and store using update_environment
-                                if let Err(e) = this.update_environment(fresh_env).await {
+                                if let Err(e) = this.update_environment(fresh_env) {
                                     eprintln!(
                                         "Failed to update environment in background task: {}",
                                         e
@@ -127,7 +125,7 @@ impl Clerk {
             .map_err(|e| format!("Failed to fetch environment: {}", e))?;
 
         // Update state and store using update_environment
-        self.update_environment(environment).await?;
+        self.update_environment(environment)?;
 
         Ok(())
     }
@@ -139,7 +137,7 @@ impl Clerk {
             // Try to deserialize the stored client
             if let Ok(client) = serde_json::from_value::<Client>(stored_client) {
                 // Update state with stored client
-                self.update_client(client).await?;
+                self.update_client(client)?;
 
                 // Clone what we need for background task
                 let api_client = self.api_client.clone();
@@ -155,7 +153,7 @@ impl Clerk {
                             Ok(fresh_client_response) => {
                                 if let Some(fresh_client) = fresh_client_response.response {
                                     // Update state and store using update_client
-                                    if let Err(e) = this.update_client(*fresh_client).await {
+                                    if let Err(e) = this.update_client(*fresh_client) {
                                         eprintln!(
                                             "Failed to update client in background task: {}",
                                             e
@@ -188,7 +186,7 @@ impl Clerk {
 
         // Update client state if response contains client data
         if let Some(client) = client_response.response {
-            self.update_client(*client).await?;
+            self.update_client(*client)?;
         }
 
         Ok(())
@@ -226,37 +224,37 @@ impl Clerk {
     }
 
     /// Returns whether the client has been initialized
-    pub async fn loaded(&self) -> bool {
+    pub fn loaded(&self) -> bool {
         self.state.read().unwrap().loaded
     }
 
     /// Returns the current environment if initialized
-    pub async fn environment(&self) -> Option<Environment> {
+    pub fn environment(&self) -> Option<Environment> {
         self.state.read().unwrap().environment.clone()
     }
 
     /// Returns the current client if initialized
-    pub async fn client(&self) -> Option<Client> {
+    pub fn client(&self) -> Option<Client> {
         self.state.read().unwrap().client.clone()
     }
 
     /// Returns the current session if set
-    pub async fn session(&self) -> Option<Session> {
+    pub fn session(&self) -> Option<Session> {
         self.state.read().unwrap().session.clone()
     }
 
     /// Returns the current user if set
-    pub async fn user(&self) -> Option<User> {
+    pub fn user(&self) -> Option<User> {
         self.state.read().unwrap().user.clone()
     }
 
     /// Returns the current organization if set
-    pub async fn organization(&self) -> Option<Organization> {
+    pub fn organization(&self) -> Option<Organization> {
         self.state.read().unwrap().organization.clone()
     }
 
     /// Notifies all registered listeners with the current state
-    async fn notify_listeners(&self) {
+    fn notify_listeners(&self) {
         // Get all state with minimal lock time
         let client_opt;
         let current_session;
@@ -299,7 +297,7 @@ impl Clerk {
 
     /// Updates the client state based on the provided client data
     /// This includes updating the client, session, user, and organization state
-    pub async fn update_client(&mut self, client: Client) -> Result<(), String> {
+    pub fn update_client(&mut self, client: Client) -> Result<(), String> {
         // Get the active session from the sessions list
         let client_clone = client.clone();
         let active_session = client_clone.last_active_session_id.as_ref().and_then(|id| {
@@ -310,7 +308,7 @@ impl Clerk {
                 .cloned()
         });
 
-        // Update state and save client first before async operations
+        // Update state and save client first
         {
             let mut state = self.state.write().unwrap();
 
@@ -330,7 +328,7 @@ impl Clerk {
         );
 
         // Notify listeners using the new method (after the lock is dropped)
-        self.notify_listeners().await;
+        self.notify_listeners();
 
         Ok(())
     }
@@ -408,17 +406,17 @@ impl Clerk {
         template: Option<&str>,
     ) -> Result<Option<String>, String> {
         // Check if client is loaded and has active session
-        if !self.loaded().await {
+        if !self.loaded() {
             return Ok(None);
         }
 
-        let session = match self.session().await {
+        let session = match self.session() {
             Some(s) => s,
             None => return Ok(None),
         };
 
         // Check if session has associated user
-        if self.user().await.is_none() {
+        if self.user().is_none() {
             return Ok(None);
         }
 
@@ -484,7 +482,7 @@ impl Clerk {
         organization_id_or_slug: Option<String>,
     ) -> Result<(), String> {
         // Check if client is loaded
-        if !self.loaded().await {
+        if !self.loaded() {
             return Err("Cannot set active session before client is loaded".to_string());
         }
 
@@ -575,7 +573,7 @@ impl Clerk {
     }
 
     /// Add this new method
-    async fn update_environment(&self, environment: Environment) -> Result<(), String> {
+    fn update_environment(&self, environment: Environment) -> Result<(), String> {
         // Update state
         {
             let mut state = self.state.write().unwrap();
@@ -595,7 +593,7 @@ impl Clerk {
     /// Adds a listener that will be called whenever the client state changes
     /// The listener receives the current Client, Session, User and Organization state
     /// If there's already a loaded client, the callback will be called immediately
-    pub async fn add_listener<F>(&self, callback: F)
+    pub fn add_listener<F>(&self, callback: F)
     where
         F: Fn(Client, Option<Session>, Option<User>, Option<Organization>)
             + Send
@@ -1066,7 +1064,7 @@ mod tests {
 
         env_mock.assert_async().await;
         client_mock.assert_async().await;
-        assert!(result.environment().await.is_some());
+        assert!(result.environment().is_some());
     }
 
     #[tokio::test]
@@ -1705,11 +1703,11 @@ mod tests {
         client_mock.assert_async().await;
 
         // Verify all state was set
-        assert!(initialized_client.loaded().await);
-        assert!(initialized_client.environment().await.is_some());
-        assert!(initialized_client.client().await.is_some());
-        assert!(initialized_client.session().await.is_some());
-        assert!(initialized_client.user().await.is_some());
+        assert!(initialized_client.loaded());
+        assert!(initialized_client.environment().is_some());
+        assert!(initialized_client.client().is_some());
+        assert!(initialized_client.session().is_some());
+        assert!(initialized_client.user().is_some());
     }
 
     #[tokio::test]
@@ -1795,15 +1793,13 @@ mod tests {
         let was_called_clone = was_called.clone();
 
         // Add a listener
-        clerk
-            .add_listener(move |client, session, user, org| {
-                assert_eq!(client.id, "test_client".to_string());
-                assert!(session.is_some());
-                assert!(user.is_some());
-                assert!(org.is_none());
-                was_called_clone.store(true, Ordering::SeqCst);
-            })
-            .await;
+        clerk.add_listener(move |client, session, user, org| {
+            assert_eq!(client.id, "test_client".to_string());
+            assert!(session.is_some());
+            assert!(user.is_some());
+            assert!(org.is_none());
+            was_called_clone.store(true, Ordering::SeqCst);
+        });
 
         // Create test data
         let test_client = Client {
@@ -1819,7 +1815,7 @@ mod tests {
 
         // Update client which should trigger listener
         let mut clerk = clerk.clone();
-        clerk.update_client(test_client).await.unwrap();
+        clerk.update_client(test_client).unwrap();
 
         // Verify listener was called
         assert!(was_called.load(Ordering::SeqCst));
@@ -1847,21 +1843,19 @@ mod tests {
 
         // Update client before adding listener
         let mut clerk = clerk.clone();
-        clerk.update_client(test_client).await.unwrap();
+        clerk.update_client(test_client).unwrap();
 
         let was_called = Arc::new(AtomicBool::new(false));
         let was_called_clone = was_called.clone();
 
         // Add a listener - should be called immediately
-        clerk
-            .add_listener(move |client, session, user, org| {
-                assert_eq!(client.id, "test_client".to_string());
-                assert!(session.is_some());
-                assert!(user.is_some());
-                assert!(org.is_none());
-                was_called_clone.store(true, Ordering::SeqCst);
-            })
-            .await;
+        clerk.add_listener(move |client, session, user, org| {
+            assert_eq!(client.id, "test_client".to_string());
+            assert!(session.is_some());
+            assert!(user.is_some());
+            assert!(org.is_none());
+            was_called_clone.store(true, Ordering::SeqCst);
+        });
 
         // Verify listener was called immediately
         assert!(was_called.load(Ordering::SeqCst));

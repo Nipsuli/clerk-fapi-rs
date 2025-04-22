@@ -146,7 +146,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     sleep(Duration::from_millis(500)).await;
 
     // Get and display user information
-    if let Some(user) = clerk.user().await {
+    if let Some(user) = clerk.user() {
         println!("\nUser Information:");
         println!(
             "Name: {:?} {:?}",
