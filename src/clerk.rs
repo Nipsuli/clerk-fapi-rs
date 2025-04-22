@@ -36,7 +36,7 @@ struct ClerkState {
 
 impl Clerk {
     /// Creates a new Clerk client with the provided configuration
-    /// 
+    ///
     /// This constructor initializes a new client with the given configuration,
     /// setting up the necessary internal state and API client for interacting
     /// with Clerk's Frontend API.
@@ -141,14 +141,14 @@ impl Clerk {
     }
 
     /// Initialize the client by fetching environment and client data
-    /// 
+    ///
     /// This method must be called before using other client methods.
     /// It fetches the environment configuration and client data from the Clerk API.
     /// If the client is already loaded, this method returns immediately.
-    /// 
+    ///
     /// # Returns
     /// Returns a Result containing self if successful
-    /// 
+    ///
     /// # Errors
     /// Returns an error if either API call fails
     pub async fn load(&self) -> Result<Self, String> {
@@ -268,7 +268,7 @@ impl Clerk {
     }
 
     /// Updates the client state based on the provided client data
-    /// 
+    ///
     /// This method updates the internal state with new client data, which includes
     /// extracting and updating the session, user, and organization state as well.
     /// It also saves the client data to the store and notifies any registered listeners.
@@ -372,7 +372,7 @@ impl Clerk {
     ///
     /// Creates and returns a JWT token for the current active session. The token can be
     /// optionally scoped to an organization or created with a specific template.
-    /// 
+    ///
     /// Returns None if:
     /// - Client is not loaded
     /// - No active session exists
@@ -614,7 +614,7 @@ impl Clerk {
     }
 
     /// Adds a listener that will be called whenever the client state changes
-    /// 
+    ///
     /// Registers a callback function that will be notified of client state changes.
     /// The listener receives the current Client, Session, User and Organization state
     /// whenever it changes. If there's already a loaded client when the listener is added,
