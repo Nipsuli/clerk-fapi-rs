@@ -646,16 +646,11 @@ impl Clerk {
 
         {
             // Use try_read to avoid blocking if another lock is held
-            if let Some(state) = self.state.try_read_for(std::time::Duration::from_millis(0)) {
-                maybe_client = state.client.clone();
-                maybe_session = state.session.clone();
-                maybe_user = state.user.clone();
-                maybe_organization = state.organization.clone();
-            } else {
-                // If we couldn't get the lock, just return
-                // The callback will be called on the next client update
-                return;
-            }
+            let state = self.state.read();
+            maybe_client = state.client.clone();
+            maybe_session = state.session.clone();
+            maybe_user = state.user.clone();
+            maybe_organization = state.organization.clone();
         }
 
         // Call the callback if we have a client
