@@ -4,6 +4,7 @@ use crate::configuration::{ClerkFapiConfiguration, Store};
 use crate::models::*;
 use async_trait::async_trait;
 use http::Extensions as HttpExtensions;
+use parking_lot::Mutex;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use reqwest::{Request, Response};
@@ -13,7 +14,7 @@ use reqwest_middleware::{
 use serde_json::Value as JsonValue;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 // Add middleware definitions
 #[derive(Clone)]
@@ -141,7 +142,7 @@ impl ClerkFapiClient {
         client: client_period_client::ClientPeriodClient,
     ) -> Result<(), String> {
         if let Some(cb) = &self.update_client_callback {
-            let mut cb = cb.lock().unwrap(); // Lock the Mutex to get mutable access
+            let mut cb = cb.lock(); // Lock the Mutex to get mutable access
             (cb)(client); // Call the synchronous callback
             Ok(())
         } else {

@@ -6,10 +6,11 @@ use crate::models::{
     ClientPeriodOrganization as Organization, ClientPeriodSession as Session,
     ClientPeriodUser as User,
 };
+use parking_lot::{Mutex, RwLock, RwLockWriteGuard};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
+use std::sync::Arc;
 
 pub type Listener =
     Box<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
@@ -153,7 +154,7 @@ impl Clerk {
     /// Returns an error if either API call fails
     pub async fn load(&self) -> Result<Self, String> {
         // Return early if already loaded
-        if self.state.read().unwrap().loaded {
+        if self.state.read().loaded {
             return Ok(self.clone());
         }
         let mut mut_self = self.clone();
@@ -164,7 +165,7 @@ impl Clerk {
 
         // Set loaded flag
         {
-            let mut state = self.state.write().unwrap();
+            let mut state = self.state.write();
             state.loaded = true;
         }
 
@@ -176,7 +177,7 @@ impl Clerk {
     /// Checks if the client has successfully loaded environment and client data.
     /// This can be used to determine if the `load()` method has been called successfully.
     pub fn loaded(&self) -> bool {
-        self.state.read().unwrap().loaded
+        self.state.read().loaded
     }
 
     /// Returns the current environment if initialized
@@ -185,7 +186,7 @@ impl Clerk {
     /// configuration, display settings, and other environment-specific information.
     /// Returns None if the client hasn't been loaded yet.
     pub fn environment(&self) -> Option<Environment> {
-        self.state.read().unwrap().environment.clone()
+        self.state.read().environment.clone()
     }
 
     /// Returns the current client data if initialized
@@ -194,7 +195,7 @@ impl Clerk {
     /// the current browser/device client and its associated sessions.
     /// Returns None if the client hasn't been loaded yet.
     pub fn client(&self) -> Option<Client> {
-        self.state.read().unwrap().client.clone()
+        self.state.read().client.clone()
     }
 
     /// Returns the current active session if available
@@ -203,7 +204,7 @@ impl Clerk {
     /// state and session-specific data. Returns None if no active session exists
     /// or if the client hasn't been loaded yet.
     pub fn session(&self) -> Option<Session> {
-        self.state.read().unwrap().session.clone()
+        self.state.read().session.clone()
     }
 
     /// Returns the current authenticated user if available
@@ -212,7 +213,7 @@ impl Clerk {
     /// Returns user data including profile information, email addresses, and organization memberships.
     /// Returns None if no user is authenticated or if the client hasn't been loaded yet.
     pub fn user(&self) -> Option<User> {
-        self.state.read().unwrap().user.clone()
+        self.state.read().user.clone()
     }
 
     /// Returns the active organization if available
@@ -222,7 +223,7 @@ impl Clerk {
     /// with `set_active()`. Returns None if no organization is active or if the client
     /// hasn't been loaded yet.
     pub fn organization(&self) -> Option<Organization> {
-        self.state.read().unwrap().organization.clone()
+        self.state.read().organization.clone()
     }
 
     /// Notifies all registered listeners with the current state
@@ -235,7 +236,7 @@ impl Clerk {
 
         // First, get the state data without holding locks during calls
         {
-            let state = self.state.read().unwrap();
+            let state = self.state.read();
 
             // Early return if no client
             if state.client.is_none() {
@@ -254,7 +255,7 @@ impl Clerk {
 
         // Read the listeners and call each one
         // We have to hold the lock during iteration, but not during the individual calls
-        let listeners = self.listeners.read().unwrap();
+        let listeners = self.listeners.read();
         for listener in listeners.iter() {
             // Make the call after releasing the lock for this iteration
             let client_clone = client.clone();
@@ -294,7 +295,7 @@ impl Clerk {
 
         // Update state and save client first
         {
-            let mut state = self.state.write().unwrap();
+            let mut state = self.state.write();
 
             // Update client state
             state.client = Some(client.clone());
@@ -503,7 +504,7 @@ impl Clerk {
         let target_organization_id_option;
 
         {
-            let mut state = self.state.write().unwrap();
+            let mut state = self.state.write();
             let client = state.client.as_ref().ok_or("Client not found")?;
 
             // Get the target session either from the argument or current session
@@ -599,7 +600,7 @@ impl Clerk {
     fn update_environment(&self, environment: Environment) -> Result<(), String> {
         // Update state
         {
-            let mut state = self.state.write().unwrap();
+            let mut state = self.state.write();
             state.environment = Some(environment.clone());
         }
 
@@ -632,7 +633,7 @@ impl Clerk {
     {
         // First add the listener
         {
-            let mut listeners = self.listeners.write().unwrap();
+            let mut listeners = self.listeners.write();
             listeners.push(Box::new(callback.clone()));
         }
 
@@ -645,7 +646,7 @@ impl Clerk {
 
         {
             // Use try_read to avoid blocking if another lock is held
-            if let Ok(state) = self.state.try_read() {
+            if let Some(state) = self.state.try_read_for(std::time::Duration::from_millis(0)) {
                 maybe_client = state.client.clone();
                 maybe_session = state.session.clone();
                 maybe_user = state.user.clone();
@@ -1767,7 +1768,7 @@ mod tests {
 
         // Manually set up client state for testing
         {
-            let mut state = client.state.write().unwrap();
+            let mut state = client.state.write();
             state.loaded = true;
             state.session = Some(Session {
                 id: "sess_123".to_string(),
@@ -1783,7 +1784,7 @@ mod tests {
 
         // Test with unloaded client
         {
-            let mut state = client.state.write().unwrap();
+            let mut state = client.state.write();
             state.loaded = false;
         }
         let token = client.get_token(None, None).await.unwrap();
@@ -1791,7 +1792,7 @@ mod tests {
 
         // Test with no session
         {
-            let mut state = client.state.write().unwrap();
+            let mut state = client.state.write();
             state.loaded = true;
             state.session = None;
         }
@@ -1800,7 +1801,7 @@ mod tests {
 
         // Test with no user
         {
-            let mut state = client.state.write().unwrap();
+            let mut state = client.state.write();
             state.session = Some(Session {
                 id: "sess_123".to_string(),
                 ..Default::default()
