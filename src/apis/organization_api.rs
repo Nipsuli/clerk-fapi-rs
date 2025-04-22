@@ -397,7 +397,7 @@ pub async fn update_organization(
 pub async fn update_organization_logo(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    file: Option<std::path::PathBuf>,
+    _file: Option<std::path::PathBuf>,
 ) -> Result<models::ClientPeriodClientWrappedOrganization, Error<UpdateOrganizationLogoError>> {
     let local_var_configuration = configuration;
 
@@ -434,7 +434,7 @@ pub async fn update_organization_logo(
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
-    let mut local_var_form = reqwest::multipart::Form::new();
+    let local_var_form = reqwest::multipart::Form::new();
     // TODO: support file upload for 'file' parameter
     local_var_req_builder = local_var_req_builder.multipart(local_var_form);
 

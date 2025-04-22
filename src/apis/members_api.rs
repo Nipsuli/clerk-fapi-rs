@@ -108,7 +108,7 @@ pub async fn create_organization_membership(
             local_var_form_params.insert("user_id", local_var_param_value.to_string());
         }
         None => {
-            local_var_form_params.insert("user_id", "");
+            local_var_form_params.insert("user_id", "".to_string());
         }
     }
     match role {
@@ -116,7 +116,7 @@ pub async fn create_organization_membership(
             local_var_form_params.insert("role", local_var_param_value.to_string());
         }
         None => {
-            local_var_form_params.insert("role", "");
+            local_var_form_params.insert("role", "".to_string());
         }
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);

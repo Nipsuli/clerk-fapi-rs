@@ -50,11 +50,7 @@ impl ClientPeriodPasskey {
             object,
             name,
             last_used_at: None,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
             created_at: None,
             updated_at: None,
         }

@@ -63,16 +63,8 @@ impl ClientPeriodSamlAccount {
             last_name,
             provider_user_id,
             public_metadata,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            saml_connection: if let Some(x) = saml_connection {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
+            saml_connection: saml_connection.map(Box::new),
         }
     }
 }

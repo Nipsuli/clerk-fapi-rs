@@ -28,7 +28,7 @@ impl Default for JwksKeysInner {
         Self::JwksPeriodEd25519PeriodPublicKey(Default::default())
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Kty {
     #[serde(rename = "oct")]

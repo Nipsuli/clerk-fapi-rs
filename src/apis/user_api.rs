@@ -602,7 +602,7 @@ pub async fn remove_password(
 pub async fn update_profile_image(
     configuration: &configuration::Configuration,
     _clerk_session_id: Option<&str>,
-    file: Option<std::path::PathBuf>,
+    _file: Option<std::path::PathBuf>,
 ) -> Result<models::ClientPeriodClientWrappedImage, Error<UpdateProfileImageError>> {
     let local_var_configuration = configuration;
 
@@ -639,7 +639,7 @@ pub async fn update_profile_image(
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
-    let mut local_var_form = reqwest::multipart::Form::new();
+    let local_var_form = reqwest::multipart::Form::new();
     // TODO: support file upload for 'file' parameter
     local_var_req_builder = local_var_req_builder.multipart(local_var_form);
 

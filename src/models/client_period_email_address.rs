@@ -56,11 +56,7 @@ impl ClientPeriodEmailAddress {
             object,
             email_address,
             reserved,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
             linked_to,
             matches_sso_connection: None,
             created_at,

@@ -63,11 +63,7 @@ impl ClientPeriodOrganizationDomain {
             name,
             enrollment_mode,
             affiliation_email_address,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
             total_pending_invitations,
             total_pending_suggestions,
             created_at,
@@ -75,7 +71,7 @@ impl ClientPeriodOrganizationDomain {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "organization_domain")]

@@ -25,11 +25,7 @@ impl ClientPeriodDeleteSession {
         client: Option<serde_json::Value>,
     ) -> ClientPeriodDeleteSession {
         ClientPeriodDeleteSession {
-            response: if let Some(x) = response {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            response: response.map(Box::new),
             client,
         }
     }

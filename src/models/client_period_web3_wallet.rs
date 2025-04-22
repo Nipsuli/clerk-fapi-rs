@@ -43,11 +43,7 @@ impl ClientPeriodWeb3Wallet {
             id,
             object,
             web3_wallet,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
             created_at,
             updated_at,
         }

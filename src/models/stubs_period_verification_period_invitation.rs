@@ -43,7 +43,7 @@ impl StubsPeriodVerificationPeriodInvitation {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "verified")]
@@ -55,7 +55,7 @@ impl Default for Status {
         Self::Verified
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "invitation")]

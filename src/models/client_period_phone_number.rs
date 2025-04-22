@@ -69,11 +69,7 @@ impl ClientPeriodPhoneNumber {
             reserved_for_second_factor: None,
             default_second_factor: None,
             reserved,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
             linked_to,
             backup_codes: None,
             created_at,

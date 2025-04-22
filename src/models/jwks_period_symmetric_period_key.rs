@@ -54,7 +54,7 @@ impl JwksPeriodSymmetricPeriodKey {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Kty {
     #[serde(rename = "oct")]

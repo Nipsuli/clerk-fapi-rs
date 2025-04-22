@@ -56,7 +56,7 @@ impl ClientPeriodPermission {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "permission")]
@@ -68,7 +68,7 @@ impl Default for Object {
         Self::Permission
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Type {
     #[serde(rename = "system")]

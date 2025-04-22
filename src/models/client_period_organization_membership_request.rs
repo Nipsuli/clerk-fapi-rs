@@ -46,17 +46,13 @@ impl ClientPeriodOrganizationMembershipRequest {
             id,
             organization_id,
             status,
-            public_user_data: if let Some(x) = public_user_data {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            public_user_data: public_user_data.map(Box::new),
             created_at,
             updated_at,
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "organization_membership_request")]

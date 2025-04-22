@@ -58,7 +58,7 @@ impl JwksPeriodEd25519PeriodPublicKey {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Kty {
     #[serde(rename = "OKP")]
@@ -70,7 +70,7 @@ impl Default for Kty {
         Self::Okp
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Crv {
     #[serde(rename = "Ed25519")]
