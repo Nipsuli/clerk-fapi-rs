@@ -35,7 +35,11 @@ struct ClerkState {
 }
 
 impl Clerk {
-    /// Creates a new ClerkFapiClient with the provided configuration
+    /// Creates a new Clerk client with the provided configuration
+    /// 
+    /// This constructor initializes a new client with the given configuration,
+    /// setting up the necessary internal state and API client for interacting
+    /// with Clerk's Frontend API.
     pub fn new(config: ClerkFapiConfiguration) -> Self {
         // Create the api_client first without Arc
         let mut api_client = ClerkFapiClient::new(config.clone()).unwrap();
@@ -61,12 +65,18 @@ impl Clerk {
         clerk
     }
 
-    /// getter for the api_client
+    /// Returns a reference to the internal Frontend API client
+    ///
+    /// This method provides access to the underlying API client, allowing
+    /// direct interaction with the Clerk API when needed.
     pub fn get_fapi_client(&self) -> &ClerkFapiClient {
         &self.api_client
     }
 
     /// Returns a reference to the client's configuration
+    ///
+    /// Provides access to the configuration used by this client,
+    /// allowing inspection of settings like base URL and API key.
     pub fn config(&self) -> &ClerkFapiConfiguration {
         &self.config
     }
@@ -86,6 +96,10 @@ impl Clerk {
         self.reload_environment().await
     }
 
+    /// Reloads the environment data from the Clerk API
+    ///
+    /// This method fetches fresh environment data from the API and
+    /// updates the client's state, overwriting any cached data.
     pub async fn reload_environment(&self) -> Result<(), String> {
         // Fetch environment from API
         let environment = self
@@ -127,10 +141,14 @@ impl Clerk {
     }
 
     /// Initialize the client by fetching environment and client data
+    /// 
     /// This method must be called before using other client methods.
+    /// It fetches the environment configuration and client data from the Clerk API.
     /// If the client is already loaded, this method returns immediately.
+    /// 
     /// # Returns
     /// Returns a Result containing self if successful
+    /// 
     /// # Errors
     /// Returns an error if either API call fails
     pub async fn load(&self) -> Result<Self, String> {
@@ -154,31 +172,55 @@ impl Clerk {
     }
 
     /// Returns whether the client has been initialized
+    ///
+    /// Checks if the client has successfully loaded environment and client data.
+    /// This can be used to determine if the `load()` method has been called successfully.
     pub fn loaded(&self) -> bool {
         self.state.read().unwrap().loaded
     }
 
     /// Returns the current environment if initialized
+    ///
+    /// Provides access to the Clerk environment data, which includes authentication
+    /// configuration, display settings, and other environment-specific information.
+    /// Returns None if the client hasn't been loaded yet.
     pub fn environment(&self) -> Option<Environment> {
         self.state.read().unwrap().environment.clone()
     }
 
-    /// Returns the current client if initialized
+    /// Returns the current client data if initialized
+    ///
+    /// Provides access to the Clerk client data, which includes information about
+    /// the current browser/device client and its associated sessions.
+    /// Returns None if the client hasn't been loaded yet.
     pub fn client(&self) -> Option<Client> {
         self.state.read().unwrap().client.clone()
     }
 
-    /// Returns the current session if set
+    /// Returns the current active session if available
+    ///
+    /// Provides access to the user's active session, which contains authentication
+    /// state and session-specific data. Returns None if no active session exists
+    /// or if the client hasn't been loaded yet.
     pub fn session(&self) -> Option<Session> {
         self.state.read().unwrap().session.clone()
     }
 
-    /// Returns the current user if set
+    /// Returns the current authenticated user if available
+    ///
+    /// Provides access to the authenticated user associated with the active session.
+    /// Returns user data including profile information, email addresses, and organization memberships.
+    /// Returns None if no user is authenticated or if the client hasn't been loaded yet.
     pub fn user(&self) -> Option<User> {
         self.state.read().unwrap().user.clone()
     }
 
-    /// Returns the current organization if set
+    /// Returns the active organization if available
+    ///
+    /// Provides access to the currently active organization for the authenticated user.
+    /// This is the organization that was last activated in the session, or was specified
+    /// with `set_active()`. Returns None if no organization is active or if the client
+    /// hasn't been loaded yet.
     pub fn organization(&self) -> Option<Organization> {
         self.state.read().unwrap().organization.clone()
     }
@@ -226,7 +268,19 @@ impl Clerk {
     }
 
     /// Updates the client state based on the provided client data
-    /// This includes updating the client, session, user, and organization state
+    /// 
+    /// This method updates the internal state with new client data, which includes
+    /// extracting and updating the session, user, and organization state as well.
+    /// It also saves the client data to the store and notifies any registered listeners.
+    ///
+    /// # Arguments
+    /// * `client` - The new client data to update state with
+    ///
+    /// # Returns
+    /// Returns a Result containing () if successful
+    ///
+    /// # Errors
+    /// Returns an error if serialization of client data fails
     pub fn update_client(&mut self, client: Client) -> Result<(), String> {
         // Get the active session from the sessions list
         let client_clone = client.clone();
@@ -315,14 +369,27 @@ impl Clerk {
     }
 
     /// Get a session JWT token for the current session
+    ///
+    /// Creates and returns a JWT token for the current active session. The token can be
+    /// optionally scoped to an organization or created with a specific template.
+    /// 
     /// Returns None if:
     /// - Client is not loaded
     /// - No active session exists
     /// - No user is associated with the session
     /// - Token creation fails
+    ///
     /// # Arguments
     /// * `organization_id` - Optional organization ID to scope the token to
     /// * `template` - Optional template name to use for token creation
+    ///
+    /// # Returns
+    /// Returns a Result containing an Option<String>. The string contains the JWT token
+    /// if successful, or None if no token could be created.
+    ///
+    /// # Errors
+    /// Returns an error if the API call fails
+    ///
     /// # Examples
     /// ```
     /// # async fn example(client: clerk_fapi_rs::clerk::Clerk) -> Result<(), Box<dyn std::error::Error>> {
@@ -368,10 +435,17 @@ impl Clerk {
     }
 
     /// Signs out either a specific session or all sessions for this client
+    ///
+    /// This method allows signing out a single session by ID, or signing out all sessions
+    /// for the current client if no session ID is provided. After successful sign-out,
+    /// the client state will be updated accordingly via the callback mechanism.
+    ///
     /// # Arguments
     /// * `session_id` - Optional session ID to sign out. If None, signs out all sessions.
+    ///
     /// # Returns
     /// Returns a Result containing () if successful
+    ///
     /// # Errors
     /// Returns an error if the API call fails
     pub async fn sign_out(&self, session_id: Option<String>) -> Result<(), String> {
@@ -395,11 +469,18 @@ impl Clerk {
     }
 
     /// Updates the active session and/or organization
+    ///
+    /// This method allows changing the active session and/or organization for the current client.
+    /// It can be used to switch between different sessions or organizations that the user
+    /// has access to. After the update, the client state will be refreshed via the callback.
+    ///
     /// # Arguments
-    /// * `session_id` - Optional session ID to set as active
-    /// * `organization_id_or_slug` - Optional organization ID or slug to set as active
+    /// * `session_id` - Optional session ID to set as active. If None, uses the current session.
+    /// * `organization_id_or_slug` - Optional organization ID or slug to set as active. If None, no change to organization.
+    ///
     /// # Returns
     /// Returns a Result containing () if successful
+    ///
     /// # Errors
     /// Returns an error if:
     /// - Client is not loaded
@@ -502,7 +583,19 @@ impl Clerk {
         Ok(())
     }
 
-    /// Add this new method
+    /// Updates the environment state with new environment data
+    ///
+    /// This method updates the internal state with new environment data and
+    /// saves it to the store for persistence.
+    ///
+    /// # Arguments
+    /// * `environment` - The new environment data to update state with
+    ///
+    /// # Returns
+    /// Returns a Result containing () if successful
+    ///
+    /// # Errors
+    /// Returns an error if serialization of environment data fails
     fn update_environment(&self, environment: Environment) -> Result<(), String> {
         // Update state
         {
@@ -521,8 +614,14 @@ impl Clerk {
     }
 
     /// Adds a listener that will be called whenever the client state changes
+    /// 
+    /// Registers a callback function that will be notified of client state changes.
     /// The listener receives the current Client, Session, User and Organization state
-    /// If there's already a loaded client, the callback will be called immediately
+    /// whenever it changes. If there's already a loaded client when the listener is added,
+    /// the callback will be called immediately with the current state.
+    ///
+    /// # Arguments
+    /// * `callback` - A function that takes the client, session, user, and organization as parameters
     pub fn add_listener<F>(&self, callback: F)
     where
         F: Fn(Client, Option<Session>, Option<User>, Option<Organization>)
