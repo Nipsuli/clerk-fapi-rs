@@ -13,8 +13,7 @@ use reqwest_middleware::{
 use serde_json::Value as JsonValue;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 // Add middleware definitions
 #[derive(Clone)]
@@ -150,7 +149,7 @@ impl ClerkFapiClient {
         client: client_period_client::ClientPeriodClient,
     ) -> Result<(), String> {
         if let Some(cb) = &self.update_client_callback {
-            let mut cb = cb.lock().await; // Lock the Mutex to get mutable access
+            let mut cb = cb.lock().unwrap(); // Lock the Mutex to get mutable access
             (cb)(client).await; // Await the async callback
             Ok(())
         } else {

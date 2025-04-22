@@ -9,10 +9,8 @@ use crate::models::{
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
 use std::time::Duration;
-use tokio::sync::{RwLock, RwLockWriteGuard};
 
 pub type Listener =
     Box<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
@@ -90,7 +88,7 @@ impl Clerk {
                 let this = self.clone();
 
                 // Spawn background task to update environment
-                tokio::spawn(async move {
+                tokio::task::spawn(async move {
                     const RETRY_INTERVAL: Duration = Duration::from_secs(15 * 60); // 15 minutes
 
                     loop {
@@ -148,7 +146,7 @@ impl Clerk {
                 let mut this = self.clone();
 
                 // Spawn background task to update client
-                tokio::spawn(async move {
+                tokio::task::spawn(async move {
                     const RETRY_INTERVAL: Duration = Duration::from_secs(15 * 60); // 15 minutes
 
                     loop {
@@ -205,7 +203,7 @@ impl Clerk {
     /// Returns an error if either API call fails
     pub async fn load(&self) -> Result<Self, String> {
         // Return early if already loaded
-        if self.state.read().await.loaded {
+        if self.state.read().unwrap().loaded {
             return Ok(self.clone());
         }
         let mut mut_self = self.clone();
@@ -220,7 +218,7 @@ impl Clerk {
 
         // Set loaded flag
         {
-            let mut state = self.state.write().await;
+            let mut state = self.state.write().unwrap();
             state.loaded = true;
         }
 
@@ -229,90 +227,109 @@ impl Clerk {
 
     /// Returns whether the client has been initialized
     pub async fn loaded(&self) -> bool {
-        self.state.read().await.loaded
+        self.state.read().unwrap().loaded
     }
 
     /// Returns the current environment if initialized
     pub async fn environment(&self) -> Option<Environment> {
-        self.state.read().await.environment.clone()
+        self.state.read().unwrap().environment.clone()
     }
 
     /// Returns the current client if initialized
     pub async fn client(&self) -> Option<Client> {
-        self.state.read().await.client.clone()
+        self.state.read().unwrap().client.clone()
     }
 
     /// Returns the current session if set
     pub async fn session(&self) -> Option<Session> {
-        self.state.read().await.session.clone()
+        self.state.read().unwrap().session.clone()
     }
 
     /// Returns the current user if set
     pub async fn user(&self) -> Option<User> {
-        self.state.read().await.user.clone()
+        self.state.read().unwrap().user.clone()
     }
 
     /// Returns the current organization if set
     pub async fn organization(&self) -> Option<Organization> {
-        self.state.read().await.organization.clone()
+        self.state.read().unwrap().organization.clone()
     }
 
     /// Notifies all registered listeners with the current state
     async fn notify_listeners(&self) {
-        let state = self.state.read().await;
+        // Get all state with minimal lock time
+        let client_opt;
+        let current_session;
+        let current_user;
+        let current_organization;
 
-        // Get all required state
-        let client = match state.client.clone() {
-            Some(client) => client,
-            None => return, // Exit early if no client exists
-        };
-        let current_session = state.session.clone();
-        let current_user = state.user.clone();
-        let current_organization = state.organization.clone();
+        // First, get the state data without holding locks during calls
+        {
+            let state = self.state.read().unwrap();
 
-        // Drop the read lock before notifying listeners
-        drop(state);
+            // Early return if no client
+            if state.client.is_none() {
+                return;
+            }
 
-        // Notify all listeners
-        let listeners = self.listeners.read().await;
+            // Clone all the data we need
+            client_opt = state.client.clone();
+            current_session = state.session.clone();
+            current_user = state.user.clone();
+            current_organization = state.organization.clone();
+        }
+
+        // Extract client - we already checked it's Some
+        let client = client_opt.unwrap();
+
+        // Read the listeners and call each one
+        // We have to hold the lock during iteration, but not during the individual calls
+        let listeners = self.listeners.read().unwrap();
         for listener in listeners.iter() {
-            listener(
-                client.clone(),
-                current_session.clone(),
-                current_user.clone(),
-                current_organization.clone(),
-            );
+            // Make the call after releasing the lock for this iteration
+            let client_clone = client.clone();
+            let session_clone = current_session.clone();
+            let user_clone = current_user.clone();
+            let org_clone = current_organization.clone();
+
+            // Call the listener with cloned data
+            listener(client_clone, session_clone, user_clone, org_clone);
         }
     }
 
     /// Updates the client state based on the provided client data
     /// This includes updating the client, session, user, and organization state
     pub async fn update_client(&mut self, client: Client) -> Result<(), String> {
-        let mut state = self.state.write().await;
-
-        // Update client state
-        state.client = Some(client.clone());
-        let fresh_client = client.clone();
-
         // Get the active session from the sessions list
-        let active_session = client
-            .last_active_session_id
-            .and_then(|id| client.sessions.iter().find(|s| s.id == id.clone()).cloned());
+        let client_clone = client.clone();
+        let active_session = client_clone.last_active_session_id.as_ref().and_then(|id| {
+            client_clone
+                .sessions
+                .iter()
+                .find(|s| s.id == id.clone())
+                .cloned()
+        });
 
-        // Remove mut self requirement from set_accessors
-        Self::set_accessors(&mut state, active_session)?;
+        // Update state and save client first before async operations
+        {
+            let mut state = self.state.write().unwrap();
 
-        // Save client to store
+            // Update client state
+            state.client = Some(client.clone());
+
+            // Remove mut self requirement from set_accessors
+            Self::set_accessors(&mut state, active_session)?;
+        }
+
+        // Save client to store (do this outside the lock to avoid holding lock during I/O)
+        let fresh_client = client.clone();
         self.config.set_store_value(
             "client",
-            serde_json::to_value(fresh_client.clone())
+            serde_json::to_value(fresh_client)
                 .map_err(|e| format!("Failed to serialize client: {}", e))?,
         );
 
-        // Drop the write lock before notifying listeners
-        drop(state);
-
-        // Notify listeners using the new method
+        // Notify listeners using the new method (after the lock is dropped)
         self.notify_listeners().await;
 
         Ok(())
@@ -471,77 +488,88 @@ impl Clerk {
             return Err("Cannot set active session before client is loaded".to_string());
         }
 
-        let mut state = self.state.write().await;
-        let client = state.client.as_ref().ok_or("Client not found")?;
+        // Get the client, target session, and organization information
+        // while keeping the lock scope as small as possible
+        let session_id_to_touch;
+        let target_organization_id_option;
 
-        // Get the target session either from the argument or current session
-        let target_session = if let Some(sid) = session_id {
-            client
-                .sessions
-                .iter()
-                .find(|s| s.id == sid)
-                .cloned()
-                .ok_or_else(|| format!("Session with ID {} not found", sid))?
-        } else {
-            state
-                .session
-                .clone()
-                .ok_or("No active session and no session_id provided")?
-        };
+        {
+            let mut state = self.state.write().unwrap();
+            let client = state.client.as_ref().ok_or("Client not found")?;
 
-        let user = match &target_session.user {
-            Some(user_value) => *user_value.clone(),
-            _ => return Err("No user data found in session".to_string()),
-        };
+            // Get the target session either from the argument or current session
+            let target_session = if let Some(sid) = session_id.clone() {
+                client
+                    .sessions
+                    .iter()
+                    .find(|s| s.id == sid)
+                    .cloned()
+                    .ok_or_else(|| format!("Session with ID {} not found", sid))?
+            } else {
+                state
+                    .session
+                    .clone()
+                    .ok_or("No active session and no session_id provided")?
+            };
 
-        let target_organization_id = if let Some(org_id_or_slug) = organization_id_or_slug {
-            if org_id_or_slug.starts_with("org_") {
-                // It's an organization ID - verify it exists in user's memberships
-                let org_exists = user
-                    .organization_memberships
-                    .as_ref()
-                    .map(|memberships| {
-                        memberships
-                            .iter()
-                            .any(|m| m.organization.id == org_id_or_slug)
-                    })
-                    .unwrap_or(false);
-                if !org_exists {
-                    None
+            let user = match &target_session.user {
+                Some(user_value) => *user_value.clone(),
+                _ => return Err("No user data found in session".to_string()),
+            };
+
+            let target_organization_id = if let Some(org_id_or_slug) = organization_id_or_slug {
+                if org_id_or_slug.starts_with("org_") {
+                    // It's an organization ID - verify it exists in user's memberships
+                    let org_exists = user
+                        .organization_memberships
+                        .as_ref()
+                        .map(|memberships| {
+                            memberships
+                                .iter()
+                                .any(|m| m.organization.id == org_id_or_slug)
+                        })
+                        .unwrap_or(false);
+                    if !org_exists {
+                        None
+                    } else {
+                        Some(org_id_or_slug)
+                    }
                 } else {
-                    Some(org_id_or_slug)
+                    // Try to find organization by slug
+                    let org_id = user
+                        .organization_memberships
+                        .as_ref()
+                        .and_then(|memberships| {
+                            memberships.iter().find_map(|m| {
+                                if m.organization.slug == org_id_or_slug {
+                                    Some(m.organization.id.clone())
+                                } else {
+                                    None
+                                }
+                            })
+                        });
+
+                    org_id
                 }
             } else {
-                // Try to find organization by slug
-                let org_id = user
-                    .organization_memberships
-                    .as_ref()
-                    .and_then(|memberships| {
-                        memberships.iter().find_map(|m| {
-                            if m.organization.slug == org_id_or_slug {
-                                Some(m.organization.id.clone())
-                            } else {
-                                None
-                            }
-                        })
-                    });
+                None
+            };
 
-                org_id
-            }
-        } else {
-            None
-        };
+            // Save for API call
+            session_id_to_touch = target_session.id;
+            target_organization_id_option = target_organization_id.clone();
 
-        state.target_organization_id = Some(target_organization_id.clone());
-        // Need to drop the state before calling api's to avoid deadlocks
-        drop(state);
-        // Touch the target session using the clerk_fapi client
-        let active_organization_id = target_organization_id.as_deref();
-        let session_id = target_session.id;
+            // Update state
+            state.target_organization_id = Some(target_organization_id);
+        }
+
+        // Now make the API call without holding any locks
+        let active_organization_id = target_organization_id_option.as_deref();
         self.api_client
-            .touch_session(&session_id, active_organization_id)
+            .touch_session(&session_id_to_touch, active_organization_id)
             .await
             .map_err(|e| format!("Failed to touch session: {}", e))?;
+
         // We rely on the callback to update the state
         Ok(())
     }
@@ -550,7 +578,7 @@ impl Clerk {
     async fn update_environment(&self, environment: Environment) -> Result<(), String> {
         // Update state
         {
-            let mut state = self.state.write().await;
+            let mut state = self.state.write().unwrap();
             state.environment = Some(environment.clone());
         }
 
@@ -575,21 +603,36 @@ impl Clerk {
             + Clone
             + 'static,
     {
-        let mut listeners = self.listeners.write().await;
-        listeners.push(Box::new(callback.clone()));
+        // First add the listener
+        {
+            let mut listeners = self.listeners.write().unwrap();
+            listeners.push(Box::new(callback.clone()));
+        }
 
-        // If we already have a loaded client, call the callback immediately
-        if let Ok(state) = self.state.try_read() {
-            if let Some(client) = state.client.clone() {
-                let session = state.session.clone();
-                let user = state.user.clone();
-                let organization = state.organization.clone();
+        // Then separately call the callback if we have a loaded client
+        // Get state values with as small a lock scope as possible
+        let maybe_client;
+        let maybe_session;
+        let maybe_user;
+        let maybe_organization;
 
-                // Drop the read lock before calling the callback
-                drop(state);
-
-                callback(client, session, user, organization);
+        {
+            // Use try_read to avoid blocking if another lock is held
+            if let Ok(state) = self.state.try_read() {
+                maybe_client = state.client.clone();
+                maybe_session = state.session.clone();
+                maybe_user = state.user.clone();
+                maybe_organization = state.organization.clone();
+            } else {
+                // If we couldn't get the lock, just return
+                // The callback will be called on the next client update
+                return;
             }
+        }
+
+        // Call the callback if we have a client
+        if let Some(client) = maybe_client {
+            callback(client, maybe_session, maybe_user, maybe_organization);
         }
     }
 }
@@ -1697,7 +1740,7 @@ mod tests {
 
         // Manually set up client state for testing
         {
-            let mut state = client.state.write().await;
+            let mut state = client.state.write().unwrap();
             state.loaded = true;
             state.session = Some(Session {
                 id: "sess_123".to_string(),
@@ -1713,7 +1756,7 @@ mod tests {
 
         // Test with unloaded client
         {
-            let mut state = client.state.write().await;
+            let mut state = client.state.write().unwrap();
             state.loaded = false;
         }
         let token = client.get_token(None, None).await.unwrap();
@@ -1721,7 +1764,7 @@ mod tests {
 
         // Test with no session
         {
-            let mut state = client.state.write().await;
+            let mut state = client.state.write().unwrap();
             state.loaded = true;
             state.session = None;
         }
@@ -1730,7 +1773,7 @@ mod tests {
 
         // Test with no user
         {
-            let mut state = client.state.write().await;
+            let mut state = client.state.write().unwrap();
             state.session = Some(Session {
                 id: "sess_123".to_string(),
                 ..Default::default()
