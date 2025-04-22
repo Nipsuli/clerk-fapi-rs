@@ -631,6 +631,8 @@ mod tests {
                 "sign_up": null,
                 "sessions": [],
                 "last_active_session_id": null,
+                "cookie_expires_at": null,
+                "captcha_bypass": false,
                 "created_at": 1704067200,
                 "updated_at": 1704067200
         });
@@ -697,6 +699,8 @@ mod tests {
                           "test_mode": false,
                           "cookieless_dev": false,
                           "url_based_session_syncing": false,
+                          "claimed_at": 0,
+                          "reverification": false,
                           "demo": false
                         },
                         "display_config": {
@@ -1127,7 +1131,9 @@ mod tests {
                           "test_mode": false,
                           "cookieless_dev": false,
                           "url_based_session_syncing": false,
-                          "demo": false
+                          "claimed_at": 0,
+                          "demo": false,
+                          "reverification": false
                         },
                         "display_config": {
                           "object": "display_config",
@@ -1486,8 +1492,9 @@ mod tests {
                             "verification": {
                               "status": "verified",
                               "strategy": "from_oauth_google",
+                              "external_verification_redirect_url": null,
                               "attempts": null,
-                              "expire_at": null
+                              "expire_at": 0
                             },
                             "linked_to": [
                               {
@@ -1506,22 +1513,25 @@ mod tests {
                           {
                             "object": "google_account",
                             "id": "idn_789xyz123abc456",
-                            "google_id": "987654321012345678901",
+                            "provider": "google",
+                            "identification_id": "987654321012345678901",
+                            "provider_user_id": "987654321012345678901",
                             "approved_scopes": "email https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid profile",
                             "email_address": "john.doe@example.com",
-                            "given_name": "John",
-                            "family_name": "Doe",
-                            "picture": "https://example.com/photos/abc123.jpg",
+                            "first_name": "John",
+                            "last_name": "Doe",
+                            "image_url": "https://example.com/photos/abc123.jpg",
                             "username": "",
                             "public_metadata": {},
                             "label": null,
                             "created_at": 1717411902313i64,
                             "updated_at": 1730105981619i64,
                             "verification": {
-                              "status": "verified",
-                              "strategy": "oauth_google",
-                              "attempts": null,
-                              "expire_at": 1717412499056i64
+                                "status": "verified",
+                                "strategy": "from_oauth_google",
+                                "external_verification_redirect_url": null,
+                                "attempts": null,
+                                "expire_at": 0
                             }
                           }
                         ],
@@ -1622,6 +1632,7 @@ mod tests {
                         "identifier": "john.doe@example.com",
                         "profile_image_url": "https://example.com/profiles/stu901.jpg"
                       },
+                      "factor_verification_age": [60],
                       "created_at": 1731327903443i64,
                       "updated_at": 1731327903495i64,
                       "last_active_token": {
@@ -1634,6 +1645,7 @@ mod tests {
                   "sign_up": null,
                   "last_active_session_id": "sess_abc123xyz456def789",
                   "cookie_expires_at": null,
+                  "captcha_bypass": false,
                   "created_at": 1731327798987i64,
                   "updated_at": 1731327903492i64
                 },
