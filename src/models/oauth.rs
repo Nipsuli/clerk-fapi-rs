@@ -16,7 +16,7 @@ pub struct Oauth {
     #[serde(rename = "status")]
     pub status: Status,
     #[serde(rename = "strategy")]
-    pub strategy: Strategy,
+    pub strategy: String,
     #[serde(
         rename = "external_verification_redirect_url",
         skip_serializing_if = "Option::is_none"
@@ -30,29 +30,32 @@ pub struct Oauth {
     )]
     pub error: Option<Option<Box<models::OauthError>>>,
     #[serde(rename = "expire_at")]
-    pub expire_at: i64,
+    pub expire_at: i32,
+    #[serde(rename = "attempts", deserialize_with = "Option::deserialize")]
+    pub attempts: Option<i32>,
     #[serde(
-        rename = "attempts",
+        rename = "verified_at_client",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i64>>,
+    pub verified_at_client: Option<Option<String>>,
 }
 
 impl Oauth {
-    pub fn new(status: Status, strategy: Strategy, expire_at: i64) -> Oauth {
+    pub fn new(status: Status, strategy: String, expire_at: i32, attempts: Option<i32>) -> Oauth {
         Oauth {
             status,
             strategy,
             external_verification_redirect_url: None,
             error: None,
             expire_at,
-            attempts: None,
+            attempts,
+            verified_at_client: None,
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -70,21 +73,5 @@ pub enum Status {
 impl Default for Status {
     fn default() -> Status {
         Self::Unverified
-    }
-}
-///
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-pub enum Strategy {
-    #[serde(rename = "oauth_google")]
-    Google,
-    #[serde(rename = "oauth_mock")]
-    Mock,
-    #[serde(rename = "oauth_custom_mock")]
-    CustomMock,
-}
-
-impl Default for Strategy {
-    fn default() -> Strategy {
-        Self::Google
     }
 }

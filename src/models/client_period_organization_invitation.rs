@@ -13,36 +13,68 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodOrganizationInvitation {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
-    #[serde(rename = "email_address", skip_serializing_if = "Option::is_none")]
-    pub email_address: Option<String>,
-    #[serde(rename = "role", skip_serializing_if = "Option::is_none")]
-    pub role: Option<String>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "email_address")]
+    pub email_address: String,
+    #[serde(rename = "role")]
+    pub role: String,
+    #[serde(rename = "role_name")]
+    pub role_name: String,
+    #[serde(rename = "organization_id", skip_serializing_if = "Option::is_none")]
+    pub organization_id: Option<String>,
+    #[serde(
+        rename = "public_organization_data",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub public_organization_data: Option<Box<models::ClientPeriodPublicOrganizationData>>,
     /// String representing the object's type. Objects of the same type share the same value.
     #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
     pub status: Option<Status>,
+    #[serde(rename = "public_metadata")]
+    pub public_metadata: std::collections::HashMap<String, serde_json::Value>,
+    #[serde(rename = "url", deserialize_with = "Option::deserialize")]
+    pub url: Option<String>,
+    #[serde(rename = "expires_at", deserialize_with = "Option::deserialize")]
+    pub expires_at: Option<i64>,
     /// Unix timestamp of creation.
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
     /// Unix timestamp of last update.
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl ClientPeriodOrganizationInvitation {
-    pub fn new() -> ClientPeriodOrganizationInvitation {
+    pub fn new(
+        id: String,
+        object: Object,
+        email_address: String,
+        role: String,
+        role_name: String,
+        public_metadata: std::collections::HashMap<String, serde_json::Value>,
+        url: Option<String>,
+        expires_at: Option<i64>,
+        created_at: i64,
+        updated_at: i64,
+    ) -> ClientPeriodOrganizationInvitation {
         ClientPeriodOrganizationInvitation {
-            id: None,
-            object: None,
-            email_address: None,
-            role: None,
+            id,
+            object,
+            email_address,
+            role,
+            role_name,
+            organization_id: None,
+            public_organization_data: None,
             status: None,
-            created_at: None,
-            updated_at: None,
+            public_metadata,
+            url,
+            expires_at,
+            created_at,
+            updated_at,
         }
     }
 }

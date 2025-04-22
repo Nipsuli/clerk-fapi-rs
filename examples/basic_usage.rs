@@ -52,15 +52,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let sign_in_response = clerk
                 .get_fapi_client()
                 .create_sign_in(
-                    Some("email_code"),
-                    Some(&email),
-                    None, // password
-                    None, // ticket
-                    None, // redirect_url
-                    None, // action_complete_redirect_url
-                    None, // transfer
-                    None, // code
-                    None, // token
+                    None,               // origin
+                    Some("email_code"), // strategy
+                    Some(&email),       // identifier
+                    None,               // password
+                    None,               // ticket
+                    None,               // redirect_url
+                    None,               // action_complete_redirect_url
+                    None,               // transfer
+                    None,               // code
+                    None,               // token
+                    None,               // oidc_login_hint
+                    None,               // oidc_prompt
                 )
                 .await?;
 
@@ -75,14 +78,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let verification_response = clerk
                 .get_fapi_client()
                 .attempt_sign_in_factor_one(
-                    &sign_in_id,
-                    Some("email_code"),
-                    Some(&code),
-                    None, // password
-                    None, // signature
-                    None, // redirect_url
-                    None, // action_complete_redirect_url
-                    None, // ticket
+                    &sign_in_id,  // sign_in_id
+                    "email_code", // strategy
+                    None,         // origin
+                    Some(&code),  // code
+                    None,         // password
+                    None,         // signature
+                    None,         // token
+                    None,         // ticket
+                    None,         //public_key_credential
                 )
                 .await?;
 
@@ -105,15 +109,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let sign_in_response = clerk
                 .get_fapi_client()
                 .create_sign_in(
-                    Some("ticket"),
-                    None, // identifier
-                    None, // password
-                    Some(&ticket),
-                    None, // redirect_url
-                    None, // action_complete_redirect_url
-                    None, // transfer
-                    None, // code
-                    None, // token
+                    None,           // origin
+                    Some("ticket"), // strategy
+                    None,           // identifier
+                    None,           // password
+                    Some(&ticket),  // ticket
+                    None,           // redirect_url
+                    None,           // action_complete_redirect_url
+                    None,           // transfer
+                    None,           // code
+                    None,           // token
+                    None,           // oidc_login_hint
+                    None,           // oidc_prompt
                 )
                 .await?;
 
@@ -147,10 +154,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             user.last_name.unwrap_or_default()
         );
 
-        if let Some(email_addresses) = user.email_addresses {
-            if !email_addresses.is_empty() {
-                println!("Email: {}", email_addresses[0].email_address);
-            }
+        if !user.email_addresses.is_empty() {
+            println!("Email: {}", user.email_addresses[0].email_address);
         }
     } else {
         println!("Could not retrieve user information");
@@ -158,26 +163,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let memberships = clerk
         .get_fapi_client()
-        .get_organization_memberships(None, None)
+        .get_organization_memberships(None, None, None)
         .await
         .unwrap();
     println!("\nOrganizations:");
+
     let data = *memberships.response;
+
     match data {
         clerk_fapi_rs::models::ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(memberships) => {
-            let mems = (*memberships).data.unwrap();
+            let mems = memberships.data.unwrap();
             println!("Found {} memberships (1): ", mems.len());
             for membership in mems {
-                let org = membership.organization.unwrap();
-                let name = org.name.unwrap();
+                let org = membership.organization;
+                let name = org.name;
                 println!("- Organization: {}", name);
             }
         },
         clerk_fapi_rs::models::ClientClientWrappedOrganizationMembershipsResponse::Array(memberships) => {
             println!("Found {} memberships (2): ", memberships.len());
             for membership in memberships {
-                let org = membership.organization.unwrap();
-                let name = org.name.unwrap();
+                let org = membership.organization;
+                let name = org.name;
                 println!("- Organization: {}", name);
             }
         },

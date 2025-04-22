@@ -14,15 +14,43 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BackupCodes {
     #[serde(rename = "object")]
-    pub object: String,
+    pub object: Object,
     #[serde(rename = "id")]
     pub id: String,
     #[serde(rename = "codes")]
     pub codes: Vec<String>,
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl BackupCodes {
-    pub fn new(object: String, id: String, codes: Vec<String>) -> BackupCodes {
-        BackupCodes { object, id, codes }
+    pub fn new(
+        object: Object,
+        id: String,
+        codes: Vec<String>,
+        created_at: i64,
+        updated_at: i64,
+    ) -> BackupCodes {
+        BackupCodes {
+            object,
+            id,
+            codes,
+            created_at,
+            updated_at,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "backup_code")]
+    BackupCode,
+}
+
+impl Default for Object {
+    fn default() -> Object {
+        Self::BackupCode
     }
 }

@@ -14,25 +14,24 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodRestrictions {
     #[serde(rename = "allowlist")]
-    pub allowlist: Box<models::UserSettingsPeriodRestrictionsPeriodAllowlist>,
+    pub allowlist: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
     #[serde(rename = "blocklist")]
-    pub blocklist: Box<models::UserSettingsPeriodRestrictionsPeriodBlocklist>,
+    pub blocklist: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
     #[serde(rename = "block_email_subaddresses")]
-    pub block_email_subaddresses: Box<models::UserSettingsRestrictionsBlockEmailSubaddresses>,
+    pub block_email_subaddresses: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
     #[serde(rename = "block_disposable_email_domains")]
-    pub block_disposable_email_domains: Box<models::UserSettingsRestrictionsBlockEmailSubaddresses>,
+    pub block_disposable_email_domains: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
     #[serde(rename = "ignore_dots_for_gmail_addresses")]
-    pub ignore_dots_for_gmail_addresses:
-        Box<models::UserSettingsRestrictionsBlockEmailSubaddresses>,
+    pub ignore_dots_for_gmail_addresses: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
 }
 
 impl UserSettingsPeriodRestrictions {
     pub fn new(
-        allowlist: models::UserSettingsPeriodRestrictionsPeriodAllowlist,
-        blocklist: models::UserSettingsPeriodRestrictionsPeriodBlocklist,
-        block_email_subaddresses: models::UserSettingsRestrictionsBlockEmailSubaddresses,
-        block_disposable_email_domains: models::UserSettingsRestrictionsBlockEmailSubaddresses,
-        ignore_dots_for_gmail_addresses: models::UserSettingsRestrictionsBlockEmailSubaddresses,
+        allowlist: models::UserSettingsPeriodRestrictionsPeriodEnabled,
+        blocklist: models::UserSettingsPeriodRestrictionsPeriodEnabled,
+        block_email_subaddresses: models::UserSettingsPeriodRestrictionsPeriodEnabled,
+        block_disposable_email_domains: models::UserSettingsPeriodRestrictionsPeriodEnabled,
+        ignore_dots_for_gmail_addresses: models::UserSettingsPeriodRestrictionsPeriodEnabled,
     ) -> UserSettingsPeriodRestrictions {
         UserSettingsPeriodRestrictions {
             allowlist: Box::new(allowlist),

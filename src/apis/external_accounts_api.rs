@@ -41,6 +41,7 @@ pub enum PostOAuthAccountsError {
 pub enum ReauthorizeExternalAccountError {
     Status400(models::ClerkErrors),
     Status404(models::ClerkErrors),
+    Status422(models::ClerkErrors),
     UnknownValue(serde_json::Value),
 }
 
@@ -117,11 +118,15 @@ pub async fn delete_external_account(
 /// Connect a new External Account from the OAuth providers enabled.
 pub async fn post_o_auth_accounts(
     configuration: &configuration::Configuration,
-    strategy: Option<&str>,
+    strategy: &str,
+    origin: Option<&str>,
     redirect_url: Option<&str>,
     action_complete_redirect_url: Option<&str>,
+    additional_scope: Option<&str>,
     code: Option<&str>,
     token: Option<&str>,
+    oidc_login_hint: Option<&str>,
+    oidc_prompt: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedExternalAccount, Error<PostOAuthAccountsError>> {
     let local_var_configuration = configuration;
 
@@ -154,13 +159,15 @@ pub async fn post_o_auth_accounts(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = strategy {
-        local_var_form_params.insert("strategy", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("strategy", strategy.to_string());
     if let Some(local_var_param_value) = redirect_url {
         local_var_form_params.insert("redirect_url", local_var_param_value.to_string());
     }
@@ -170,11 +177,20 @@ pub async fn post_o_auth_accounts(
             local_var_param_value.to_string(),
         );
     }
+    if let Some(local_var_param_value) = additional_scope {
+        local_var_form_params.insert("additional_scope", local_var_param_value.to_string());
+    }
     if let Some(local_var_param_value) = code {
         local_var_form_params.insert("code", local_var_param_value.to_string());
     }
     if let Some(local_var_param_value) = token {
         local_var_form_params.insert("token", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_login_hint {
+        local_var_form_params.insert("oidc_login_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_prompt {
+        local_var_form_params.insert("oidc_prompt", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -202,9 +218,11 @@ pub async fn post_o_auth_accounts(
 pub async fn reauthorize_external_account(
     configuration: &configuration::Configuration,
     external_account_id: &str,
+    redirect_url: &str,
     additional_scope: Option<Vec<String>>,
-    redirect_url: Option<&str>,
     action_complete_redirect_url: Option<&str>,
+    oidc_login_hint: Option<&str>,
+    oidc_prompt: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedExternalAccount, Error<ReauthorizeExternalAccountError>>
 {
     let local_var_configuration = configuration;
@@ -254,14 +272,18 @@ pub async fn reauthorize_external_account(
                 .to_string(),
         );
     }
-    if let Some(local_var_param_value) = redirect_url {
-        local_var_form_params.insert("redirect_url", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("redirect_url", redirect_url.to_string());
     if let Some(local_var_param_value) = action_complete_redirect_url {
         local_var_form_params.insert(
             "action_complete_redirect_url",
             local_var_param_value.to_string(),
         );
+    }
+    if let Some(local_var_param_value) = oidc_login_hint {
+        local_var_form_params.insert("oidc_login_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_prompt {
+        local_var_form_params.insert("oidc_prompt", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 

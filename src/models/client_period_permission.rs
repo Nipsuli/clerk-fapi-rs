@@ -13,41 +13,50 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodPermission {
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(rename = "key", skip_serializing_if = "Option::is_none")]
-    pub key: Option<String>,
-    #[serde(rename = "description", skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<Type>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "key")]
+    pub key: String,
+    #[serde(rename = "description")]
+    pub description: String,
+    #[serde(rename = "type")]
+    pub r#type: Type,
     /// Unix timestamp of creation.
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
     /// Unix timestamp of last update.
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl ClientPeriodPermission {
-    pub fn new() -> ClientPeriodPermission {
+    pub fn new(
+        object: Object,
+        id: String,
+        name: String,
+        key: String,
+        description: String,
+        r#type: Type,
+        created_at: i64,
+        updated_at: i64,
+    ) -> ClientPeriodPermission {
         ClientPeriodPermission {
-            object: None,
-            id: None,
-            name: None,
-            key: None,
-            description: None,
-            r#type: None,
-            created_at: None,
-            updated_at: None,
+            object,
+            id,
+            name,
+            key,
+            description,
+            r#type,
+            created_at,
+            updated_at,
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "permission")]
@@ -59,7 +68,7 @@ impl Default for Object {
         Self::Permission
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Type {
     #[serde(rename = "system")]

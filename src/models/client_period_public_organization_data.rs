@@ -13,26 +13,31 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodPublicOrganizationData {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(rename = "slug", skip_serializing_if = "Option::is_none")]
-    pub slug: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "slug")]
+    pub slug: String,
     #[serde(rename = "image_url", skip_serializing_if = "Option::is_none")]
     pub image_url: Option<String>,
-    #[serde(rename = "has_image", skip_serializing_if = "Option::is_none")]
-    pub has_image: Option<bool>,
+    #[serde(rename = "has_image")]
+    pub has_image: bool,
 }
 
 impl ClientPeriodPublicOrganizationData {
-    pub fn new() -> ClientPeriodPublicOrganizationData {
+    pub fn new(
+        id: String,
+        name: String,
+        slug: String,
+        has_image: bool,
+    ) -> ClientPeriodPublicOrganizationData {
         ClientPeriodPublicOrganizationData {
-            id: None,
-            name: None,
-            slug: None,
+            id,
+            name,
+            slug,
             image_url: None,
-            has_image: None,
+            has_image,
         }
     }
 }

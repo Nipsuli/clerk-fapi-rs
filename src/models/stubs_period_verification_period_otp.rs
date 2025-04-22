@@ -23,16 +23,16 @@ pub struct StubsPeriodVerificationPeriodOtp {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i64>>,
+    pub attempts: Option<Option<i32>>,
     #[serde(rename = "expire_at")]
-    pub expire_at: i64,
+    pub expire_at: i32,
 }
 
 impl StubsPeriodVerificationPeriodOtp {
     pub fn new(
         status: Status,
         strategy: Strategy,
-        expire_at: i64,
+        expire_at: i32,
     ) -> StubsPeriodVerificationPeriodOtp {
         StubsPeriodVerificationPeriodOtp {
             status,
@@ -42,7 +42,7 @@ impl StubsPeriodVerificationPeriodOtp {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -60,7 +60,7 @@ impl Default for Status {
         Self::Unverified
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "phone_code")]

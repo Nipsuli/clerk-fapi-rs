@@ -13,28 +13,28 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodOrganizationDomainVerification {
-    #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
-    #[serde(rename = "strategy", skip_serializing_if = "Option::is_none")]
-    pub strategy: Option<String>,
-    #[serde(rename = "attempts", skip_serializing_if = "Option::is_none")]
-    pub attempts: Option<i64>,
-    #[serde(
-        rename = "expire_at",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub expire_at: Option<Option<i64>>,
+    #[serde(rename = "status")]
+    pub status: String,
+    #[serde(rename = "strategy")]
+    pub strategy: String,
+    #[serde(rename = "attempts", deserialize_with = "Option::deserialize")]
+    pub attempts: Option<i32>,
+    #[serde(rename = "expire_at", deserialize_with = "Option::deserialize")]
+    pub expire_at: Option<i64>,
 }
 
 impl ClientPeriodOrganizationDomainVerification {
-    pub fn new() -> ClientPeriodOrganizationDomainVerification {
+    pub fn new(
+        status: String,
+        strategy: String,
+        attempts: Option<i32>,
+        expire_at: Option<i64>,
+    ) -> ClientPeriodOrganizationDomainVerification {
         ClientPeriodOrganizationDomainVerification {
-            status: None,
-            strategy: None,
-            attempts: None,
-            expire_at: None,
+            status,
+            strategy,
+            attempts,
+            expire_at,
         }
     }
 }

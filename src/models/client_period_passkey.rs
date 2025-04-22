@@ -21,8 +21,13 @@ pub struct ClientPeriodPasskey {
     #[serde(rename = "name")]
     pub name: String,
     /// Unix timestamp of when the passkey was last used.
-    #[serde(rename = "last_used_at", skip_serializing_if = "Option::is_none")]
-    pub last_used_at: Option<i64>,
+    #[serde(
+        rename = "last_used_at",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub last_used_at: Option<Option<i64>>,
     #[serde(rename = "verification", deserialize_with = "Option::deserialize")]
     pub verification: Option<Box<models::ClientPasskeyVerification>>,
     /// Unix timestamp of creation
@@ -45,11 +50,7 @@ impl ClientPeriodPasskey {
             object,
             name,
             last_used_at: None,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
             created_at: None,
             updated_at: None,
         }

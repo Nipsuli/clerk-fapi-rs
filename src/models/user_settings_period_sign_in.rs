@@ -14,11 +14,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodSignIn {
     #[serde(rename = "second_factor")]
-    pub second_factor: Box<models::UserSettingsPeriodSecondFactor>,
+    pub second_factor: Box<models::UserSettingsSignInSecondFactor>,
 }
 
 impl UserSettingsPeriodSignIn {
-    pub fn new(second_factor: models::UserSettingsPeriodSecondFactor) -> UserSettingsPeriodSignIn {
+    pub fn new(second_factor: models::UserSettingsSignInSecondFactor) -> UserSettingsPeriodSignIn {
         UserSettingsPeriodSignIn {
             second_factor: Box::new(second_factor),
         }

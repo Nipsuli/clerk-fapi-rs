@@ -17,13 +17,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetHealthError {
+    Status503(models::GetHealth503Response),
     UnknownValue(serde_json::Value),
 }
 
 /// Get Health
 pub async fn get_health(
     configuration: &configuration::Configuration,
-) -> Result<serde_json::Value, Error<GetHealthError>> {
+) -> Result<models::GetHealth200Response, Error<GetHealthError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;

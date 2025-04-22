@@ -23,6 +23,16 @@ pub enum ChangePasswordError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`create_service_token`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CreateServiceTokenError {
+    Status403(models::ClerkErrors),
+    Status404(models::ClerkErrors),
+    Status422(models::ClerkErrors),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`delete_profile_image`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -87,8 +97,9 @@ pub enum UpdateProfileImageError {
 /// Update the current user's password.
 pub async fn change_password(
     configuration: &configuration::Configuration,
+    new_password: &str,
+    _clerk_session_id: Option<&str>,
     current_password: Option<&str>,
-    new_password: Option<&str>,
     sign_out_of_other_sessions: Option<bool>,
 ) -> Result<models::ClientPeriodClientWrappedUser, Error<ChangePasswordError>> {
     let local_var_configuration = configuration;
@@ -102,6 +113,10 @@ pub async fn change_password(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -129,9 +144,7 @@ pub async fn change_password(
     if let Some(local_var_param_value) = current_password {
         local_var_form_params.insert("current_password", local_var_param_value.to_string());
     }
-    if let Some(local_var_param_value) = new_password {
-        local_var_form_params.insert("new_password", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("new_password", new_password.to_string());
     if let Some(local_var_param_value) = sign_out_of_other_sessions {
         local_var_form_params.insert(
             "sign_out_of_other_sessions",
@@ -160,9 +173,75 @@ pub async fn change_password(
     }
 }
 
+/// create a jwt for the requested user.
+pub async fn create_service_token(
+    configuration: &configuration::Configuration,
+    service: &str,
+    _clerk_session_id: Option<&str>,
+) -> Result<models::Token, Error<CreateServiceTokenError>> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!("{}/v1/me/tokens", local_var_configuration.base_path);
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("_is_native", local_var_value)]);
+    }
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("__dev_session", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    local_var_form_params.insert("service", service.to_string());
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<CreateServiceTokenError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
 /// Remove the current user's profile image.
 pub async fn delete_profile_image(
     configuration: &configuration::Configuration,
+    _clerk_session_id: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedDeletedObject, Error<DeleteProfileImageError>> {
     let local_var_configuration = configuration;
 
@@ -172,6 +251,10 @@ pub async fn delete_profile_image(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::DELETE, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -219,6 +302,7 @@ pub async fn delete_profile_image(
 /// Delete the current user.
 pub async fn delete_user(
     configuration: &configuration::Configuration,
+    _clerk_session_id: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedDeletedObject, Error<DeleteUserError>> {
     let local_var_configuration = configuration;
 
@@ -228,6 +312,10 @@ pub async fn delete_user(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::DELETE, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -275,6 +363,7 @@ pub async fn delete_user(
 /// Returns all attributes of the current user.
 pub async fn get_user(
     configuration: &configuration::Configuration,
+    _clerk_session_id: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedUser, Error<GetUserError>> {
     let local_var_configuration = configuration;
 
@@ -284,6 +373,10 @@ pub async fn get_user(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -330,13 +423,18 @@ pub async fn get_user(
 /// Update the current user with the given attributes.
 pub async fn patch_user(
     configuration: &configuration::Configuration,
-    username: Option<&str>,
+    _clerk_session_id: Option<&str>,
     first_name: Option<&str>,
     last_name: Option<&str>,
+    username: Option<&str>,
+    password: Option<&str>,
     primary_email_address_id: Option<&str>,
     primary_phone_number_id: Option<&str>,
     primary_web3_wallet_id: Option<&str>,
+    public_metadata: Option<&str>,
+    private_metadata: Option<&str>,
     unsafe_metadata: Option<&str>,
+    profile_image_id: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedUser, Error<PatchUserError>> {
     let local_var_configuration = configuration;
 
@@ -346,6 +444,10 @@ pub async fn patch_user(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::PATCH, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -370,14 +472,17 @@ pub async fn patch_user(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = username {
-        local_var_form_params.insert("username", local_var_param_value.to_string());
-    }
     if let Some(local_var_param_value) = first_name {
         local_var_form_params.insert("first_name", local_var_param_value.to_string());
     }
     if let Some(local_var_param_value) = last_name {
         local_var_form_params.insert("last_name", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = username {
+        local_var_form_params.insert("username", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = password {
+        local_var_form_params.insert("password", local_var_param_value.to_string());
     }
     if let Some(local_var_param_value) = primary_email_address_id {
         local_var_form_params.insert(
@@ -391,8 +496,17 @@ pub async fn patch_user(
     if let Some(local_var_param_value) = primary_web3_wallet_id {
         local_var_form_params.insert("primary_web3_wallet_id", local_var_param_value.to_string());
     }
+    if let Some(local_var_param_value) = public_metadata {
+        local_var_form_params.insert("public_metadata", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = private_metadata {
+        local_var_form_params.insert("private_metadata", local_var_param_value.to_string());
+    }
     if let Some(local_var_param_value) = unsafe_metadata {
         local_var_form_params.insert("unsafe_metadata", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = profile_image_id {
+        local_var_form_params.insert("profile_image_id", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -419,7 +533,8 @@ pub async fn patch_user(
 /// Removes the current user's password.
 pub async fn remove_password(
     configuration: &configuration::Configuration,
-    current_password: Option<&str>,
+    current_password: &str,
+    _clerk_session_id: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedUser, Error<RemovePasswordError>> {
     let local_var_configuration = configuration;
 
@@ -432,6 +547,10 @@ pub async fn remove_password(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -456,9 +575,7 @@ pub async fn remove_password(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = current_password {
-        local_var_form_params.insert("current_password", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("current_password", current_password.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -484,8 +601,9 @@ pub async fn remove_password(
 /// Update the current user's profile image.
 pub async fn update_profile_image(
     configuration: &configuration::Configuration,
+    _clerk_session_id: Option<&str>,
     _file: Option<std::path::PathBuf>,
-) -> Result<models::ResponsesPeriodClientPeriodClientWrappedImage, Error<UpdateProfileImageError>> {
+) -> Result<models::ClientPeriodClientWrappedImage, Error<UpdateProfileImageError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -494,6 +612,10 @@ pub async fn update_profile_image(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = _clerk_session_id {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("_clerk_session_id", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {

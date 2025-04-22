@@ -24,39 +24,19 @@ pub struct ClientPeriodSamlAccount {
     pub active: bool,
     #[serde(rename = "email_address")]
     pub email_address: String,
-    #[serde(
-        rename = "first_name",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub first_name: Option<Option<String>>,
-    #[serde(
-        rename = "last_name",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub last_name: Option<Option<String>>,
+    #[serde(rename = "first_name", deserialize_with = "Option::deserialize")]
+    pub first_name: Option<String>,
+    #[serde(rename = "last_name", deserialize_with = "Option::deserialize")]
+    pub last_name: Option<String>,
     /// The unique ID of the user in the external provider's system
-    #[serde(
-        rename = "provider_user_id",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub provider_user_id: Option<Option<String>>,
-    #[serde(rename = "public_metadata", skip_serializing_if = "Option::is_none")]
-    pub public_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
+    #[serde(rename = "provider_user_id", deserialize_with = "Option::deserialize")]
+    pub provider_user_id: Option<String>,
+    #[serde(rename = "public_metadata")]
+    pub public_metadata: std::collections::HashMap<String, serde_json::Value>,
     #[serde(rename = "verification", deserialize_with = "Option::deserialize")]
     pub verification: Option<Box<models::ClientSamlAccountVerification>>,
-    #[serde(
-        rename = "saml_connection",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub saml_connection: Option<Option<Box<models::ClientSamlAccountSamlConnection>>>,
+    #[serde(rename = "saml_connection", deserialize_with = "Option::deserialize")]
+    pub saml_connection: Option<Box<models::ClientSamlAccountSamlConnection>>,
 }
 
 impl ClientPeriodSamlAccount {
@@ -66,7 +46,12 @@ impl ClientPeriodSamlAccount {
         provider: String,
         active: bool,
         email_address: String,
+        first_name: Option<String>,
+        last_name: Option<String>,
+        provider_user_id: Option<String>,
+        public_metadata: std::collections::HashMap<String, serde_json::Value>,
         verification: Option<models::ClientSamlAccountVerification>,
+        saml_connection: Option<models::ClientSamlAccountSamlConnection>,
     ) -> ClientPeriodSamlAccount {
         ClientPeriodSamlAccount {
             id,
@@ -74,16 +59,12 @@ impl ClientPeriodSamlAccount {
             provider,
             active,
             email_address,
-            first_name: None,
-            last_name: None,
-            provider_user_id: None,
-            public_metadata: None,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            saml_connection: None,
+            first_name,
+            last_name,
+            provider_user_id,
+            public_metadata,
+            verification: verification.map(Box::new),
+            saml_connection: saml_connection.map(Box::new),
         }
     }
 }

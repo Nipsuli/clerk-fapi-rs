@@ -115,7 +115,7 @@ pub async fn delete_client_sessions(
 /// Returns the current client that is present either in the browser cookies or authorization header.
 pub async fn get_client(
     configuration: &configuration::Configuration,
-) -> Result<models::GetClient200Response, Error<GetClientError>> {
+) -> Result<models::ClientPeriodClientWrappedClient, Error<GetClientError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -160,8 +160,11 @@ pub async fn get_client(
 /// When the authentication status cannot be determined from the current session token, we initiate a handshake to refresh the token and send it back to the application. Called in server environments.
 pub async fn handshake_client(
     configuration: &configuration::Configuration,
+    clerk_proxy_url: Option<&str>,
+    clerk_secret_key: Option<&str>,
     redirect_url: Option<&str>,
     organization_id: Option<&str>,
+    satellite_fapi: Option<&str>,
 ) -> Result<(), Error<HandshakeClientError>> {
     let local_var_configuration = configuration;
 
@@ -178,6 +181,10 @@ pub async fn handshake_client(
     if let Some(ref local_var_str) = organization_id {
         local_var_req_builder =
             local_var_req_builder.query(&[("organization_id", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = satellite_fapi {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("satellite_fapi", &local_var_str.to_string())]);
     }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
@@ -198,6 +205,14 @@ pub async fn handshake_client(
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(local_var_param_value) = clerk_proxy_url {
+        local_var_req_builder =
+            local_var_req_builder.header("Clerk-Proxy-Url", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = clerk_secret_key {
+        local_var_req_builder =
+            local_var_req_builder.header("Clerk-Secret-Key", local_var_param_value.to_string());
     }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
@@ -226,7 +241,7 @@ pub async fn handshake_client(
 /// Creates a new Client and sets it either in the response cookies or the response authorization header.
 pub async fn post_client(
     configuration: &configuration::Configuration,
-) -> Result<models::GetClient200Response, Error<PostClientError>> {
+) -> Result<models::ClientPeriodClientWrappedClient, Error<PostClientError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -271,7 +286,7 @@ pub async fn post_client(
 /// Creates a new Client and sets it either in the response cookies or the response authorization header.
 pub async fn put_client(
     configuration: &configuration::Configuration,
-) -> Result<models::GetClient200Response, Error<PutClientError>> {
+) -> Result<models::ClientPeriodClientWrappedClient, Error<PutClientError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;

@@ -18,19 +18,22 @@ pub struct ExternalAccountWithVerification {
     pub object: Object,
     #[serde(rename = "id")]
     pub id: String,
-    #[serde(rename = "provider", skip_serializing_if = "Option::is_none")]
-    pub provider: Option<String>,
+    #[serde(rename = "provider")]
+    pub provider: String,
+    #[serde(rename = "identification_id")]
+    pub identification_id: String,
     /// The unique ID of the user in the external provider's system
-    #[serde(rename = "provider_user_id", skip_serializing_if = "Option::is_none")]
-    pub provider_user_id: Option<String>,
+    #[serde(rename = "provider_user_id")]
+    pub provider_user_id: String,
     #[serde(rename = "approved_scopes")]
     pub approved_scopes: String,
     #[serde(rename = "email_address")]
     pub email_address: String,
-    #[serde(rename = "first_name", skip_serializing_if = "Option::is_none")]
-    pub first_name: Option<String>,
-    #[serde(rename = "last_name", skip_serializing_if = "Option::is_none")]
-    pub last_name: Option<String>,
+    #[serde(rename = "first_name")]
+    pub first_name: String,
+    #[serde(rename = "last_name")]
+    pub last_name: String,
+    /// Please use `image_url` instead
     #[serde(rename = "avatar_url", skip_serializing_if = "Option::is_none")]
     pub avatar_url: Option<String>,
     #[serde(
@@ -47,6 +50,13 @@ pub struct ExternalAccountWithVerification {
         skip_serializing_if = "Option::is_none"
     )]
     pub username: Option<Option<String>>,
+    #[serde(
+        rename = "phone_number",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub phone_number: Option<Option<String>>,
     #[serde(rename = "public_metadata")]
     pub public_metadata: std::collections::HashMap<String, serde_json::Value>,
     #[serde(
@@ -56,48 +66,51 @@ pub struct ExternalAccountWithVerification {
         skip_serializing_if = "Option::is_none"
     )]
     pub label: Option<Option<String>>,
-    #[serde(
-        rename = "verification",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub verification: Option<Option<Box<models::ExternalAccountWithVerificationVerification>>>,
     /// Unix timestamp of creation
     #[serde(rename = "created_at")]
     pub created_at: i64,
     /// Unix timestamp of creation
     #[serde(rename = "updated_at")]
     pub updated_at: i64,
+    #[serde(rename = "verification", deserialize_with = "Option::deserialize")]
+    pub verification: Option<Box<models::ExternalAccountWithVerificationVerification>>,
 }
 
 impl ExternalAccountWithVerification {
     pub fn new(
         object: Object,
         id: String,
+        provider: String,
+        identification_id: String,
+        provider_user_id: String,
         approved_scopes: String,
         email_address: String,
+        first_name: String,
+        last_name: String,
         public_metadata: std::collections::HashMap<String, serde_json::Value>,
         created_at: i64,
         updated_at: i64,
+        verification: Option<models::ExternalAccountWithVerificationVerification>,
     ) -> ExternalAccountWithVerification {
         ExternalAccountWithVerification {
             object,
             id,
-            provider: None,
-            provider_user_id: None,
+            provider,
+            identification_id,
+            provider_user_id,
             approved_scopes,
             email_address,
-            first_name: None,
-            last_name: None,
+            first_name,
+            last_name,
             avatar_url: None,
             image_url: None,
             username: None,
+            phone_number: None,
             public_metadata,
             label: None,
-            verification: None,
             created_at,
             updated_at,
+            verification: verification.map(Box::new),
         }
     }
 }

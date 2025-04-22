@@ -52,6 +52,7 @@ pub enum GetSignUpsError {
 #[serde(untagged)]
 pub enum PrepareSignUpsVerificationError {
     Status400(models::ClerkErrors),
+    Status401(models::ClerkErrors),
     Status422(models::ClerkErrors),
     Status429(models::ClerkErrors),
     UnknownValue(serde_json::Value),
@@ -71,19 +72,21 @@ pub enum UpdateSignUpsError {
 /// Attempts to verify the identification that corresponds to the given strategy using the given verification code.
 pub async fn attempt_sign_ups_verification(
     configuration: &configuration::Configuration,
-    id: &str,
+    sign_up_id: &str,
+    origin: Option<&str>,
     strategy: Option<&str>,
     code: Option<&str>,
     signature: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignUp, Error<AttemptSignUpsVerificationError>> {
+    token: Option<&str>,
+) -> Result<models::ClientPeriodClientWrappedSignUp, Error<AttemptSignUpsVerificationError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
     let local_var_uri_str = format!(
-        "{}/v1/client/sign_ups/{id}/attempt_verification",
+        "{}/v1/client/sign_ups/{sign_up_id}/attempt_verification",
         local_var_configuration.base_path,
-        id = crate::apis::urlencode(id)
+        sign_up_id = crate::apis::urlencode(sign_up_id)
     );
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
@@ -108,6 +111,10 @@ pub async fn attempt_sign_ups_verification(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
@@ -120,6 +127,9 @@ pub async fn attempt_sign_ups_verification(
     }
     if let Some(local_var_param_value) = signature {
         local_var_form_params.insert("signature", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = token {
+        local_var_form_params.insert("token", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -146,6 +156,7 @@ pub async fn attempt_sign_ups_verification(
 /// Creates or replaces the sign-up on the current Client object.
 pub async fn create_sign_ups(
     configuration: &configuration::Configuration,
+    origin: Option<&str>,
     transfer: Option<bool>,
     password: Option<&str>,
     first_name: Option<&str>,
@@ -160,11 +171,15 @@ pub async fn create_sign_ups(
     redirect_url: Option<&str>,
     ticket: Option<&str>,
     web3_wallet: Option<&str>,
+    token: Option<&str>,
+    code: Option<&str>,
     captcha_token: Option<&str>,
     captcha_error: Option<&str>,
-    code: Option<&str>,
-    token: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignUp, Error<CreateSignUpsError>> {
+    captcha_widget_type: Option<&str>,
+    legal_accepted: Option<bool>,
+    oidc_login_hint: Option<&str>,
+    oidc_prompt: Option<&str>,
+) -> Result<models::ClientPeriodClientWrappedSignUp, Error<CreateSignUpsError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -192,6 +207,10 @@ pub async fn create_sign_ups(
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
     }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
@@ -245,17 +264,29 @@ pub async fn create_sign_ups(
     if let Some(local_var_param_value) = web3_wallet {
         local_var_form_params.insert("web3_wallet", local_var_param_value.to_string());
     }
+    if let Some(local_var_param_value) = token {
+        local_var_form_params.insert("token", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = code {
+        local_var_form_params.insert("code", local_var_param_value.to_string());
+    }
     if let Some(local_var_param_value) = captcha_token {
         local_var_form_params.insert("captcha_token", local_var_param_value.to_string());
     }
     if let Some(local_var_param_value) = captcha_error {
         local_var_form_params.insert("captcha_error", local_var_param_value.to_string());
     }
-    if let Some(local_var_param_value) = code {
-        local_var_form_params.insert("code", local_var_param_value.to_string());
+    if let Some(local_var_param_value) = captcha_widget_type {
+        local_var_form_params.insert("captcha_widget_type", local_var_param_value.to_string());
     }
-    if let Some(local_var_param_value) = token {
-        local_var_form_params.insert("token", local_var_param_value.to_string());
+    if let Some(local_var_param_value) = legal_accepted {
+        local_var_form_params.insert("legal_accepted", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_login_hint {
+        local_var_form_params.insert("oidc_login_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_prompt {
+        local_var_form_params.insert("oidc_prompt", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -282,16 +313,16 @@ pub async fn create_sign_ups(
 /// Returns the sign-up by ID. Must be associated with the current Client object.
 pub async fn get_sign_ups(
     configuration: &configuration::Configuration,
-    id: &str,
-) -> Result<models::ResponsesPeriodClientPeriodSignUp, Error<GetSignUpsError>> {
+    sign_up_id: &str,
+) -> Result<models::ClientPeriodClientWrappedSignUp, Error<GetSignUpsError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
     let local_var_uri_str = format!(
-        "{}/v1/client/sign_ups/{id}",
+        "{}/v1/client/sign_ups/{sign_up_id}",
         local_var_configuration.base_path,
-        id = crate::apis::urlencode(id)
+        sign_up_id = crate::apis::urlencode(sign_up_id)
     );
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
@@ -343,17 +374,22 @@ pub async fn get_sign_ups(
 /// Prepares verification for the sign-up specified by `{id}`.  Depending on the given strategy, the API will prepare the verification for the current sign-up. In particular, * for `email_code`, the API will send a verification email to the email address currently load up in the sign-up * for `phone_code`, the API will send a verification SMS to the phone number currently load up in the sign-up
 pub async fn prepare_sign_ups_verification(
     configuration: &configuration::Configuration,
-    id: &str,
+    sign_up_id: &str,
+    origin: Option<&str>,
     strategy: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignUp, Error<PrepareSignUpsVerificationError>> {
+    redirect_url: Option<&str>,
+    action_complete_redirect_url: Option<&str>,
+    oidc_login_hint: Option<&str>,
+    oidc_prompt: Option<&str>,
+) -> Result<models::ClientPeriodClientWrappedSignUp, Error<PrepareSignUpsVerificationError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
     let local_var_uri_str = format!(
-        "{}/v1/client/sign_ups/{id}/prepare_verification",
+        "{}/v1/client/sign_ups/{sign_up_id}/prepare_verification",
         local_var_configuration.base_path,
-        id = crate::apis::urlencode(id)
+        sign_up_id = crate::apis::urlencode(sign_up_id)
     );
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
@@ -378,12 +414,31 @@ pub async fn prepare_sign_ups_verification(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
     if let Some(local_var_param_value) = strategy {
         local_var_form_params.insert("strategy", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = redirect_url {
+        local_var_form_params.insert("redirect_url", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = action_complete_redirect_url {
+        local_var_form_params.insert(
+            "action_complete_redirect_url",
+            local_var_param_value.to_string(),
+        );
+    }
+    if let Some(local_var_param_value) = oidc_login_hint {
+        local_var_form_params.insert("oidc_login_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_prompt {
+        local_var_form_params.insert("oidc_prompt", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -410,7 +465,8 @@ pub async fn prepare_sign_ups_verification(
 /// Updates the sign-up object specified by id, with the supplied parameters.
 pub async fn update_sign_ups(
     configuration: &configuration::Configuration,
-    id: &str,
+    sign_up_id: &str,
+    origin: Option<&str>,
     password: Option<&str>,
     first_name: Option<&str>,
     last_name: Option<&str>,
@@ -424,17 +480,20 @@ pub async fn update_sign_ups(
     action_complete_redirect_url: Option<&str>,
     ticket: Option<&str>,
     web3_wallet: Option<&str>,
-    code: Option<&str>,
     token: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignUp, Error<UpdateSignUpsError>> {
+    code: Option<&str>,
+    legal_accepted: Option<bool>,
+    oidc_login_hint: Option<&str>,
+    oidc_prompt: Option<&str>,
+) -> Result<models::ClientPeriodClientWrappedSignUp, Error<UpdateSignUpsError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
     let local_var_uri_str = format!(
-        "{}/v1/client/sign_ups/{id}",
+        "{}/v1/client/sign_ups/{sign_up_id}",
         local_var_configuration.base_path,
-        id = crate::apis::urlencode(id)
+        sign_up_id = crate::apis::urlencode(sign_up_id)
     );
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::PATCH, local_var_uri_str.as_str());
@@ -458,6 +517,10 @@ pub async fn update_sign_ups(
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
     }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
@@ -508,11 +571,20 @@ pub async fn update_sign_ups(
     if let Some(local_var_param_value) = web3_wallet {
         local_var_form_params.insert("web3_wallet", local_var_param_value.to_string());
     }
+    if let Some(local_var_param_value) = token {
+        local_var_form_params.insert("token", local_var_param_value.to_string());
+    }
     if let Some(local_var_param_value) = code {
         local_var_form_params.insert("code", local_var_param_value.to_string());
     }
-    if let Some(local_var_param_value) = token {
-        local_var_form_params.insert("token", local_var_param_value.to_string());
+    if let Some(local_var_param_value) = legal_accepted {
+        local_var_form_params.insert("legal_accepted", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_login_hint {
+        local_var_form_params.insert("oidc_login_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_prompt {
+        local_var_form_params.insert("oidc_prompt", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 

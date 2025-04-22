@@ -13,21 +13,24 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodAttackProtectionSettings {
-    #[serde(rename = "user_lockout", skip_serializing_if = "Option::is_none")]
-    pub user_lockout:
-        Option<Box<models::UserSettingsPeriodAttackProtectionSettingsPeriodUserLockout>>,
-    #[serde(rename = "pii", skip_serializing_if = "Option::is_none")]
-    pub pii: Option<Box<models::UserSettingsPeriodAttackProtectionSettingsPeriodPii>>,
-    #[serde(rename = "email_link", skip_serializing_if = "Option::is_none")]
-    pub email_link: Option<Box<models::UserSettingsPeriodAttackProtectionSettingsPeriodEmailLink>>,
+    #[serde(rename = "user_lockout")]
+    pub user_lockout: Box<models::UserSettingsPeriodAttackProtectionSettingsPeriodUserLockout>,
+    #[serde(rename = "pii")]
+    pub pii: Box<models::UserSettingsPeriodAttackProtectionSettingsPeriodPii>,
+    #[serde(rename = "email_link")]
+    pub email_link: Box<models::UserSettingsPeriodAttackProtectionSettingsPeriodEmailLink>,
 }
 
 impl UserSettingsPeriodAttackProtectionSettings {
-    pub fn new() -> UserSettingsPeriodAttackProtectionSettings {
+    pub fn new(
+        user_lockout: models::UserSettingsPeriodAttackProtectionSettingsPeriodUserLockout,
+        pii: models::UserSettingsPeriodAttackProtectionSettingsPeriodPii,
+        email_link: models::UserSettingsPeriodAttackProtectionSettingsPeriodEmailLink,
+    ) -> UserSettingsPeriodAttackProtectionSettings {
         UserSettingsPeriodAttackProtectionSettings {
-            user_lockout: None,
-            pii: None,
-            email_link: None,
+            user_lockout: Box::new(user_lockout),
+            pii: Box::new(pii),
+            email_link: Box::new(email_link),
         }
     }
 }

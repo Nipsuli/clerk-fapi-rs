@@ -15,18 +15,21 @@ use serde::{Deserialize, Serialize};
 pub struct ClientPeriodDeletedObject {
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<String>,
-    #[serde(rename = "deleted", skip_serializing_if = "Option::is_none")]
-    pub deleted: Option<bool>,
+    #[serde(rename = "slug", skip_serializing_if = "Option::is_none")]
+    pub slug: Option<String>,
+    #[serde(rename = "object")]
+    pub object: String,
+    #[serde(rename = "deleted")]
+    pub deleted: bool,
 }
 
 impl ClientPeriodDeletedObject {
-    pub fn new() -> ClientPeriodDeletedObject {
+    pub fn new(object: String, deleted: bool) -> ClientPeriodDeletedObject {
         ClientPeriodDeletedObject {
             id: None,
-            object: None,
-            deleted: None,
+            slug: None,
+            object,
+            deleted,
         }
     }
 }

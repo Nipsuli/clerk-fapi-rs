@@ -18,7 +18,7 @@ pub struct ClientPeriodDisplayConfig {
     #[serde(rename = "id")]
     pub id: String,
     #[serde(rename = "instance_environment_type")]
-    pub instance_environment_type: String,
+    pub instance_environment_type: InstanceEnvironmentType,
     #[serde(rename = "application_name")]
     pub application_name: String,
     #[serde(rename = "theme")]
@@ -26,30 +26,12 @@ pub struct ClientPeriodDisplayConfig {
     #[serde(rename = "preferred_sign_in_strategy")]
     pub preferred_sign_in_strategy: PreferredSignInStrategy,
     #[serde(
-        rename = "logo_image",
+        rename = "logo_image_url",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub logo_image: Option<Option<Box<models::Image>>>,
-    #[serde(
-        rename = "logo_url",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub logo_url: Option<Option<String>>,
-    #[serde(rename = "logo_image_url", deserialize_with = "Option::deserialize")]
-    pub logo_image_url: Option<String>,
-    #[serde(
-        rename = "favicon_image",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub favicon_image: Option<Option<Box<models::Image>>>,
-    #[serde(rename = "favicon_url", deserialize_with = "Option::deserialize")]
-    pub favicon_url: Option<String>,
+    pub logo_image_url: Option<Option<String>>,
     #[serde(
         rename = "favicon_image_url",
         default,
@@ -65,136 +47,135 @@ pub struct ClientPeriodDisplayConfig {
     pub sign_up_url: String,
     #[serde(rename = "user_profile_url")]
     pub user_profile_url: String,
+    #[serde(rename = "waitlist_url")]
+    pub waitlist_url: String,
     #[serde(rename = "after_sign_in_url")]
     pub after_sign_in_url: String,
     #[serde(rename = "after_sign_up_url")]
     pub after_sign_up_url: String,
     #[serde(rename = "after_sign_out_one_url")]
     pub after_sign_out_one_url: String,
-    #[serde(
-        rename = "after_sign_out_all_url",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub after_sign_out_all_url: Option<String>,
+    #[serde(rename = "after_sign_out_all_url")]
+    pub after_sign_out_all_url: String,
     #[serde(rename = "after_switch_session_url")]
     pub after_switch_session_url: String,
-    #[serde(
-        rename = "organization_profile_url",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub organization_profile_url: Option<String>,
-    #[serde(
-        rename = "create_organization_url",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub create_organization_url: Option<String>,
-    #[serde(
-        rename = "after_create_organization_url",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub after_create_organization_url: Option<String>,
-    #[serde(
-        rename = "after_leave_organization_url",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub after_leave_organization_url: Option<String>,
-    #[serde(rename = "logo_link_url", skip_serializing_if = "Option::is_none")]
-    pub logo_link_url: Option<String>,
-    #[serde(
-        rename = "help_url",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub help_url: Option<Option<String>>,
-    #[serde(
-        rename = "privacy_policy_url",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub privacy_policy_url: Option<Option<String>>,
-    #[serde(
-        rename = "terms_url",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub terms_url: Option<Option<String>>,
+    #[serde(rename = "after_join_waitlist_url")]
+    pub after_join_waitlist_url: String,
+    #[serde(rename = "organization_profile_url")]
+    pub organization_profile_url: String,
+    #[serde(rename = "create_organization_url")]
+    pub create_organization_url: String,
+    #[serde(rename = "after_leave_organization_url")]
+    pub after_leave_organization_url: String,
+    #[serde(rename = "after_create_organization_url")]
+    pub after_create_organization_url: String,
+    #[serde(rename = "logo_link_url")]
+    pub logo_link_url: String,
     #[serde(rename = "support_email", deserialize_with = "Option::deserialize")]
     pub support_email: Option<String>,
-    #[serde(
-        rename = "clerk_js_version",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub clerk_js_version: Option<Option<String>>,
-    #[serde(rename = "branded", skip_serializing_if = "Option::is_none")]
-    pub branded: Option<bool>,
+    #[serde(rename = "branded")]
+    pub branded: bool,
     #[serde(rename = "experimental_force_oauth_first")]
     pub experimental_force_oauth_first: bool,
+    #[serde(rename = "clerk_js_version", deserialize_with = "Option::deserialize")]
+    pub clerk_js_version: Option<String>,
+    #[serde(rename = "show_devmode_warning")]
+    pub show_devmode_warning: bool,
+    #[serde(
+        rename = "google_one_tap_client_id",
+        deserialize_with = "Option::deserialize"
+    )]
+    pub google_one_tap_client_id: Option<String>,
+    #[serde(rename = "help_url", deserialize_with = "Option::deserialize")]
+    pub help_url: Option<String>,
+    #[serde(
+        rename = "privacy_policy_url",
+        deserialize_with = "Option::deserialize"
+    )]
+    pub privacy_policy_url: Option<String>,
+    #[serde(rename = "terms_url", deserialize_with = "Option::deserialize")]
+    pub terms_url: Option<String>,
+    /// Use `logo_image_url` instead
+    #[serde(rename = "logo_url", deserialize_with = "Option::deserialize")]
+    pub logo_url: Option<String>,
+    /// Use `favicon_image_url` instead
+    #[serde(rename = "favicon_url", deserialize_with = "Option::deserialize")]
+    pub favicon_url: Option<String>,
+    /// Use `logo_image_url` instead
+    #[serde(rename = "logo_image", deserialize_with = "Option::deserialize")]
+    pub logo_image: Option<Box<models::Image>>,
+    /// Use `favicon_image_url` instead
+    #[serde(rename = "favicon_image", deserialize_with = "Option::deserialize")]
+    pub favicon_image: Option<Box<models::Image>>,
     #[serde(
         rename = "captcha_public_key",
         deserialize_with = "Option::deserialize"
     )]
     pub captcha_public_key: Option<String>,
     #[serde(
-        rename = "captcha_public_key_invisible",
-        deserialize_with = "Option::deserialize"
-    )]
-    pub captcha_public_key_invisible: Option<String>,
-    #[serde(
         rename = "captcha_widget_type",
         deserialize_with = "Option::deserialize"
     )]
     pub captcha_widget_type: Option<CaptchaWidgetType>,
     #[serde(
-        rename = "captcha_provider",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
+        rename = "captcha_public_key_invisible",
+        deserialize_with = "Option::deserialize"
     )]
-    pub captcha_provider: Option<Option<CaptchaProvider>>,
+    pub captcha_public_key_invisible: Option<String>,
+    #[serde(rename = "captcha_provider", deserialize_with = "Option::deserialize")]
+    pub captcha_provider: Option<CaptchaProvider>,
     #[serde(rename = "captcha_oauth_bypass")]
     pub captcha_oauth_bypass: Vec<String>,
     #[serde(
-        rename = "google_one_tap_client_id",
+        rename = "captcha_heartbeat",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub google_one_tap_client_id: Option<Option<String>>,
-    #[serde(
-        rename = "show_devmode_warning",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub show_devmode_warning: Option<bool>,
+    pub captcha_heartbeat: Option<Option<bool>>,
 }
 
 impl ClientPeriodDisplayConfig {
     pub fn new(
         object: Object,
         id: String,
-        instance_environment_type: String,
+        instance_environment_type: InstanceEnvironmentType,
         application_name: String,
         theme: serde_json::Value,
         preferred_sign_in_strategy: PreferredSignInStrategy,
-        logo_image_url: Option<String>,
-        favicon_url: Option<String>,
         home_url: String,
         sign_in_url: String,
         sign_up_url: String,
         user_profile_url: String,
+        waitlist_url: String,
         after_sign_in_url: String,
         after_sign_up_url: String,
         after_sign_out_one_url: String,
+        after_sign_out_all_url: String,
         after_switch_session_url: String,
+        after_join_waitlist_url: String,
+        organization_profile_url: String,
+        create_organization_url: String,
+        after_leave_organization_url: String,
+        after_create_organization_url: String,
+        logo_link_url: String,
         support_email: Option<String>,
+        branded: bool,
         experimental_force_oauth_first: bool,
+        clerk_js_version: Option<String>,
+        show_devmode_warning: bool,
+        google_one_tap_client_id: Option<String>,
+        help_url: Option<String>,
+        privacy_policy_url: Option<String>,
+        terms_url: Option<String>,
+        logo_url: Option<String>,
+        favicon_url: Option<String>,
+        logo_image: Option<models::Image>,
+        favicon_image: Option<models::Image>,
         captcha_public_key: Option<String>,
-        captcha_public_key_invisible: Option<String>,
         captcha_widget_type: Option<CaptchaWidgetType>,
+        captcha_public_key_invisible: Option<String>,
+        captcha_provider: Option<CaptchaProvider>,
         captcha_oauth_bypass: Vec<String>,
     ) -> ClientPeriodDisplayConfig {
         ClientPeriodDisplayConfig {
@@ -204,44 +185,47 @@ impl ClientPeriodDisplayConfig {
             application_name,
             theme,
             preferred_sign_in_strategy,
-            logo_image: None,
-            logo_url: None,
-            logo_image_url,
-            favicon_image: None,
-            favicon_url,
+            logo_image_url: None,
             favicon_image_url: None,
             home_url,
             sign_in_url,
             sign_up_url,
             user_profile_url,
+            waitlist_url,
             after_sign_in_url,
             after_sign_up_url,
             after_sign_out_one_url,
-            after_sign_out_all_url: None,
+            after_sign_out_all_url,
             after_switch_session_url,
-            organization_profile_url: None,
-            create_organization_url: None,
-            after_create_organization_url: None,
-            after_leave_organization_url: None,
-            logo_link_url: None,
-            help_url: None,
-            privacy_policy_url: None,
-            terms_url: None,
+            after_join_waitlist_url,
+            organization_profile_url,
+            create_organization_url,
+            after_leave_organization_url,
+            after_create_organization_url,
+            logo_link_url,
             support_email,
-            clerk_js_version: None,
-            branded: None,
+            branded,
             experimental_force_oauth_first,
+            clerk_js_version,
+            show_devmode_warning,
+            google_one_tap_client_id,
+            help_url,
+            privacy_policy_url,
+            terms_url,
+            logo_url,
+            favicon_url,
+            logo_image: logo_image.map(Box::new),
+            favicon_image: favicon_image.map(Box::new),
             captcha_public_key,
-            captcha_public_key_invisible,
             captcha_widget_type,
-            captcha_provider: None,
+            captcha_public_key_invisible,
+            captcha_provider,
             captcha_oauth_bypass,
-            google_one_tap_client_id: None,
-            show_devmode_warning: None,
+            captcha_heartbeat: None,
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "display_config")]
@@ -253,7 +237,23 @@ impl Default for Object {
         Self::DisplayConfig
     }
 }
-///
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum InstanceEnvironmentType {
+    #[serde(rename = "production")]
+    Production,
+    #[serde(rename = "development")]
+    Development,
+    #[serde(rename = "staging")]
+    Staging,
+}
+
+impl Default for InstanceEnvironmentType {
+    fn default() -> InstanceEnvironmentType {
+        Self::Production
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum PreferredSignInStrategy {
     #[serde(rename = "password")]
@@ -267,7 +267,7 @@ impl Default for PreferredSignInStrategy {
         Self::Password
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum CaptchaWidgetType {
     #[serde(rename = "smart")]
@@ -281,13 +281,11 @@ impl Default for CaptchaWidgetType {
         Self::Smart
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum CaptchaProvider {
     #[serde(rename = "turnstile")]
     Turnstile,
-    #[serde(rename = "hcaptcha")]
-    Hcaptcha,
 }
 
 impl Default for CaptchaProvider {

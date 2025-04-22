@@ -23,43 +23,36 @@ pub struct ClientPeriodSignIn {
     /// List of supported identifiers that can be used to sign in.
     #[serde(rename = "supported_identifiers")]
     pub supported_identifiers: Vec<SupportedIdentifiers>,
-    #[serde(rename = "identifier", deserialize_with = "Option::deserialize")]
-    pub identifier: Option<String>,
-    #[serde(
-        rename = "user_data",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub user_data: Option<Option<Box<models::ClientSignInUserData>>>,
     #[serde(
         rename = "supported_first_factors",
         deserialize_with = "Option::deserialize"
     )]
     pub supported_first_factors: Option<Vec<models::StubsPeriodSignInFactor>>,
     #[serde(
-        rename = "first_factor_verification",
-        deserialize_with = "Option::deserialize"
-    )]
-    pub first_factor_verification: Option<Box<models::ClientSignInFirstFactorVerification>>,
-    #[serde(
         rename = "supported_second_factors",
         deserialize_with = "Option::deserialize"
     )]
     pub supported_second_factors: Option<Vec<models::StubsPeriodSignInFactor>>,
     #[serde(
-        rename = "second_factor_verification",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
+        rename = "first_factor_verification",
+        deserialize_with = "Option::deserialize"
     )]
-    pub second_factor_verification:
-        Option<Option<Box<models::ClientSignInSecondFactorVerification>>>,
+    pub first_factor_verification: Option<Box<models::ClientSignInFirstFactorVerification>>,
+    #[serde(
+        rename = "second_factor_verification",
+        deserialize_with = "Option::deserialize"
+    )]
+    pub second_factor_verification: Option<Box<models::ClientSignInSecondFactorVerification>>,
+    #[serde(rename = "identifier", deserialize_with = "Option::deserialize")]
+    pub identifier: Option<String>,
+    #[serde(rename = "user_data", deserialize_with = "Option::deserialize")]
+    pub user_data: Option<Box<models::ClientSignInUserData>>,
     #[serde(
         rename = "created_session_id",
         deserialize_with = "Option::deserialize"
     )]
     pub created_session_id: Option<String>,
+    /// Unix timestamp at which the sign in will be abandoned.
     #[serde(rename = "abandon_at")]
     pub abandon_at: i64,
 }
@@ -70,10 +63,12 @@ impl ClientPeriodSignIn {
         id: String,
         status: Status,
         supported_identifiers: Vec<SupportedIdentifiers>,
-        identifier: Option<String>,
         supported_first_factors: Option<Vec<models::StubsPeriodSignInFactor>>,
-        first_factor_verification: Option<models::ClientSignInFirstFactorVerification>,
         supported_second_factors: Option<Vec<models::StubsPeriodSignInFactor>>,
+        first_factor_verification: Option<models::ClientSignInFirstFactorVerification>,
+        second_factor_verification: Option<models::ClientSignInSecondFactorVerification>,
+        identifier: Option<String>,
+        user_data: Option<models::ClientSignInUserData>,
         created_session_id: Option<String>,
         abandon_at: i64,
     ) -> ClientPeriodSignIn {
@@ -82,16 +77,12 @@ impl ClientPeriodSignIn {
             id,
             status,
             supported_identifiers,
-            identifier,
-            user_data: None,
             supported_first_factors,
-            first_factor_verification: if let Some(x) = first_factor_verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
             supported_second_factors,
-            second_factor_verification: None,
+            first_factor_verification: first_factor_verification.map(Box::new),
+            second_factor_verification: second_factor_verification.map(Box::new),
+            identifier,
+            user_data: user_data.map(Box::new),
             created_session_id,
             abandon_at,
         }
@@ -109,7 +100,7 @@ impl Default for Object {
         Self::SignInAttempt
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "abandoned")]

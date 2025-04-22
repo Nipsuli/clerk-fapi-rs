@@ -13,6 +13,26 @@ use crate::{apis::ResponseContent, models};
 use reqwest;
 use serde::{Deserialize, Serialize};
 
+/// struct for typed errors of method [`attempt_session_reverification_first_factor`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AttemptSessionReverificationFirstFactorError {
+    Status400(models::ClerkErrors),
+    Status403(models::ClerkErrors),
+    Status422(models::ClerkErrors),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`attempt_session_reverification_second_factor`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AttemptSessionReverificationSecondFactorError {
+    Status400(models::ClerkErrors),
+    Status403(models::ClerkErrors),
+    Status422(models::ClerkErrors),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`create_session_token`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -26,6 +46,8 @@ pub enum CreateSessionTokenError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateSessionTokenWithTemplateError {
+    Status401(models::ClerkErrors),
+    Status404(models::ClerkErrors),
     UnknownValue(serde_json::Value),
 }
 
@@ -42,7 +64,28 @@ pub enum EndSessionError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetSessionError {
+    Status401(models::ClerkErrors),
     Status404(models::ClerkErrors),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`prepare_session_reverification_first_factor`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PrepareSessionReverificationFirstFactorError {
+    Status400(models::ClerkErrors),
+    Status403(models::ClerkErrors),
+    Status422(models::ClerkErrors),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`prepare_session_reverification_second_factor`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PrepareSessionReverificationSecondFactorError {
+    Status400(models::ClerkErrors),
+    Status403(models::ClerkErrors),
+    Status422(models::ClerkErrors),
     UnknownValue(serde_json::Value),
 }
 
@@ -64,6 +107,15 @@ pub enum RemoveSessionError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`start_session_reverification`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum StartSessionReverificationError {
+    Status401(models::ClerkErrors),
+    Status422(models::ClerkErrors),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`touch_session`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -74,6 +126,165 @@ pub enum TouchSessionError {
     Status404(models::ClerkErrors),
     Status422(models::ClerkErrors),
     UnknownValue(serde_json::Value),
+}
+
+/// Attempt the first factor verification. Requires the first factor verification to be prepared, unless you're using a password.  Parameter rules: If the strategy equals `email_code` then a code is required. If the strategy equals `password` then a password is required.
+pub async fn attempt_session_reverification_first_factor(
+    configuration: &configuration::Configuration,
+    session_id: &str,
+    strategy: &str,
+    origin: Option<&str>,
+    code: Option<&str>,
+    password: Option<&str>,
+    public_key_credential: Option<&str>,
+) -> Result<
+    models::ClientPeriodClientWrappedSessionReverification,
+    Error<AttemptSessionReverificationFirstFactorError>,
+> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!(
+        "{}/v1/client/sessions/{session_id}/verify/attempt_first_factor",
+        local_var_configuration.base_path,
+        session_id = crate::apis::urlencode(session_id)
+    );
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("_is_native", local_var_value)]);
+    }
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("__dev_session", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
+    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    local_var_form_params.insert("strategy", strategy.to_string());
+    if let Some(local_var_param_value) = code {
+        local_var_form_params.insert("code", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = password {
+        local_var_form_params.insert("password", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = public_key_credential {
+        local_var_form_params.insert("public_key_credential", local_var_param_value.to_string());
+    }
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<AttemptSessionReverificationFirstFactorError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Attempt the second factor verification. Requires the `status` to be equal to `needs_second_factor` and for the preparation step to have been called.
+pub async fn attempt_session_reverification_second_factor(
+    configuration: &configuration::Configuration,
+    session_id: &str,
+    strategy: Option<&str>,
+    code: Option<&str>,
+) -> Result<
+    models::ClientPeriodClientWrappedSessionReverification,
+    Error<AttemptSessionReverificationSecondFactorError>,
+> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!(
+        "{}/v1/client/sessions/{session_id}/verify/attempt_second_factor",
+        local_var_configuration.base_path,
+        session_id = crate::apis::urlencode(session_id)
+    );
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("_is_native", local_var_value)]);
+    }
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("__dev_session", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    if let Some(local_var_param_value) = strategy {
+        local_var_form_params.insert("strategy", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = code {
+        local_var_form_params.insert("code", local_var_param_value.to_string());
+    }
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<AttemptSessionReverificationSecondFactorError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
 }
 
 /// Create a session jwt for the authenticated requested user.
@@ -210,7 +421,7 @@ pub async fn create_session_token_with_template(
 pub async fn end_session(
     configuration: &configuration::Configuration,
     session_id: &str,
-) -> Result<models::ResponsesPeriodClientPeriodSession, Error<EndSessionError>> {
+) -> Result<models::ClientPeriodClientWrappedSession, Error<EndSessionError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -271,7 +482,7 @@ pub async fn end_session(
 pub async fn get_session(
     configuration: &configuration::Configuration,
     session_id: &str,
-) -> Result<models::ResponsesPeriodClientPeriodSession, Error<GetSessionError>> {
+) -> Result<models::ClientPeriodClientWrappedSession, Error<GetSessionError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -318,6 +529,163 @@ pub async fn get_session(
         serde_json::from_str(&local_var_content).map_err(Error::from)
     } else {
         let local_var_entity: Option<GetSessionError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Prepare the first factor verification. Depending on the strategy, this request will do something different.  Parameter actions: If the strategy equals email_code then this request will send an email with an OTP code. If the strategy equals phone_code then this request will send an SMS with an OTP code.
+pub async fn prepare_session_reverification_first_factor(
+    configuration: &configuration::Configuration,
+    session_id: &str,
+    origin: Option<&str>,
+    strategy: Option<&str>,
+    email_address_id: Option<&str>,
+    phone_number_id: Option<&str>,
+) -> Result<
+    models::ClientPeriodClientWrappedSessionReverification,
+    Error<PrepareSessionReverificationFirstFactorError>,
+> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!(
+        "{}/v1/client/sessions/{session_id}/verify/prepare_first_factor",
+        local_var_configuration.base_path,
+        session_id = crate::apis::urlencode(session_id)
+    );
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("_is_native", local_var_value)]);
+    }
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("__dev_session", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
+    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    if let Some(local_var_param_value) = strategy {
+        local_var_form_params.insert("strategy", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = email_address_id {
+        local_var_form_params.insert("email_address_id", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = phone_number_id {
+        local_var_form_params.insert("phone_number_id", local_var_param_value.to_string());
+    }
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<PrepareSessionReverificationFirstFactorError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Prepare the second factor verification. Requires the `status` to be equal to `needs_second_factor`.
+pub async fn prepare_session_reverification_second_factor(
+    configuration: &configuration::Configuration,
+    session_id: &str,
+    strategy: Option<&str>,
+    phone_number_id: Option<&str>,
+) -> Result<
+    models::ClientPeriodClientWrappedSessionReverification,
+    Error<PrepareSessionReverificationSecondFactorError>,
+> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!(
+        "{}/v1/client/sessions/{session_id}/verify/prepare_second_factor",
+        local_var_configuration.base_path,
+        session_id = crate::apis::urlencode(session_id)
+    );
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("_is_native", local_var_value)]);
+    }
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("__dev_session", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    if let Some(local_var_param_value) = strategy {
+        local_var_form_params.insert("strategy", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = phone_number_id {
+        local_var_form_params.insert("phone_number_id", local_var_param_value.to_string());
+    }
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<PrepareSessionReverificationSecondFactorError> =
             serde_json::from_str(&local_var_content).ok();
         let local_var_error = ResponseContent {
             status: local_var_status,
@@ -388,7 +756,7 @@ pub async fn remove_client_sessions_and_retain_cookie(
 pub async fn remove_session(
     configuration: &configuration::Configuration,
     session_id: &str,
-) -> Result<models::ResponsesPeriodClientPeriodSession, Error<RemoveSessionError>> {
+) -> Result<models::ClientPeriodClientWrappedSession, Error<RemoveSessionError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -445,12 +813,80 @@ pub async fn remove_session(
     }
 }
 
+/// Start a new session reverification flow by providing a verification level.  If the requested level equals 'secondFactor' or 'multiFactor' and the associated user doesn't have any available second factor, then we fallback to 'firstFactor'
+pub async fn start_session_reverification(
+    configuration: &configuration::Configuration,
+    session_id: &str,
+    level: &str,
+) -> Result<
+    models::ClientPeriodClientWrappedSessionReverification,
+    Error<StartSessionReverificationError>,
+> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!(
+        "{}/v1/client/sessions/{session_id}/verify",
+        local_var_configuration.base_path,
+        session_id = crate::apis::urlencode(session_id)
+    );
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("_is_native", local_var_value)]);
+    }
+    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
+        let local_var_key = local_var_apikey.key.clone();
+        let local_var_value = match local_var_apikey.prefix {
+            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
+            None => local_var_key,
+        };
+        local_var_req_builder = local_var_req_builder.query(&[("__dev_session", local_var_value)]);
+    }
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    local_var_form_params.insert("level", level.to_string());
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<StartSessionReverificationError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
 /// Specify the active session for the client.
 pub async fn touch_session(
     configuration: &configuration::Configuration,
     session_id: &str,
     active_organization_id: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSession, Error<TouchSessionError>> {
+) -> Result<models::ClientPeriodClientWrappedSession, Error<TouchSessionError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;

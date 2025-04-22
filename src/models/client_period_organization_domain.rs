@@ -13,66 +13,65 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodOrganizationDomain {
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(rename = "organization_id", skip_serializing_if = "Option::is_none")]
-    pub organization_id: Option<String>,
-    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(rename = "enrollment_mode", skip_serializing_if = "Option::is_none")]
-    pub enrollment_mode: Option<String>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "organization_id")]
+    pub organization_id: String,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "enrollment_mode")]
+    pub enrollment_mode: String,
     #[serde(
         rename = "affiliation_email_address",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
+        deserialize_with = "Option::deserialize"
     )]
-    pub affiliation_email_address: Option<Option<String>>,
-    #[serde(
-        rename = "total_pending_invitations",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub total_pending_invitations: Option<i64>,
-    #[serde(
-        rename = "total_pending_suggestions",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub total_pending_suggestions: Option<i64>,
+    pub affiliation_email_address: Option<String>,
+    #[serde(rename = "verification", deserialize_with = "Option::deserialize")]
+    pub verification: Option<Box<models::ClientPeriodOrganizationDomainVerification>>,
+    #[serde(rename = "total_pending_invitations")]
+    pub total_pending_invitations: i32,
+    #[serde(rename = "total_pending_suggestions")]
+    pub total_pending_suggestions: i32,
     /// Unix timestamp of creation.
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
     /// Unix timestamp of last update.
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
-    #[serde(
-        rename = "verification",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub verification: Option<Option<Box<models::ClientPeriodOrganizationDomainVerification>>>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl ClientPeriodOrganizationDomain {
-    pub fn new() -> ClientPeriodOrganizationDomain {
+    pub fn new(
+        object: Object,
+        id: String,
+        organization_id: String,
+        name: String,
+        enrollment_mode: String,
+        affiliation_email_address: Option<String>,
+        verification: Option<models::ClientPeriodOrganizationDomainVerification>,
+        total_pending_invitations: i32,
+        total_pending_suggestions: i32,
+        created_at: i64,
+        updated_at: i64,
+    ) -> ClientPeriodOrganizationDomain {
         ClientPeriodOrganizationDomain {
-            object: None,
-            id: None,
-            organization_id: None,
-            name: None,
-            enrollment_mode: None,
-            affiliation_email_address: None,
-            total_pending_invitations: None,
-            total_pending_suggestions: None,
-            created_at: None,
-            updated_at: None,
-            verification: None,
+            object,
+            id,
+            organization_id,
+            name,
+            enrollment_mode,
+            affiliation_email_address,
+            verification: verification.map(Box::new),
+            total_pending_invitations,
+            total_pending_suggestions,
+            created_at,
+            updated_at,
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "organization_domain")]

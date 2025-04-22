@@ -10,7 +10,6 @@
 
 use crate::models;
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodEnvironment {
@@ -25,6 +24,10 @@ pub struct ClientPeriodEnvironment {
         skip_serializing_if = "Option::is_none"
     )]
     pub organization_settings: Option<Box<models::ClientPeriodOrganizationSettings>>,
+    #[serde(rename = "fraud_settings", skip_serializing_if = "Option::is_none")]
+    pub fraud_settings: Option<Box<models::ClientPeriodFraudSettings>>,
+    #[serde(rename = "commerce_settings", skip_serializing_if = "Option::is_none")]
+    pub commerce_settings: Option<Box<models::ClientPeriodCommerceSettings>>,
     #[serde(rename = "maintenance_mode", skip_serializing_if = "Option::is_none")]
     pub maintenance_mode: Option<bool>,
 }
@@ -36,6 +39,8 @@ impl ClientPeriodEnvironment {
             display_config: None,
             user_settings: None,
             organization_settings: None,
+            fraud_settings: None,
+            commerce_settings: None,
             maintenance_mode: None,
         }
     }

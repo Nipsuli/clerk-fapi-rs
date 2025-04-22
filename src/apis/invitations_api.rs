@@ -73,8 +73,8 @@ pub enum RevokePendingOrganizationInvitationError {
 pub async fn bulk_create_organization_invitations(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    email_addresses: Option<Vec<String>>,
-    role: Option<&str>,
+    email_address: Vec<String>,
+    role: &str,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationInvitations,
     Error<BulkCreateOrganizationInvitationsError>,
@@ -115,20 +115,16 @@ pub async fn bulk_create_organization_invitations(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = email_addresses {
-        local_var_form_params.insert(
-            "email_addresses",
-            local_var_param_value
-                .into_iter()
-                .map(|p| p.to_string())
-                .collect::<Vec<String>>()
-                .join(",")
-                .to_string(),
-        );
-    }
-    if let Some(local_var_param_value) = role {
-        local_var_form_params.insert("role", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert(
+        "email_address",
+        email_address
+            .into_iter()
+            .map(|p| p.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+            .to_string(),
+    );
+    local_var_form_params.insert("role", role.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -155,10 +151,8 @@ pub async fn bulk_create_organization_invitations(
 pub async fn create_organization_invitations(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    user_id: Option<&str>,
-    role: Option<&str>,
-    email_address: Option<&str>,
-    role2: Option<&str>,
+    email_address: &str,
+    role: &str,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationInvitation,
     Error<CreateOrganizationInvitationsError>,
@@ -175,14 +169,6 @@ pub async fn create_organization_invitations(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
 
-    if let Some(ref local_var_str) = user_id {
-        local_var_req_builder =
-            local_var_req_builder.query(&[("user_id", &local_var_str.to_string())]);
-    }
-    if let Some(ref local_var_str) = role {
-        local_var_req_builder =
-            local_var_req_builder.query(&[("role", &local_var_str.to_string())]);
-    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -207,12 +193,8 @@ pub async fn create_organization_invitations(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = email_address {
-        local_var_form_params.insert("email_address", local_var_param_value.to_string());
-    }
-    if let Some(local_var_param_value) = role2 {
-        local_var_form_params.insert("role", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("email_address", email_address.to_string());
+    local_var_form_params.insert("role", role.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -303,8 +285,8 @@ pub async fn get_all_pending_organization_invitations(
 pub async fn get_organization_invitations(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<f64>,
-    offset: Option<f64>,
+    limit: Option<i32>,
+    offset: Option<i32>,
     status: Option<&str>,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationInvitations,

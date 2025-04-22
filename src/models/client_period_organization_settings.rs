@@ -16,24 +16,30 @@ pub struct ClientPeriodOrganizationSettings {
     #[serde(rename = "enabled")]
     pub enabled: bool,
     #[serde(rename = "max_allowed_memberships")]
-    pub max_allowed_memberships: i64,
-    #[serde(rename = "actions", skip_serializing_if = "Option::is_none")]
-    pub actions: Option<Box<models::OrganizationSettingsPeriodActionsSettings>>,
-    #[serde(rename = "domains", skip_serializing_if = "Option::is_none")]
-    pub domains: Option<Box<models::OrganizationSettingsPeriodDomainsSettings>>,
+    pub max_allowed_memberships: i32,
+    #[serde(rename = "actions")]
+    pub actions: Box<models::OrganizationSettingsPeriodActionsSettings>,
+    #[serde(rename = "domains")]
+    pub domains: Box<models::OrganizationSettingsPeriodDomainsSettings>,
     /// The role key that a user will be assigned after creating an organization.
-    #[serde(rename = "creator_role", skip_serializing_if = "Option::is_none")]
-    pub creator_role: Option<String>,
+    #[serde(rename = "creator_role")]
+    pub creator_role: String,
 }
 
 impl ClientPeriodOrganizationSettings {
-    pub fn new(enabled: bool, max_allowed_memberships: i64) -> ClientPeriodOrganizationSettings {
+    pub fn new(
+        enabled: bool,
+        max_allowed_memberships: i32,
+        actions: models::OrganizationSettingsPeriodActionsSettings,
+        domains: models::OrganizationSettingsPeriodDomainsSettings,
+        creator_role: String,
+    ) -> ClientPeriodOrganizationSettings {
         ClientPeriodOrganizationSettings {
             enabled,
             max_allowed_memberships,
-            actions: None,
-            domains: None,
-            creator_role: None,
+            actions: Box::new(actions),
+            domains: Box::new(domains),
+            creator_role,
         }
     }
 }

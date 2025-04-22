@@ -14,23 +14,16 @@ use std::sync::Mutex;
 use std::time::Duration;
 use tokio::sync::{RwLock, RwLockWriteGuard};
 
+pub type Listener =
+    Box<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
+
 /// The main client for interacting with Clerk's Frontend API
 #[derive(Clone, Default)]
 pub struct Clerk {
     config: Arc<ClerkFapiConfiguration>,
     state: Arc<RwLock<ClerkState>>,
     api_client: Arc<ClerkFapiClient>,
-    listeners: Arc<
-        RwLock<
-            Vec<
-                Box<
-                    dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>)
-                        + Send
-                        + Sync,
-                >,
-            >,
-        >,
-    >,
+    listeners: Arc<RwLock<Vec<Listener>>>,
 }
 
 #[derive(Default)]
@@ -162,7 +155,7 @@ impl Clerk {
                         // Try to fetch fresh client
                         match api_client.get_client().await {
                             Ok(fresh_client_response) => {
-                                if let Some(Some(fresh_client)) = fresh_client_response.response {
+                                if let Some(fresh_client) = fresh_client_response.response {
                                     // Update state and store using update_client
                                     if let Err(e) = this.update_client(*fresh_client).await {
                                         eprintln!(
@@ -196,7 +189,7 @@ impl Clerk {
             .map_err(|e| format!("Failed to fetch client: {}", e))?;
 
         // Update client state if response contains client data
-        if let Some(Some(client)) = client_response.response {
+        if let Some(client) = client_response.response {
             self.update_client(*client).await?;
         }
 
@@ -204,16 +197,11 @@ impl Clerk {
     }
 
     /// Initialize the client by fetching environment and client data
-    ///
     /// This method must be called before using other client methods.
     /// If the client is already loaded, this method returns immediately.
-    ///
     /// # Returns
-    ///
     /// Returns a Result containing self if successful
-    ///
     /// # Errors
-    ///
     /// Returns an error if either API call fails
     pub async fn load(&self) -> Result<Self, String> {
         // Return early if already loaded
@@ -307,13 +295,9 @@ impl Clerk {
         let fresh_client = client.clone();
 
         // Get the active session from the sessions list
-        let active_session = client.last_active_session_id.and_then(|id| {
-            client
-                .sessions
-                .iter()
-                .find(|s| s.id == Some(id.clone()))
-                .cloned()
-        });
+        let active_session = client
+            .last_active_session_id
+            .and_then(|id| client.sessions.iter().find(|s| s.id == id.clone()).cloned());
 
         // Remove mut self requirement from set_accessors
         Self::set_accessors(&mut state, active_session)?;
@@ -335,8 +319,8 @@ impl Clerk {
     }
 
     /// Sets the session, user and organization state based on the provided active session
-    fn set_accessors<'a>(
-        state: &mut RwLockWriteGuard<'a, ClerkState>,
+    fn set_accessors(
+        state: &mut RwLockWriteGuard<ClerkState>,
         active_session: Option<Session>,
     ) -> Result<(), String> {
         match active_session {
@@ -345,16 +329,14 @@ impl Clerk {
                 state.session = Some(session.clone());
 
                 // Update user state from session
-                if let Some(Some(user)) = session.user {
+                if let Some(user) = session.user {
                     state.user = Some(*user.clone());
                     let target_org_id = state.target_organization_id.clone();
 
                     let org_id_target = if let Some(org_id) = target_org_id {
                         org_id
-                    } else if let Some(org_id) = session.last_active_organization_id {
-                        Some(org_id)
                     } else {
-                        None
+                        session.last_active_organization_id
                     };
 
                     // We've used the value --> time to reset
@@ -363,12 +345,9 @@ impl Clerk {
                     // Find organization from user's memberships
                     if let Some(last_active_org_id) = org_id_target {
                         if let Some(ref memberships) = user.organization_memberships {
-                            if let Some(Some(active_org)) = memberships
+                            if let Some(active_org) = memberships
                                 .iter()
-                                .find(|m| {
-                                    m.organization.clone().unwrap().id
-                                        == Some(last_active_org_id.clone())
-                                })
+                                .find(|m| m.organization.id == last_active_org_id.clone())
                                 .map(|m| m.organization.clone())
                             {
                                 state.organization = Some(*active_org);
@@ -391,20 +370,15 @@ impl Clerk {
     }
 
     /// Get a session JWT token for the current session
-    ///
     /// Returns None if:
     /// - Client is not loaded
     /// - No active session exists
     /// - No user is associated with the session
     /// - Token creation fails
-    ///
     /// # Arguments
-    ///
     /// * `organization_id` - Optional organization ID to scope the token to
     /// * `template` - Optional template name to use for token creation
-    ///
     /// # Examples
-    ///
     /// ```
     /// # async fn example(client: clerk_fapi_rs::clerk::Clerk) -> Result<(), Box<dyn std::error::Error>> {
     /// let token = client.get_token(None, None).await?;
@@ -435,12 +409,12 @@ impl Clerk {
         let result = match template {
             Some(template_name) => self
                 .api_client
-                .create_session_token_with_template(&session.id.unwrap(), template_name)
+                .create_session_token_with_template(&session.id, template_name)
                 .await
                 .map_err(|e| format!("Failed to create session token with template: {}", e))?,
             None => self
                 .api_client
-                .create_session_token(&session.id.unwrap(), organization_id)
+                .create_session_token(&session.id, organization_id)
                 .await
                 .map_err(|e| format!("Failed to create session token: {}", e))?,
         };
@@ -449,17 +423,11 @@ impl Clerk {
     }
 
     /// Signs out either a specific session or all sessions for this client
-    ///
     /// # Arguments
-    ///
     /// * `session_id` - Optional session ID to sign out. If None, signs out all sessions.
-    ///
     /// # Returns
-    ///
     /// Returns a Result containing () if successful
-    ///
     /// # Errors
-    ///
     /// Returns an error if the API call fails
     pub async fn sign_out(&self, session_id: Option<String>) -> Result<(), String> {
         match session_id {
@@ -467,15 +435,13 @@ impl Clerk {
                 self.api_client
                     .remove_session(&sid)
                     .await
-                    .map_err(|e| format!("Failed to remove session: {}", e))?
-                    .client
+                    .map_err(|e| format!("Failed to remove session: {}", e))?;
             }
             None => {
                 self.api_client
                     .remove_client_sessions_and_retain_cookie()
                     .await
-                    .map_err(|e| format!("Failed to remove all sessions: {}", e))?
-                    .client
+                    .map_err(|e| format!("Failed to remove all sessions: {}", e))?;
             }
         };
         // The remove sessions calls will update the client state via the callback
@@ -484,18 +450,12 @@ impl Clerk {
     }
 
     /// Updates the active session and/or organization
-    ///
     /// # Arguments
-    ///
     /// * `session_id` - Optional session ID to set as active
     /// * `organization_id_or_slug` - Optional organization ID or slug to set as active
-    ///
     /// # Returns
-    ///
     /// Returns a Result containing () if successful
-    ///
     /// # Errors
-    ///
     /// Returns an error if:
     /// - Client is not loaded
     /// - Both arguments are None
@@ -519,7 +479,7 @@ impl Clerk {
             client
                 .sessions
                 .iter()
-                .find(|s| s.id.as_ref() == Some(&sid))
+                .find(|s| s.id == sid)
                 .cloned()
                 .ok_or_else(|| format!("Session with ID {} not found", sid))?
         } else {
@@ -530,7 +490,7 @@ impl Clerk {
         };
 
         let user = match &target_session.user {
-            Some(Some(user_value)) => *user_value.clone(),
+            Some(user_value) => *user_value.clone(),
             _ => return Err("No user data found in session".to_string()),
         };
 
@@ -541,13 +501,9 @@ impl Clerk {
                     .organization_memberships
                     .as_ref()
                     .map(|memberships| {
-                        memberships.iter().any(|m| {
-                            m.organization
-                                .as_ref()
-                                .and_then(|o| o.id.as_ref())
-                                .map(|id| *id == org_id_or_slug)
-                                .unwrap_or(false)
-                        })
+                        memberships
+                            .iter()
+                            .any(|m| m.organization.id == org_id_or_slug)
                     })
                     .unwrap_or(false);
                 if !org_exists {
@@ -562,13 +518,8 @@ impl Clerk {
                     .as_ref()
                     .and_then(|memberships| {
                         memberships.iter().find_map(|m| {
-                            if m.organization
-                                .as_ref()
-                                .and_then(|o| o.slug.as_ref())
-                                .map(|slug| *slug == org_id_or_slug)
-                                .unwrap_or(false)
-                            {
-                                m.organization.as_ref().and_then(|o| o.id.clone())
+                            if m.organization.slug == org_id_or_slug {
+                                Some(m.organization.id.clone())
                             } else {
                                 None
                             }
@@ -586,7 +537,7 @@ impl Clerk {
         drop(state);
         // Touch the target session using the clerk_fapi client
         let active_organization_id = target_organization_id.as_deref();
-        let session_id = target_session.id.ok_or("No session ID found")?;
+        let session_id = target_session.id;
         self.api_client
             .touch_session(&session_id, active_organization_id)
             .await
@@ -673,6 +624,8 @@ mod tests {
                 "sign_up": null,
                 "sessions": [],
                 "last_active_session_id": null,
+                "cookie_expires_at": null,
+                "captcha_bypass": false,
                 "created_at": 1704067200,
                 "updated_at": 1704067200
         });
@@ -739,6 +692,8 @@ mod tests {
                           "test_mode": false,
                           "cookieless_dev": false,
                           "url_based_session_syncing": false,
+                          "claimed_at": 0,
+                          "reverification": false,
                           "demo": false
                         },
                         "display_config": {
@@ -1169,7 +1124,9 @@ mod tests {
                           "test_mode": false,
                           "cookieless_dev": false,
                           "url_based_session_syncing": false,
-                          "demo": false
+                          "claimed_at": 0,
+                          "demo": false,
+                          "reverification": false
                         },
                         "display_config": {
                           "object": "display_config",
@@ -1528,8 +1485,9 @@ mod tests {
                             "verification": {
                               "status": "verified",
                               "strategy": "from_oauth_google",
+                              "external_verification_redirect_url": null,
                               "attempts": null,
-                              "expire_at": null
+                              "expire_at": 0
                             },
                             "linked_to": [
                               {
@@ -1548,22 +1506,25 @@ mod tests {
                           {
                             "object": "google_account",
                             "id": "idn_789xyz123abc456",
-                            "google_id": "987654321012345678901",
+                            "provider": "google",
+                            "identification_id": "987654321012345678901",
+                            "provider_user_id": "987654321012345678901",
                             "approved_scopes": "email https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid profile",
                             "email_address": "john.doe@example.com",
-                            "given_name": "John",
-                            "family_name": "Doe",
-                            "picture": "https://example.com/photos/abc123.jpg",
+                            "first_name": "John",
+                            "last_name": "Doe",
+                            "image_url": "https://example.com/photos/abc123.jpg",
                             "username": "",
                             "public_metadata": {},
                             "label": null,
                             "created_at": 1717411902313i64,
                             "updated_at": 1730105981619i64,
                             "verification": {
-                              "status": "verified",
-                              "strategy": "oauth_google",
-                              "attempts": null,
-                              "expire_at": 1717412499056i64
+                                "status": "verified",
+                                "strategy": "from_oauth_google",
+                                "external_verification_redirect_url": null,
+                                "attempts": null,
+                                "expire_at": 0
                             }
                           }
                         ],
@@ -1664,6 +1625,7 @@ mod tests {
                         "identifier": "john.doe@example.com",
                         "profile_image_url": "https://example.com/profiles/stu901.jpg"
                       },
+                      "factor_verification_age": [60],
                       "created_at": 1731327903443i64,
                       "updated_at": 1731327903495i64,
                       "last_active_token": {
@@ -1676,6 +1638,7 @@ mod tests {
                   "sign_up": null,
                   "last_active_session_id": "sess_abc123xyz456def789",
                   "cookie_expires_at": null,
+                  "captcha_bypass": false,
                   "created_at": 1731327798987i64,
                   "updated_at": 1731327903492i64
                 },
@@ -1737,7 +1700,7 @@ mod tests {
             let mut state = client.state.write().await;
             state.loaded = true;
             state.session = Some(Session {
-                id: Some("sess_123".to_string()),
+                id: "sess_123".to_string(),
                 ..Default::default()
             });
             state.user = Some(User::default());
@@ -1769,7 +1732,7 @@ mod tests {
         {
             let mut state = client.state.write().await;
             state.session = Some(Session {
-                id: Some("sess_123".to_string()),
+                id: "sess_123".to_string(),
                 ..Default::default()
             });
             state.user = None;
@@ -1791,7 +1754,7 @@ mod tests {
         // Add a listener
         clerk
             .add_listener(move |client, session, user, org| {
-                assert_eq!(client.id, Some("test_client".to_string()));
+                assert_eq!(client.id, "test_client".to_string());
                 assert!(session.is_some());
                 assert!(user.is_some());
                 assert!(org.is_none());
@@ -1801,10 +1764,10 @@ mod tests {
 
         // Create test data
         let test_client = Client {
-            id: Some("test_client".to_string()),
+            id: "test_client".to_string(),
             sessions: vec![Session {
-                id: Some("test_session".to_string()),
-                user: Some(Some(Box::new(User::default()))),
+                id: "test_session".to_string(),
+                user: Some(Box::new(User::default())),
                 ..Default::default()
             }],
             last_active_session_id: Some("test_session".to_string()),
@@ -1829,10 +1792,10 @@ mod tests {
 
         // Set up initial state
         let test_client = Client {
-            id: Some("test_client".to_string()),
+            id: "test_client".to_string(),
             sessions: vec![Session {
-                id: Some("test_session".to_string()),
-                user: Some(Some(Box::new(User::default()))),
+                id: "test_session".to_string(),
+                user: Some(Box::new(User::default())),
                 ..Default::default()
             }],
             last_active_session_id: Some("test_session".to_string()),
@@ -1849,7 +1812,7 @@ mod tests {
         // Add a listener - should be called immediately
         clerk
             .add_listener(move |client, session, user, org| {
-                assert_eq!(client.id, Some("test_client".to_string()));
+                assert_eq!(client.id, "test_client".to_string());
                 assert!(session.is_some());
                 assert!(user.is_some());
                 assert!(org.is_none());

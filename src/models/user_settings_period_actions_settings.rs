@@ -19,19 +19,21 @@ pub struct UserSettingsPeriodActionsSettings {
     pub create_organization: bool,
     #[serde(
         rename = "create_organizations_limit",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
+        deserialize_with = "Option::deserialize"
     )]
-    pub create_organizations_limit: Option<Option<i64>>,
+    pub create_organizations_limit: Option<i32>,
 }
 
 impl UserSettingsPeriodActionsSettings {
-    pub fn new(delete_self: bool, create_organization: bool) -> UserSettingsPeriodActionsSettings {
+    pub fn new(
+        delete_self: bool,
+        create_organization: bool,
+        create_organizations_limit: Option<i32>,
+    ) -> UserSettingsPeriodActionsSettings {
         UserSettingsPeriodActionsSettings {
             delete_self,
             create_organization,
-            create_organizations_limit: None,
+            create_organizations_limit,
         }
     }
 }

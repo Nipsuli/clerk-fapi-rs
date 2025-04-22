@@ -95,7 +95,7 @@ pub async fn attempt_organization_domain_verification(
     configuration: &configuration::Configuration,
     organization_id: &str,
     domain_id: &str,
-    code: Option<&str>,
+    code: &str,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationDomain,
     Error<AttemptOrganizationDomainVerificationError>,
@@ -132,9 +132,7 @@ pub async fn attempt_organization_domain_verification(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = code {
-        local_var_form_params.insert("code", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("code", code.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -161,7 +159,7 @@ pub async fn attempt_organization_domain_verification(
 pub async fn create_organization_domain(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    name: Option<&str>,
+    name: &str,
 ) -> Result<models::ClientPeriodClientWrappedOrganizationDomain, Error<CreateOrganizationDomainError>>
 {
     let local_var_configuration = configuration;
@@ -200,9 +198,7 @@ pub async fn create_organization_domain(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = name {
-        local_var_form_params.insert("name", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("name", name.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -293,7 +289,6 @@ pub async fn get_organization_domain(
     configuration: &configuration::Configuration,
     organization_id: &str,
     domain_id: &str,
-    name: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedOrganizationDomain, Error<GetOrganizationDomainError>>
 {
     let local_var_configuration = configuration;
@@ -332,11 +327,6 @@ pub async fn get_organization_domain(
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
-    let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = name {
-        local_var_form_params.insert("name", local_var_param_value.to_string());
-    }
-    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
     let local_var_resp = local_var_client.execute(local_var_req).await?;
@@ -362,8 +352,10 @@ pub async fn get_organization_domain(
 pub async fn list_organization_domains(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<f64>,
-    offset: Option<f64>,
+    limit: Option<i32>,
+    offset: Option<i32>,
+    verified: Option<bool>,
+    enrollment_mode: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedOrganizationDomains, Error<ListOrganizationDomainsError>>
 {
     let local_var_configuration = configuration;
@@ -385,6 +377,14 @@ pub async fn list_organization_domains(
     if let Some(ref local_var_str) = offset {
         local_var_req_builder =
             local_var_req_builder.query(&[("offset", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = verified {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("verified", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = enrollment_mode {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("enrollment_mode", &local_var_str.to_string())]);
     }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
@@ -435,7 +435,7 @@ pub async fn prepare_organization_domain_verification(
     configuration: &configuration::Configuration,
     organization_id: &str,
     domain_id: &str,
-    affiliation_email_address: Option<&str>,
+    affiliation_email_address: &str,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationDomain,
     Error<PrepareOrganizationDomainVerificationError>,
@@ -472,12 +472,10 @@ pub async fn prepare_organization_domain_verification(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = affiliation_email_address {
-        local_var_form_params.insert(
-            "affiliation_email_address",
-            local_var_param_value.to_string(),
-        );
-    }
+    local_var_form_params.insert(
+        "affiliation_email_address",
+        affiliation_email_address.to_string(),
+    );
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -505,7 +503,7 @@ pub async fn update_organization_domain_enrollment_mode(
     configuration: &configuration::Configuration,
     organization_id: &str,
     domain_id: &str,
-    enrollment_mode: Option<&str>,
+    enrollment_mode: &str,
     delete_pending: Option<bool>,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationDomain,
@@ -548,9 +546,7 @@ pub async fn update_organization_domain_enrollment_mode(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = enrollment_mode {
-        local_var_form_params.insert("enrollment_mode", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("enrollment_mode", enrollment_mode.to_string());
     if let Some(local_var_param_value) = delete_pending {
         local_var_form_params.insert("delete_pending", local_var_param_value.to_string());
     }

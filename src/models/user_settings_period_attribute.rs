@@ -13,41 +13,44 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodAttribute {
-    #[serde(rename = "enabled", skip_serializing_if = "Option::is_none")]
-    pub enabled: Option<bool>,
-    #[serde(rename = "required", skip_serializing_if = "Option::is_none")]
-    pub required: Option<bool>,
-    #[serde(
-        rename = "used_for_first_factor",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub used_for_first_factor: Option<bool>,
-    #[serde(rename = "first_factors", skip_serializing_if = "Option::is_none")]
-    pub first_factors: Option<Vec<String>>,
-    #[serde(
-        rename = "used_for_second_factor",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub used_for_second_factor: Option<bool>,
-    #[serde(rename = "second_factors", skip_serializing_if = "Option::is_none")]
-    pub second_factors: Option<Vec<String>>,
-    #[serde(rename = "verifications", skip_serializing_if = "Option::is_none")]
-    pub verifications: Option<Vec<String>>,
-    #[serde(rename = "verify_at_sign_up", skip_serializing_if = "Option::is_none")]
-    pub verify_at_sign_up: Option<bool>,
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
+    #[serde(rename = "required")]
+    pub required: bool,
+    #[serde(rename = "used_for_first_factor")]
+    pub used_for_first_factor: bool,
+    #[serde(rename = "first_factors")]
+    pub first_factors: Vec<String>,
+    #[serde(rename = "used_for_second_factor")]
+    pub used_for_second_factor: bool,
+    #[serde(rename = "second_factors")]
+    pub second_factors: Vec<String>,
+    #[serde(rename = "verifications")]
+    pub verifications: Vec<String>,
+    #[serde(rename = "verify_at_sign_up")]
+    pub verify_at_sign_up: bool,
 }
 
 impl UserSettingsPeriodAttribute {
-    pub fn new() -> UserSettingsPeriodAttribute {
+    pub fn new(
+        enabled: bool,
+        required: bool,
+        used_for_first_factor: bool,
+        first_factors: Vec<String>,
+        used_for_second_factor: bool,
+        second_factors: Vec<String>,
+        verifications: Vec<String>,
+        verify_at_sign_up: bool,
+    ) -> UserSettingsPeriodAttribute {
         UserSettingsPeriodAttribute {
-            enabled: None,
-            required: None,
-            used_for_first_factor: None,
-            first_factors: None,
-            used_for_second_factor: None,
-            second_factors: None,
-            verifications: None,
-            verify_at_sign_up: None,
+            enabled,
+            required,
+            used_for_first_factor,
+            first_factors,
+            used_for_second_factor,
+            second_factors,
+            verifications,
+            verify_at_sign_up,
         }
     }
 }

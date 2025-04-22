@@ -17,56 +17,111 @@ pub struct OAuthPeriodUserInfo {
     pub object: String,
     #[serde(rename = "instance_id")]
     pub instance_id: String,
-    #[serde(rename = "email")]
-    pub email: String,
-    #[serde(rename = "email_verified")]
-    pub email_verified: bool,
-    #[serde(rename = "family_name")]
-    pub family_name: String,
-    #[serde(rename = "given_name")]
-    pub given_name: String,
-    #[serde(rename = "name")]
-    pub name: String,
-    #[serde(rename = "username")]
-    pub username: String,
-    #[serde(rename = "picture")]
-    pub picture: String,
     #[serde(rename = "user_id")]
     pub user_id: String,
-    #[serde(rename = "public_metadata", deserialize_with = "Option::deserialize")]
-    pub public_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
-    #[serde(rename = "private_metadata", skip_serializing_if = "Option::is_none")]
-    pub private_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
-    #[serde(rename = "unsafe_metadata", skip_serializing_if = "Option::is_none")]
-    pub unsafe_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
+    #[serde(rename = "sub")]
+    pub sub: String,
+    #[serde(
+        rename = "email",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub email: Option<Option<String>>,
+    #[serde(
+        rename = "email_verified",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub email_verified: Option<Option<bool>>,
+    #[serde(
+        rename = "family_name",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub family_name: Option<Option<String>>,
+    #[serde(
+        rename = "given_name",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub given_name: Option<Option<String>>,
+    #[serde(
+        rename = "name",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub name: Option<Option<String>>,
+    /// Deprecated. Use `preferred_username` instead.
+    #[serde(
+        rename = "username",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub username: Option<Option<String>>,
+    #[serde(
+        rename = "preferred_username",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub preferred_username: Option<Option<String>>,
+    #[serde(
+        rename = "picture",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub picture: Option<Option<String>>,
+    #[serde(
+        rename = "public_metadata",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub public_metadata: Option<Option<std::collections::HashMap<String, serde_json::Value>>>,
+    #[serde(
+        rename = "private_metadata",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub private_metadata: Option<Option<std::collections::HashMap<String, serde_json::Value>>>,
+    #[serde(
+        rename = "unsafe_metadata",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub unsafe_metadata: Option<Option<std::collections::HashMap<String, serde_json::Value>>>,
 }
 
 impl OAuthPeriodUserInfo {
     pub fn new(
         object: String,
         instance_id: String,
-        email: String,
-        email_verified: bool,
-        family_name: String,
-        given_name: String,
-        name: String,
-        username: String,
-        picture: String,
         user_id: String,
-        public_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
+        sub: String,
     ) -> OAuthPeriodUserInfo {
         OAuthPeriodUserInfo {
             object,
             instance_id,
-            email,
-            email_verified,
-            family_name,
-            given_name,
-            name,
-            username,
-            picture,
             user_id,
-            public_metadata,
+            sub,
+            email: None,
+            email_verified: None,
+            family_name: None,
+            given_name: None,
+            name: None,
+            username: None,
+            preferred_username: None,
+            picture: None,
+            public_metadata: None,
             private_metadata: None,
             unsafe_metadata: None,
         }

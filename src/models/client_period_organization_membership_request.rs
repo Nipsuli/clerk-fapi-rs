@@ -13,43 +13,46 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodOrganizationMembershipRequest {
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(rename = "organization_id", skip_serializing_if = "Option::is_none")]
-    pub organization_id: Option<String>,
-    #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "organization_id")]
+    pub organization_id: String,
+    #[serde(rename = "status")]
+    pub status: String,
+    #[serde(rename = "public_user_data", deserialize_with = "Option::deserialize")]
+    pub public_user_data: Option<Box<models::ClientPeriodPublicUserData>>,
     /// Unix timestamp of creation.
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
     /// Unix timestamp of last update.
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
-    #[serde(
-        rename = "public_user_data",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub public_user_data: Option<Option<Box<models::ClientPeriodPublicUserData>>>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl ClientPeriodOrganizationMembershipRequest {
-    pub fn new() -> ClientPeriodOrganizationMembershipRequest {
+    pub fn new(
+        object: Object,
+        id: String,
+        organization_id: String,
+        status: String,
+        public_user_data: Option<models::ClientPeriodPublicUserData>,
+        created_at: i64,
+        updated_at: i64,
+    ) -> ClientPeriodOrganizationMembershipRequest {
         ClientPeriodOrganizationMembershipRequest {
-            object: None,
-            id: None,
-            organization_id: None,
-            status: None,
-            created_at: None,
-            updated_at: None,
-            public_user_data: None,
+            object,
+            id,
+            organization_id,
+            status,
+            public_user_data: public_user_data.map(Box::new),
+            created_at,
+            updated_at,
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "organization_membership_request")]

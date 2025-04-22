@@ -13,56 +13,55 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodActiveSession {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "status")]
+    pub status: Status,
+    #[serde(rename = "expire_at")]
+    pub expire_at: i64,
+    #[serde(rename = "abandon_at")]
+    pub abandon_at: i64,
+    #[serde(rename = "last_active_at")]
+    pub last_active_at: i64,
+    #[serde(
+        rename = "last_active_token",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub last_active_token: Option<Option<Box<models::Token>>>,
     #[serde(
         rename = "actor",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub actor: Option<Option<serde_json::Value>>,
-    #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
-    pub status: Option<Status>,
-    #[serde(rename = "last_active_at", skip_serializing_if = "Option::is_none")]
-    pub last_active_at: Option<i64>,
-    #[serde(rename = "expire_at", skip_serializing_if = "Option::is_none")]
-    pub expire_at: Option<i64>,
-    #[serde(rename = "abandon_at", skip_serializing_if = "Option::is_none")]
-    pub abandon_at: Option<i64>,
-    #[serde(
-        rename = "user",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub user: Option<Option<Box<models::ClientPeriodUser>>>,
-    #[serde(
-        rename = "public_user_data",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub public_user_data: Option<Option<Box<models::ClientSessionAllOfPublicUserData>>>,
+    pub actor: Option<Option<std::collections::HashMap<String, serde_json::Value>>>,
     #[serde(rename = "latest_activity", skip_serializing_if = "Option::is_none")]
-    pub latest_activity: Option<Box<models::ClientPeriodActivity>>,
+    pub latest_activity: Option<Box<models::ClientPeriodSessionActivity>>,
 }
 
 impl ClientPeriodActiveSession {
-    pub fn new() -> ClientPeriodActiveSession {
+    pub fn new(
+        id: String,
+        object: Object,
+        status: Status,
+        expire_at: i64,
+        abandon_at: i64,
+        last_active_at: i64,
+    ) -> ClientPeriodActiveSession {
         ClientPeriodActiveSession {
-            id: None,
-            object: None,
+            id,
+            object,
+            status,
+            expire_at,
+            abandon_at,
+            last_active_at,
+            last_active_token: None,
             actor: None,
-            status: None,
-            last_active_at: None,
-            expire_at: None,
-            abandon_at: None,
-            user: None,
-            public_user_data: None,
             latest_activity: None,
         }
     }
@@ -79,7 +78,7 @@ impl Default for Object {
         Self::Session
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "active")]

@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodEmailAddress {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
     #[serde(rename = "object")]
     pub object: Object,
@@ -26,6 +26,12 @@ pub struct ClientPeriodEmailAddress {
     pub verification: Option<Box<models::ClientEmailAddressVerification>>,
     #[serde(rename = "linked_to")]
     pub linked_to: Vec<models::StubsPeriodIdentificationPeriodLink>,
+    /// Indicates whether this email address domain matches an active enterprise connection.
+    #[serde(
+        rename = "matches_sso_connection",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub matches_sso_connection: Option<bool>,
     /// Unix timestamp of creation
     #[serde(rename = "created_at")]
     pub created_at: i64,
@@ -36,6 +42,7 @@ pub struct ClientPeriodEmailAddress {
 
 impl ClientPeriodEmailAddress {
     pub fn new(
+        id: String,
         object: Object,
         email_address: String,
         reserved: bool,
@@ -45,16 +52,13 @@ impl ClientPeriodEmailAddress {
         updated_at: i64,
     ) -> ClientPeriodEmailAddress {
         ClientPeriodEmailAddress {
-            id: None,
+            id,
             object,
             email_address,
             reserved,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
             linked_to,
+            matches_sso_connection: None,
             created_at,
             updated_at,
         }

@@ -13,89 +13,76 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WellKnownPeriodOpenIdConfiguration {
-    #[serde(rename = "issuer", skip_serializing_if = "Option::is_none")]
-    pub issuer: Option<String>,
-    #[serde(
-        rename = "authorization_endpoint",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub authorization_endpoint: Option<String>,
-    #[serde(rename = "token_endpoint", skip_serializing_if = "Option::is_none")]
-    pub token_endpoint: Option<String>,
-    #[serde(rename = "userinfo_endpoint", skip_serializing_if = "Option::is_none")]
-    pub userinfo_endpoint: Option<String>,
-    #[serde(rename = "jwks_uri", skip_serializing_if = "Option::is_none")]
-    pub jwks_uri: Option<String>,
-    #[serde(rename = "scopes_supported", skip_serializing_if = "Option::is_none")]
-    pub scopes_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "response_types_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub response_types_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "response_modes_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub response_modes_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "grant_types_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub grant_types_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "subject_types_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub subject_types_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "id_token_signing_alg_values_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub id_token_signing_alg_values_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "token_endpoint_auth_methods_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub token_endpoint_auth_methods_supported: Option<Vec<String>>,
-    #[serde(rename = "claims_supported", skip_serializing_if = "Option::is_none")]
-    pub claims_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "code_challenge_methods_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub code_challenge_methods_supported: Option<Vec<String>>,
-    #[serde(
-        rename = "backchannel_logout_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub backchannel_logout_supported: Option<bool>,
-    #[serde(
-        rename = "frontchannel_logout_supported",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub frontchannel_logout_supported: Option<bool>,
+    #[serde(rename = "issuer")]
+    pub issuer: String,
+    #[serde(rename = "authorization_endpoint")]
+    pub authorization_endpoint: String,
+    #[serde(rename = "token_endpoint")]
+    pub token_endpoint: String,
+    #[serde(rename = "userinfo_endpoint")]
+    pub userinfo_endpoint: String,
+    #[serde(rename = "jwks_uri")]
+    pub jwks_uri: String,
+    #[serde(rename = "scopes_supported")]
+    pub scopes_supported: Vec<String>,
+    #[serde(rename = "response_types_supported")]
+    pub response_types_supported: Vec<String>,
+    #[serde(rename = "response_modes_supported")]
+    pub response_modes_supported: Vec<String>,
+    #[serde(rename = "grant_types_supported")]
+    pub grant_types_supported: Vec<String>,
+    #[serde(rename = "subject_types_supported")]
+    pub subject_types_supported: Vec<String>,
+    #[serde(rename = "id_token_signing_alg_values_supported")]
+    pub id_token_signing_alg_values_supported: Vec<String>,
+    #[serde(rename = "token_endpoint_auth_methods_supported")]
+    pub token_endpoint_auth_methods_supported: Vec<String>,
+    #[serde(rename = "claims_supported")]
+    pub claims_supported: Vec<String>,
+    #[serde(rename = "code_challenge_methods_supported")]
+    pub code_challenge_methods_supported: Vec<String>,
+    #[serde(rename = "backchannel_logout_supported")]
+    pub backchannel_logout_supported: bool,
+    #[serde(rename = "frontchannel_logout_supported")]
+    pub frontchannel_logout_supported: bool,
 }
 
 impl WellKnownPeriodOpenIdConfiguration {
-    pub fn new() -> WellKnownPeriodOpenIdConfiguration {
+    pub fn new(
+        issuer: String,
+        authorization_endpoint: String,
+        token_endpoint: String,
+        userinfo_endpoint: String,
+        jwks_uri: String,
+        scopes_supported: Vec<String>,
+        response_types_supported: Vec<String>,
+        response_modes_supported: Vec<String>,
+        grant_types_supported: Vec<String>,
+        subject_types_supported: Vec<String>,
+        id_token_signing_alg_values_supported: Vec<String>,
+        token_endpoint_auth_methods_supported: Vec<String>,
+        claims_supported: Vec<String>,
+        code_challenge_methods_supported: Vec<String>,
+        backchannel_logout_supported: bool,
+        frontchannel_logout_supported: bool,
+    ) -> WellKnownPeriodOpenIdConfiguration {
         WellKnownPeriodOpenIdConfiguration {
-            issuer: None,
-            authorization_endpoint: None,
-            token_endpoint: None,
-            userinfo_endpoint: None,
-            jwks_uri: None,
-            scopes_supported: None,
-            response_types_supported: None,
-            response_modes_supported: None,
-            grant_types_supported: None,
-            subject_types_supported: None,
-            id_token_signing_alg_values_supported: None,
-            token_endpoint_auth_methods_supported: None,
-            claims_supported: None,
-            code_challenge_methods_supported: None,
-            backchannel_logout_supported: None,
-            frontchannel_logout_supported: None,
+            issuer,
+            authorization_endpoint,
+            token_endpoint,
+            userinfo_endpoint,
+            jwks_uri,
+            scopes_supported,
+            response_types_supported,
+            response_modes_supported,
+            grant_types_supported,
+            subject_types_supported,
+            id_token_signing_alg_values_supported,
+            token_endpoint_auth_methods_supported,
+            claims_supported,
+            code_challenge_methods_supported,
+            backchannel_logout_supported,
+            frontchannel_logout_supported,
         }
     }
 }

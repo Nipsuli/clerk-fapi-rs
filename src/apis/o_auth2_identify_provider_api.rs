@@ -17,9 +17,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetOAuthTokenError {
-    Status400(models::ClerkErrors),
-    Status401(models::ClerkErrors),
-    Status403(models::ClerkErrors),
+    Status400(),
+    Status401(),
+    Status403(),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`get_o_auth_token_info`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GetOAuthTokenInfoError {
+    Status401(),
+    Status422(),
     UnknownValue(serde_json::Value),
 }
 
@@ -33,13 +42,33 @@ pub enum GetOAuthUserInfoError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`get_o_auth_user_info_post`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GetOAuthUserInfoPostError {
+    Status400(models::ClerkErrors),
+    Status401(models::ClerkErrors),
+    Status403(models::ClerkErrors),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`request_o_auth_authorize`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RequestOAuthAuthorizeError {
-    Status400(models::ClerkErrors),
-    Status401(models::ClerkErrors),
-    Status403(models::ClerkErrors),
+    Status400(),
+    Status401(),
+    Status403(),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`request_o_auth_authorize_post`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RequestOAuthAuthorizePostError {
+    Status400(),
+    Status401(),
+    Status403(),
     UnknownValue(serde_json::Value),
 }
 
@@ -70,6 +99,55 @@ pub async fn get_o_auth_token(
         serde_json::from_str(&local_var_content).map_err(Error::from)
     } else {
         let local_var_entity: Option<GetOAuthTokenError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Get information for an access or refresh token
+pub async fn get_o_auth_token_info(
+    configuration: &configuration::Configuration,
+    token: &str,
+    token_type_hint: Option<&str>,
+    scope: Option<&str>,
+) -> Result<models::OAuthPeriodTokenInfo, Error<GetOAuthTokenInfoError>> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!("{}/oauth/token_info", local_var_configuration.base_path);
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    let mut local_var_form_params = std::collections::HashMap::new();
+    local_var_form_params.insert("token", token.to_string());
+    if let Some(local_var_param_value) = token_type_hint {
+        local_var_form_params.insert("token_type_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = scope {
+        local_var_form_params.insert("scope", local_var_param_value.to_string());
+    }
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<GetOAuthTokenInfoError> =
             serde_json::from_str(&local_var_content).ok();
         let local_var_error = ResponseContent {
             status: local_var_status,
@@ -117,6 +195,43 @@ pub async fn get_o_auth_user_info(
     }
 }
 
+/// Get user info in exchange for a valid OAuth2 access token.
+pub async fn get_o_auth_user_info_post(
+    configuration: &configuration::Configuration,
+) -> Result<models::OAuthPeriodUserInfo, Error<GetOAuthUserInfoPostError>> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!("{}/oauth/userinfo", local_var_configuration.base_path);
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<GetOAuthUserInfoPostError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
 /// Request OAuth2 authorization. If successful, receive authorization grant via redirect.
 pub async fn request_o_auth_authorize(
     configuration: &configuration::Configuration,
@@ -144,6 +259,43 @@ pub async fn request_o_auth_authorize(
         Ok(())
     } else {
         let local_var_entity: Option<RequestOAuthAuthorizeError> =
+            serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent {
+            status: local_var_status,
+            content: local_var_content,
+            entity: local_var_entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+/// Request OAuth2 authorization. If successful, receive authorization grant via redirect.
+pub async fn request_o_auth_authorize_post(
+    configuration: &configuration::Configuration,
+) -> Result<(), Error<RequestOAuthAuthorizePostError>> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!("{}/oauth/authorize", local_var_configuration.base_path);
+    let mut local_var_req_builder =
+        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder =
+            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        Ok(())
+    } else {
+        let local_var_entity: Option<RequestOAuthAuthorizePostError> =
             serde_json::from_str(&local_var_content).ok();
         let local_var_error = ResponseContent {
             status: local_var_status,
