@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodPhoneNumber {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
     #[serde(rename = "object")]
     pub object: Object,
@@ -53,6 +53,7 @@ pub struct ClientPeriodPhoneNumber {
 
 impl ClientPeriodPhoneNumber {
     pub fn new(
+        id: String,
         object: Object,
         phone_number: String,
         reserved: bool,
@@ -62,7 +63,7 @@ impl ClientPeriodPhoneNumber {
         updated_at: i64,
     ) -> ClientPeriodPhoneNumber {
         ClientPeriodPhoneNumber {
-            id: None,
+            id,
             object,
             phone_number,
             reserved_for_second_factor: None,

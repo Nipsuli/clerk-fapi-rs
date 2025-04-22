@@ -45,15 +45,15 @@ pub struct ClientPeriodAuthConfig {
     pub enhanced_email_deliverability: bool,
     #[serde(rename = "test_mode")]
     pub test_mode: bool,
-    #[serde(rename = "demo", skip_serializing_if = "Option::is_none")]
-    pub demo: Option<bool>,
+    /// Please use `url_based_session_syncing` instead
     #[serde(rename = "cookieless_dev", skip_serializing_if = "Option::is_none")]
     pub cookieless_dev: Option<bool>,
-    #[serde(
-        rename = "url_based_session_syncing",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub url_based_session_syncing: Option<bool>,
+    #[serde(rename = "url_based_session_syncing")]
+    pub url_based_session_syncing: bool,
+    #[serde(rename = "claimed_at", deserialize_with = "Option::deserialize")]
+    pub claimed_at: Option<i64>,
+    #[serde(rename = "reverification")]
+    pub reverification: bool,
 }
 
 impl ClientPeriodAuthConfig {
@@ -74,6 +74,9 @@ impl ClientPeriodAuthConfig {
         single_session_mode: bool,
         enhanced_email_deliverability: bool,
         test_mode: bool,
+        url_based_session_syncing: bool,
+        claimed_at: Option<i64>,
+        reverification: bool,
     ) -> ClientPeriodAuthConfig {
         ClientPeriodAuthConfig {
             object,
@@ -92,9 +95,10 @@ impl ClientPeriodAuthConfig {
             single_session_mode,
             enhanced_email_deliverability,
             test_mode,
-            demo: None,
             cookieless_dev: None,
-            url_based_session_syncing: None,
+            url_based_session_syncing,
+            claimed_at,
+            reverification,
         }
     }
 }

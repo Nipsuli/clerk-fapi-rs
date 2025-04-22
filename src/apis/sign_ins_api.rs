@@ -167,14 +167,15 @@ pub async fn accept_ticket(
 pub async fn attempt_sign_in_factor_one(
     configuration: &configuration::Configuration,
     sign_in_id: &str,
-    strategy: Option<&str>,
+    strategy: &str,
+    origin: Option<&str>,
     code: Option<&str>,
     password: Option<&str>,
     signature: Option<&str>,
-    redirect_url: Option<&str>,
-    action_complete_redirect_url: Option<&str>,
+    token: Option<&str>,
     ticket: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignIn, Error<AttemptSignInFactorOneError>> {
+    public_key_credential: Option<&str>,
+) -> Result<models::ClientPeriodClientWrappedSignIn, Error<AttemptSignInFactorOneError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -207,13 +208,15 @@ pub async fn attempt_sign_in_factor_one(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = strategy {
-        local_var_form_params.insert("strategy", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("strategy", strategy.to_string());
     if let Some(local_var_param_value) = code {
         local_var_form_params.insert("code", local_var_param_value.to_string());
     }
@@ -223,17 +226,14 @@ pub async fn attempt_sign_in_factor_one(
     if let Some(local_var_param_value) = signature {
         local_var_form_params.insert("signature", local_var_param_value.to_string());
     }
-    if let Some(local_var_param_value) = redirect_url {
-        local_var_form_params.insert("redirect_url", local_var_param_value.to_string());
-    }
-    if let Some(local_var_param_value) = action_complete_redirect_url {
-        local_var_form_params.insert(
-            "action_complete_redirect_url",
-            local_var_param_value.to_string(),
-        );
+    if let Some(local_var_param_value) = token {
+        local_var_form_params.insert("token", local_var_param_value.to_string());
     }
     if let Some(local_var_param_value) = ticket {
         local_var_form_params.insert("ticket", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = public_key_credential {
+        local_var_form_params.insert("public_key_credential", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -263,7 +263,7 @@ pub async fn attempt_sign_in_factor_two(
     sign_in_id: &str,
     strategy: Option<&str>,
     code: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignIn, Error<AttemptSignInFactorTwoError>> {
+) -> Result<models::ClientPeriodClientWrappedSignIn, Error<AttemptSignInFactorTwoError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -331,6 +331,7 @@ pub async fn attempt_sign_in_factor_two(
 /// Creates or replaces the current Sign in object. In order to authenticate a Sign in in as few requests as possible, you can pass in parameters to this request that can identify and verify the Sign in.  Parameter rules:  If the strategy equals `phone_code`, `email_code`, `web3_[provider]_signature`, `reset_password_code` or `reset_password_phone_code` then an identifier is required.  If the strategy equals `email_link` then an identifier is required and optionally redirect_url can be supplied.  If the strategy equals `password` then both an identifier and a password is required.  If the strategy equals `oauth_[provider]` or `saml` then a redirect_url is required, and an action_complete_redirect_url is optional.  If the strategy equals `oauth_token_[provider]` then at least one of code (grant code) or token (openID token) is required. Passing only the token will probably retrieve minimal information about the user from the OAuth provider. You can pass both code and token for the best results.  If the strategy equals `ticket` then ticket is required.  If the strategy equals `passkey` then no identifier is provided.  If the strategy equals `google_one_tap` then token is required.
 pub async fn create_sign_in(
     configuration: &configuration::Configuration,
+    origin: Option<&str>,
     strategy: Option<&str>,
     identifier: Option<&str>,
     password: Option<&str>,
@@ -340,7 +341,9 @@ pub async fn create_sign_in(
     transfer: Option<bool>,
     code: Option<&str>,
     token: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignIn, Error<CreateSignInError>> {
+    oidc_login_hint: Option<&str>,
+    oidc_prompt: Option<&str>,
+) -> Result<models::ClientPeriodClientWrappedSignIn, Error<CreateSignInError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -368,6 +371,10 @@ pub async fn create_sign_in(
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
     }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
@@ -403,6 +410,12 @@ pub async fn create_sign_in(
     if let Some(local_var_param_value) = token {
         local_var_form_params.insert("token", local_var_param_value.to_string());
     }
+    if let Some(local_var_param_value) = oidc_login_hint {
+        local_var_form_params.insert("oidc_login_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_prompt {
+        local_var_form_params.insert("oidc_prompt", local_var_param_value.to_string());
+    }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -429,7 +442,7 @@ pub async fn create_sign_in(
 pub async fn get_sign_in(
     configuration: &configuration::Configuration,
     sign_in_id: &str,
-) -> Result<models::ResponsesPeriodClientPeriodSignIn, Error<GetSignInError>> {
+) -> Result<models::ClientPeriodClientWrappedSignIn, Error<GetSignInError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -486,18 +499,21 @@ pub async fn get_sign_in(
     }
 }
 
-/// Prepares the verification object for the identified Sign in. This step authenticates that the user is who they say they are. Depending on the strategy, this request request will do something different.  Parameter actions: If the strategy equals email_code then this request will send an email with an OTP code. If the strategy equals phone_code then this request will send an SMS with an OTP code. If the strategy equals oauth_[provider] then this request generate a URL that the User needs to visit in order to authenticate. If the strategy equals passkey then this request will begin the passkey registration flow.  Parameter rules: If the strategy equals `oauth_[provider]` then a redirect_url is required, and an action_complete_redirect_url is optional.
+/// Prepares the verification object for the identified Sign in. This step authenticates that the user is who they say they are. Depending on the strategy, this request will do something different.  Parameter actions: If the strategy equals email_code then this request will send an email with an OTP code. If the strategy equals phone_code then this request will send an SMS with an OTP code. If the strategy equals oauth_[provider] then this request generate a URL that the User needs to visit in order to authenticate. If the strategy equals passkey then this request will begin the passkey registration flow.  Parameter rules: If the strategy equals `oauth_[provider]` then a redirect_url is required, and an action_complete_redirect_url is optional.
 pub async fn prepare_sign_in_factor_one(
     configuration: &configuration::Configuration,
     sign_in_id: &str,
-    strategy: Option<&str>,
+    strategy: &str,
+    origin: Option<&str>,
     email_address_id: Option<&str>,
     phone_number_id: Option<&str>,
     web3_wallet_id: Option<&str>,
     passkey_id: Option<&str>,
     redirect_url: Option<&str>,
     action_complete_redirect_url: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignIn, Error<PrepareSignInFactorOneError>> {
+    oidc_login_hint: Option<&str>,
+    oidc_prompt: Option<&str>,
+) -> Result<models::ClientPeriodClientWrappedSignIn, Error<PrepareSignInFactorOneError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -530,13 +546,15 @@ pub async fn prepare_sign_in_factor_one(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = strategy {
-        local_var_form_params.insert("strategy", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("strategy", strategy.to_string());
     if let Some(local_var_param_value) = email_address_id {
         local_var_form_params.insert("email_address_id", local_var_param_value.to_string());
     }
@@ -557,6 +575,12 @@ pub async fn prepare_sign_in_factor_one(
             "action_complete_redirect_url",
             local_var_param_value.to_string(),
         );
+    }
+    if let Some(local_var_param_value) = oidc_login_hint {
+        local_var_form_params.insert("oidc_login_hint", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = oidc_prompt {
+        local_var_form_params.insert("oidc_prompt", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -586,7 +610,7 @@ pub async fn prepare_sign_in_factor_two(
     sign_in_id: &str,
     strategy: Option<&str>,
     phone_number_id: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSignIn, Error<PrepareSignInFactorTwoError>> {
+) -> Result<models::ClientPeriodClientWrappedSignIn, Error<PrepareSignInFactorTwoError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -655,9 +679,9 @@ pub async fn prepare_sign_in_factor_two(
 pub async fn reset_password(
     configuration: &configuration::Configuration,
     sign_in_id: &str,
-    password: Option<&str>,
+    password: &str,
     sign_out_of_other_sessions: Option<bool>,
-) -> Result<models::ResponsesPeriodClientPeriodSignIn, Error<ResetPasswordError>> {
+) -> Result<models::ClientPeriodClientWrappedSignIn, Error<ResetPasswordError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -694,9 +718,7 @@ pub async fn reset_password(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = password {
-        local_var_form_params.insert("password", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("password", password.to_string());
     if let Some(local_var_param_value) = sign_out_of_other_sessions {
         local_var_form_params.insert(
             "sign_out_of_other_sessions",

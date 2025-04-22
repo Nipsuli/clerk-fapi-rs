@@ -13,35 +13,44 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodSignUpPeriodVerifications {
-    #[serde(
-        rename = "email_address",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub email_address: Option<Option<Box<models::ClientSignUpVerificationsEmailAddress>>>,
-    #[serde(
-        rename = "phone_number",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub phone_number: Option<Option<Box<models::ClientSignUpVerificationsEmailAddress>>>,
-    #[serde(
-        rename = "external_account",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub external_account: Option<Option<Box<models::ClientSignUpVerificationsExternalAccount>>>,
+    #[serde(rename = "email_address", deserialize_with = "Option::deserialize")]
+    pub email_address: Option<Box<models::ClientSignUpVerificationsEmailAddress>>,
+    #[serde(rename = "phone_number", deserialize_with = "Option::deserialize")]
+    pub phone_number: Option<Box<models::ClientSignUpVerificationsEmailAddress>>,
+    #[serde(rename = "web3_wallet", deserialize_with = "Option::deserialize")]
+    pub web3_wallet: Option<Box<models::ClientSignUpVerificationsEmailAddress>>,
+    #[serde(rename = "external_account", deserialize_with = "Option::deserialize")]
+    pub external_account: Option<Box<models::ClientSignUpVerificationsExternalAccount>>,
 }
 
 impl ClientPeriodSignUpPeriodVerifications {
-    pub fn new() -> ClientPeriodSignUpPeriodVerifications {
+    pub fn new(
+        email_address: Option<models::ClientSignUpVerificationsEmailAddress>,
+        phone_number: Option<models::ClientSignUpVerificationsEmailAddress>,
+        web3_wallet: Option<models::ClientSignUpVerificationsEmailAddress>,
+        external_account: Option<models::ClientSignUpVerificationsExternalAccount>,
+    ) -> ClientPeriodSignUpPeriodVerifications {
         ClientPeriodSignUpPeriodVerifications {
-            email_address: None,
-            phone_number: None,
-            external_account: None,
+            email_address: if let Some(x) = email_address {
+                Some(Box::new(x))
+            } else {
+                None
+            },
+            phone_number: if let Some(x) = phone_number {
+                Some(Box::new(x))
+            } else {
+                None
+            },
+            web3_wallet: if let Some(x) = web3_wallet {
+                Some(Box::new(x))
+            } else {
+                None
+            },
+            external_account: if let Some(x) = external_account {
+                Some(Box::new(x))
+            } else {
+                None
+            },
         }
     }
 }

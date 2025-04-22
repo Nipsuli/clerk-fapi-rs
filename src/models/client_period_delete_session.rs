@@ -15,14 +15,14 @@ use serde::{Deserialize, Serialize};
 pub struct ClientPeriodDeleteSession {
     #[serde(rename = "response", deserialize_with = "Option::deserialize")]
     pub response: Option<Box<models::ClientPeriodClient>>,
-    #[serde(rename = "client")]
-    pub client: Box<models::ClientPeriodClient>,
+    #[serde(rename = "client", deserialize_with = "Option::deserialize")]
+    pub client: Option<serde_json::Value>,
 }
 
 impl ClientPeriodDeleteSession {
     pub fn new(
         response: Option<models::ClientPeriodClient>,
-        client: models::ClientPeriodClient,
+        client: Option<serde_json::Value>,
     ) -> ClientPeriodDeleteSession {
         ClientPeriodDeleteSession {
             response: if let Some(x) = response {
@@ -30,7 +30,7 @@ impl ClientPeriodDeleteSession {
             } else {
                 None
             },
-            client: Box::new(client),
+            client,
         }
     }
 }

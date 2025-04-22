@@ -13,20 +13,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientSignInUserData {
-    #[serde(
-        rename = "first_name",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub first_name: Option<Option<String>>,
-    #[serde(
-        rename = "last_name",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub last_name: Option<Option<String>>,
+    #[serde(rename = "first_name", deserialize_with = "Option::deserialize")]
+    pub first_name: Option<String>,
+    #[serde(rename = "last_name", deserialize_with = "Option::deserialize")]
+    pub last_name: Option<String>,
+    #[serde(rename = "image_url", skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+    #[serde(rename = "has_image")]
+    pub has_image: bool,
+    /// Use `image_url` instead.
     #[serde(
         rename = "profile_image_url",
         default,
@@ -34,20 +29,20 @@ pub struct ClientSignInUserData {
         skip_serializing_if = "Option::is_none"
     )]
     pub profile_image_url: Option<Option<String>>,
-    #[serde(rename = "image_url", skip_serializing_if = "Option::is_none")]
-    pub image_url: Option<String>,
-    #[serde(rename = "has_image", skip_serializing_if = "Option::is_none")]
-    pub has_image: Option<bool>,
 }
 
 impl ClientSignInUserData {
-    pub fn new() -> ClientSignInUserData {
+    pub fn new(
+        first_name: Option<String>,
+        last_name: Option<String>,
+        has_image: bool,
+    ) -> ClientSignInUserData {
         ClientSignInUserData {
-            first_name: None,
-            last_name: None,
-            profile_image_url: None,
+            first_name,
+            last_name,
             image_url: None,
-            has_image: None,
+            has_image,
+            profile_image_url: None,
         }
     }
 }

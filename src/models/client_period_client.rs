@@ -17,41 +17,51 @@ pub struct ClientPeriodClient {
     #[serde(rename = "object")]
     pub object: Object,
     /// String representing the identifier of the session.
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "sessions")]
+    pub sessions: Vec<models::ClientPeriodSession>,
     #[serde(rename = "sign_in", deserialize_with = "Option::deserialize")]
     pub sign_in: Option<Box<models::ClientPeriodSignIn>>,
     #[serde(rename = "sign_up", deserialize_with = "Option::deserialize")]
     pub sign_up: Option<Box<models::ClientPeriodSignUp>>,
-    #[serde(rename = "sessions")]
-    pub sessions: Vec<models::ClientPeriodSession>,
     /// Last active session_id.
     #[serde(
         rename = "last_active_session_id",
         deserialize_with = "Option::deserialize"
     )]
     pub last_active_session_id: Option<String>,
-    /// Unix timestamp of last update.
-    #[serde(rename = "updated_at")]
-    pub updated_at: i64,
+    /// Unix timestamp of the cookie expiration.
+    #[serde(rename = "cookie_expires_at", deserialize_with = "Option::deserialize")]
+    pub cookie_expires_at: Option<i64>,
+    /// Whether the client can bypass CAPTCHA.
+    #[serde(rename = "captcha_bypass")]
+    pub captcha_bypass: bool,
     /// Unix timestamp of creation.
     #[serde(rename = "created_at")]
     pub created_at: i64,
+    /// Unix timestamp of last update.
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl ClientPeriodClient {
     pub fn new(
         object: Object,
+        id: String,
+        sessions: Vec<models::ClientPeriodSession>,
         sign_in: Option<models::ClientPeriodSignIn>,
         sign_up: Option<models::ClientPeriodSignUp>,
-        sessions: Vec<models::ClientPeriodSession>,
         last_active_session_id: Option<String>,
-        updated_at: i64,
+        cookie_expires_at: Option<i64>,
+        captcha_bypass: bool,
         created_at: i64,
+        updated_at: i64,
     ) -> ClientPeriodClient {
         ClientPeriodClient {
             object,
-            id: None,
+            id,
+            sessions,
             sign_in: if let Some(x) = sign_in {
                 Some(Box::new(x))
             } else {
@@ -62,10 +72,11 @@ impl ClientPeriodClient {
             } else {
                 None
             },
-            sessions,
             last_active_session_id,
-            updated_at,
+            cookie_expires_at,
+            captcha_bypass,
             created_at,
+            updated_at,
         }
     }
 }

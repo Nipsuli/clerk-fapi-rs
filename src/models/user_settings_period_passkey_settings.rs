@@ -13,10 +13,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodPasskeySettings {
-    /// Passkey UI will be shown when user interacts with the text input. Defaults to true.
+    /// Passkey UI will be shown when user interacts with the text input.
     #[serde(rename = "allow_autofill")]
     pub allow_autofill: bool,
-    /// Passkey UI will be shown when user clicks on a button. Defaults to true.
+    /// Passkey UI will be shown when user clicks on a button.
     #[serde(rename = "show_sign_in_button")]
     pub show_sign_in_button: bool,
 }

@@ -26,8 +26,8 @@ pub enum ListOrganizationRolesError {
 pub async fn list_organization_roles(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<f64>,
-    offset: Option<f64>,
+    limit: Option<i32>,
+    offset: Option<i32>,
 ) -> Result<models::ClientPeriodClientWrappedRoles, Error<ListOrganizationRolesError>> {
     let local_var_configuration = configuration;
 

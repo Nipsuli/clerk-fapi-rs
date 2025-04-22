@@ -82,6 +82,8 @@ pub enum ReadWeb3WalletError {
 pub async fn attempt_web3_wallet_verification(
     configuration: &configuration::Configuration,
     web3_wallet_id: &str,
+    signature: &str,
+    origin: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedWeb3Wallet, Error<AttemptWeb3WalletVerificationError>>
 {
     let local_var_configuration = configuration;
@@ -116,9 +118,16 @@ pub async fn attempt_web3_wallet_verification(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    local_var_form_params.insert("signature", signature.to_string());
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
     let local_var_resp = local_var_client.execute(local_var_req).await?;
@@ -265,9 +274,8 @@ pub async fn get_web3_wallets(
 /// Create a new web3 wallet.
 pub async fn post_web3_wallets(
     configuration: &configuration::Configuration,
+    web3_wallet: &str,
     _clerk_session_id: Option<&str>,
-    strategy: Option<&str>,
-    redirect_url: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedWeb3Wallet, Error<PostWeb3WalletsError>> {
     let local_var_configuration = configuration;
 
@@ -305,12 +313,7 @@ pub async fn post_web3_wallets(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = strategy {
-        local_var_form_params.insert("strategy", local_var_param_value.to_string());
-    }
-    if let Some(local_var_param_value) = redirect_url {
-        local_var_form_params.insert("redirect_url", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("web3_wallet", web3_wallet.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -337,6 +340,9 @@ pub async fn post_web3_wallets(
 pub async fn prepare_web3_wallet_verification(
     configuration: &configuration::Configuration,
     web3_wallet_id: &str,
+    strategy: &str,
+    origin: Option<&str>,
+    redirect_url: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedWeb3Wallet, Error<PrepareWeb3WalletVerificationError>>
 {
     let local_var_configuration = configuration;
@@ -371,9 +377,19 @@ pub async fn prepare_web3_wallet_verification(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    if let Some(local_var_param_value) = origin {
+        local_var_req_builder =
+            local_var_req_builder.header("Origin", local_var_param_value.to_string());
+    }
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
+    let mut local_var_form_params = std::collections::HashMap::new();
+    local_var_form_params.insert("strategy", strategy.to_string());
+    if let Some(local_var_param_value) = redirect_url {
+        local_var_form_params.insert("redirect_url", local_var_param_value.to_string());
+    }
+    local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
     let local_var_resp = local_var_client.execute(local_var_req).await?;

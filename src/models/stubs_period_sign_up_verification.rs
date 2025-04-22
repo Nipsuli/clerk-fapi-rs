@@ -13,20 +13,20 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct StubsPeriodSignUpVerification {
-    #[serde(rename = "next_action", skip_serializing_if = "Option::is_none")]
-    pub next_action: Option<NextAction>,
-    #[serde(
-        rename = "supported_strategies",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub supported_strategies: Option<Vec<String>>,
+    #[serde(rename = "next_action")]
+    pub next_action: NextAction,
+    #[serde(rename = "supported_strategies")]
+    pub supported_strategies: Vec<String>,
 }
 
 impl StubsPeriodSignUpVerification {
-    pub fn new() -> StubsPeriodSignUpVerification {
+    pub fn new(
+        next_action: NextAction,
+        supported_strategies: Vec<String>,
+    ) -> StubsPeriodSignUpVerification {
         StubsPeriodSignUpVerification {
-            next_action: None,
-            supported_strategies: None,
+            next_action,
+            supported_strategies,
         }
     }
 }

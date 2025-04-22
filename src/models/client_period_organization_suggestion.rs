@@ -13,34 +13,40 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodOrganizationSuggestion {
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
-    /// Unix timestamp of creation.
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
-    /// Unix timestamp of last update.
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "id")]
+    pub id: String,
     #[serde(
         rename = "public_organization_data",
         skip_serializing_if = "Option::is_none"
     )]
     pub public_organization_data: Option<Box<models::ClientPeriodPublicOrganizationData>>,
+    #[serde(rename = "status")]
+    pub status: String,
+    /// Unix timestamp of creation.
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
+    /// Unix timestamp of last update.
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl ClientPeriodOrganizationSuggestion {
-    pub fn new() -> ClientPeriodOrganizationSuggestion {
+    pub fn new(
+        object: Object,
+        id: String,
+        status: String,
+        created_at: i64,
+        updated_at: i64,
+    ) -> ClientPeriodOrganizationSuggestion {
         ClientPeriodOrganizationSuggestion {
-            object: None,
-            id: None,
-            status: None,
-            created_at: None,
-            updated_at: None,
+            object,
+            id,
             public_organization_data: None,
+            status,
+            created_at,
+            updated_at,
         }
     }
 }

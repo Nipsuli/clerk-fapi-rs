@@ -17,20 +17,22 @@ pub struct ClientPeriodUserSettings {
     pub attributes: Box<models::UserSettingsPeriodAttributes>,
     #[serde(rename = "social")]
     pub social: Box<models::UserSettingsPeriodSocials>,
-    #[serde(rename = "saml", skip_serializing_if = "Option::is_none")]
-    pub saml: Option<Box<models::UserSettingsPeriodEnterpriseSso>>,
+    #[serde(rename = "saml")]
+    pub saml: Box<models::UserSettingsPeriodEnterpriseSso>,
+    #[serde(rename = "enterprise_sso")]
+    pub enterprise_sso: Box<models::UserSettingsPeriodEnterpriseSso>,
     #[serde(rename = "sign_in")]
     pub sign_in: Box<models::UserSettingsPeriodSignIn>,
     #[serde(rename = "sign_up")]
     pub sign_up: Box<models::UserSettingsPeriodSignUp>,
     #[serde(rename = "restrictions")]
     pub restrictions: Box<models::UserSettingsPeriodRestrictions>,
-    #[serde(rename = "username_settings", skip_serializing_if = "Option::is_none")]
-    pub username_settings: Option<Box<models::UserSettingsPeriodUsernameSettings>>,
     #[serde(rename = "password_settings")]
     pub password_settings: Box<models::UserSettingsPeriodPasswordSettings>,
-    #[serde(rename = "actions", skip_serializing_if = "Option::is_none")]
-    pub actions: Option<Box<models::UserSettingsPeriodActionsSettings>>,
+    #[serde(rename = "username_settings")]
+    pub username_settings: Box<models::UserSettingsPeriodUsernameSettings>,
+    #[serde(rename = "actions")]
+    pub actions: Box<models::UserSettingsPeriodActionsSettings>,
     #[serde(rename = "attack_protection")]
     pub attack_protection: Box<models::UserSettingsPeriodAttackProtectionSettings>,
     #[serde(rename = "passkey_settings")]
@@ -41,23 +43,28 @@ impl ClientPeriodUserSettings {
     pub fn new(
         attributes: models::UserSettingsPeriodAttributes,
         social: models::UserSettingsPeriodSocials,
+        saml: models::UserSettingsPeriodEnterpriseSso,
+        enterprise_sso: models::UserSettingsPeriodEnterpriseSso,
         sign_in: models::UserSettingsPeriodSignIn,
         sign_up: models::UserSettingsPeriodSignUp,
         restrictions: models::UserSettingsPeriodRestrictions,
         password_settings: models::UserSettingsPeriodPasswordSettings,
+        username_settings: models::UserSettingsPeriodUsernameSettings,
+        actions: models::UserSettingsPeriodActionsSettings,
         attack_protection: models::UserSettingsPeriodAttackProtectionSettings,
         passkey_settings: models::UserSettingsPeriodPasskeySettings,
     ) -> ClientPeriodUserSettings {
         ClientPeriodUserSettings {
             attributes: Box::new(attributes),
             social: Box::new(social),
-            saml: None,
+            saml: Box::new(saml),
+            enterprise_sso: Box::new(enterprise_sso),
             sign_in: Box::new(sign_in),
             sign_up: Box::new(sign_up),
             restrictions: Box::new(restrictions),
-            username_settings: None,
             password_settings: Box::new(password_settings),
-            actions: None,
+            username_settings: Box::new(username_settings),
+            actions: Box::new(actions),
             attack_protection: Box::new(attack_protection),
             passkey_settings: Box::new(passkey_settings),
         }

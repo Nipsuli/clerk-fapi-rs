@@ -13,16 +13,22 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodPublicUserData {
-    #[serde(rename = "first_name", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "first_name", deserialize_with = "Option::deserialize")]
     pub first_name: Option<String>,
-    #[serde(rename = "last_name", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "last_name", deserialize_with = "Option::deserialize")]
     pub last_name: Option<String>,
-    #[serde(rename = "image_url", skip_serializing_if = "Option::is_none")]
-    pub image_url: Option<String>,
-    #[serde(rename = "has_image", skip_serializing_if = "Option::is_none")]
-    pub has_image: Option<bool>,
-    #[serde(rename = "identifier", skip_serializing_if = "Option::is_none")]
-    pub identifier: Option<String>,
+    #[serde(
+        rename = "image_url",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub image_url: Option<Option<String>>,
+    #[serde(rename = "has_image")]
+    pub has_image: bool,
+    #[serde(rename = "identifier")]
+    pub identifier: String,
+    /// Use `image_url` instead.
     #[serde(
         rename = "profile_image_url",
         default,
@@ -30,17 +36,30 @@ pub struct ClientPeriodPublicUserData {
         skip_serializing_if = "Option::is_none"
     )]
     pub profile_image_url: Option<Option<String>>,
+    #[serde(
+        rename = "user_id",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub user_id: Option<Option<String>>,
 }
 
 impl ClientPeriodPublicUserData {
-    pub fn new() -> ClientPeriodPublicUserData {
+    pub fn new(
+        first_name: Option<String>,
+        last_name: Option<String>,
+        has_image: bool,
+        identifier: String,
+    ) -> ClientPeriodPublicUserData {
         ClientPeriodPublicUserData {
-            first_name: None,
-            last_name: None,
+            first_name,
+            last_name,
             image_url: None,
-            has_image: None,
-            identifier: None,
+            has_image,
+            identifier,
             profile_image_url: None,
+            user_id: None,
         }
     }
 }

@@ -13,14 +13,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodUsernameSettings {
-    #[serde(rename = "min_length")]
-    pub min_length: i64,
-    #[serde(rename = "max_length")]
-    pub max_length: i64,
+    #[serde(rename = "min_length", deserialize_with = "Option::deserialize")]
+    pub min_length: Option<i32>,
+    #[serde(rename = "max_length", deserialize_with = "Option::deserialize")]
+    pub max_length: Option<i32>,
 }
 
 impl UserSettingsPeriodUsernameSettings {
-    pub fn new(min_length: i64, max_length: i64) -> UserSettingsPeriodUsernameSettings {
+    pub fn new(
+        min_length: Option<i32>,
+        max_length: Option<i32>,
+    ) -> UserSettingsPeriodUsernameSettings {
         UserSettingsPeriodUsernameSettings {
             min_length,
             max_length,

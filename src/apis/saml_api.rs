@@ -92,7 +92,7 @@ pub async fn saml_metadata(
     let local_var_client = &local_var_configuration.client;
 
     let local_var_uri_str = format!(
-        "{}/v1/saml/metadata/{saml_connection_id}",
+        "{}/v1/saml/metadata/{saml_connection_id}.xml",
         local_var_configuration.base_path,
         saml_connection_id = crate::apis::urlencode(saml_connection_id)
     );

@@ -35,6 +35,7 @@ pub async fn get_oauth_callback(
     scope: Option<&str>,
     code: Option<&str>,
     state: Option<&str>,
+    error: Option<&str>,
 ) -> Result<(), Error<GetOauthCallbackError>> {
     let local_var_configuration = configuration;
 
@@ -55,6 +56,10 @@ pub async fn get_oauth_callback(
     if let Some(ref local_var_str) = state {
         local_var_req_builder =
             local_var_req_builder.query(&[("state", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = error {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("error", &local_var_str.to_string())]);
     }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
@@ -104,7 +109,9 @@ pub async fn get_oauth_callback(
 pub async fn post_oauth_callback(
     configuration: &configuration::Configuration,
     code: Option<&str>,
+    scope: Option<&str>,
     state: Option<&str>,
+    error: Option<&str>,
 ) -> Result<(), Error<PostOauthCallbackError>> {
     let local_var_configuration = configuration;
 
@@ -141,8 +148,14 @@ pub async fn post_oauth_callback(
     if let Some(local_var_param_value) = code {
         local_var_form_params.insert("code", local_var_param_value.to_string());
     }
+    if let Some(local_var_param_value) = scope {
+        local_var_form_params.insert("scope", local_var_param_value.to_string());
+    }
     if let Some(local_var_param_value) = state {
         local_var_form_params.insert("state", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = error {
+        local_var_form_params.insert("error", local_var_param_value.to_string());
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 

@@ -82,8 +82,8 @@ pub enum VerifyEmailAddressError {
 /// Add an email address to the current user. The address then needs to be verified using the `prepare_verification` and `attempt_verification` endpoints.
 pub async fn create_email_addresses(
     configuration: &configuration::Configuration,
+    email_address: &str,
     _clerk_session_id: Option<&str>,
-    email_address: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedEmailAddress, Error<CreateEmailAddressesError>> {
     let local_var_configuration = configuration;
 
@@ -124,9 +124,7 @@ pub async fn create_email_addresses(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = email_address {
-        local_var_form_params.insert("email_address", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("email_address", email_address.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -345,13 +343,14 @@ pub async fn get_email_addresses(
     }
 }
 
-/// Depending on the given strategy, the API will prepare the verification for the email address. In particular, * for `email_code`, the API will send a verification email to the address containing a code. * for `email_link`, the API will send a verification email to the address containg a link to the verification attempt endpoint.
+/// Depending on the given strategy, the API will prepare the verification for the email address. In particular, * for `email_code`, the API will send a verification email to the address containing a code. * for `email_link`, the API will send a verification email to the address containg a link to the verification attempt endpoint. * for `enterprise_sso`, the API will send an external redirect URL to the browser containg a link to the SSO verification endpoint.
 pub async fn send_verification_email(
     configuration: &configuration::Configuration,
     email_id: &str,
+    strategy: &str,
     _clerk_session_id: Option<&str>,
-    strategy: Option<&str>,
     redirect_url: Option<&str>,
+    action_complete_redirect_url: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedEmailAddress, Error<SendVerificationEmailError>> {
     let local_var_configuration = configuration;
 
@@ -393,11 +392,15 @@ pub async fn send_verification_email(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = strategy {
-        local_var_form_params.insert("strategy", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("strategy", strategy.to_string());
     if let Some(local_var_param_value) = redirect_url {
         local_var_form_params.insert("redirect_url", local_var_param_value.to_string());
+    }
+    if let Some(local_var_param_value) = action_complete_redirect_url {
+        local_var_form_params.insert(
+            "action_complete_redirect_url",
+            local_var_param_value.to_string(),
+        );
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -425,8 +428,8 @@ pub async fn send_verification_email(
 pub async fn verify_email_address(
     configuration: &configuration::Configuration,
     email_id: &str,
+    code: &str,
     _clerk_session_id: Option<&str>,
-    code: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedEmailAddress, Error<VerifyEmailAddressError>> {
     let local_var_configuration = configuration;
 
@@ -468,9 +471,7 @@ pub async fn verify_email_address(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = code {
-        local_var_form_params.insert("code", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("code", code.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;

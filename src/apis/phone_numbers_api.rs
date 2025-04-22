@@ -222,8 +222,9 @@ pub async fn get_phone_numbers(
 /// Add a phone number to the current user. The phone number then needs to be verified using the sms `prepare_verification` and `attempt_verification` endpoints.
 pub async fn post_phone_numbers(
     configuration: &configuration::Configuration,
+    phone_number: &str,
     _clerk_session_id: Option<&str>,
-    phone_number: Option<&str>,
+    reserved_for_second_factor: Option<bool>,
 ) -> Result<models::ClientPeriodClientWrappedPhoneNumber, Error<PostPhoneNumbersError>> {
     let local_var_configuration = configuration;
 
@@ -261,8 +262,12 @@ pub async fn post_phone_numbers(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = phone_number {
-        local_var_form_params.insert("phone_number", local_var_param_value.to_string());
+    local_var_form_params.insert("phone_number", phone_number.to_string());
+    if let Some(local_var_param_value) = reserved_for_second_factor {
+        local_var_form_params.insert(
+            "reserved_for_second_factor",
+            local_var_param_value.to_string(),
+        );
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -356,8 +361,8 @@ pub async fn read_phone_number(
 pub async fn send_verification_sms(
     configuration: &configuration::Configuration,
     phone_number_id: &str,
+    strategy: &str,
     _clerk_session_id: Option<&str>,
-    strategy: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedPhoneNumber, Error<SendVerificationSmsError>> {
     let local_var_configuration = configuration;
 
@@ -399,9 +404,7 @@ pub async fn send_verification_sms(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = strategy {
-        local_var_form_params.insert("strategy", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("strategy", strategy.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;
@@ -507,8 +510,8 @@ pub async fn update_phone_number(
 pub async fn verify_phone_number(
     configuration: &configuration::Configuration,
     phone_number_id: &str,
+    code: &str,
     _clerk_session_id: Option<&str>,
-    code: Option<&str>,
 ) -> Result<models::ClientPeriodClientWrappedPhoneNumber, Error<VerifyPhoneNumberError>> {
     let local_var_configuration = configuration;
 
@@ -550,9 +553,7 @@ pub async fn verify_phone_number(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = code {
-        local_var_form_params.insert("code", local_var_param_value.to_string());
-    }
+    local_var_form_params.insert("code", code.to_string());
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
     let local_var_req = local_var_req_builder.build()?;

@@ -19,18 +19,18 @@ pub struct UserSettingsPeriodAttributes {
     pub phone_number: Box<models::UserSettingsPeriodAttribute>,
     #[serde(rename = "username")]
     pub username: Box<models::UserSettingsPeriodAttribute>,
-    #[serde(rename = "password")]
-    pub password: Box<models::UserSettingsPeriodAttribute>,
+    #[serde(rename = "web3_wallet")]
+    pub web3_wallet: Box<models::UserSettingsPeriodAttribute>,
     #[serde(rename = "first_name")]
     pub first_name: Box<models::UserSettingsPeriodAttribute>,
     #[serde(rename = "last_name")]
     pub last_name: Box<models::UserSettingsPeriodAttribute>,
-    #[serde(rename = "ticket")]
-    pub ticket: Box<models::UserSettingsPeriodAttribute>,
-    #[serde(rename = "web3_wallet")]
-    pub web3_wallet: Box<models::UserSettingsPeriodAttribute>,
+    #[serde(rename = "password")]
+    pub password: Box<models::UserSettingsPeriodAttribute>,
     #[serde(rename = "authenticator_app")]
     pub authenticator_app: Box<models::UserSettingsPeriodAttribute>,
+    #[serde(rename = "ticket")]
+    pub ticket: Box<models::UserSettingsPeriodAttribute>,
     #[serde(rename = "backup_code")]
     pub backup_code: Box<models::UserSettingsPeriodAttribute>,
     #[serde(rename = "passkey")]
@@ -42,12 +42,12 @@ impl UserSettingsPeriodAttributes {
         email_address: models::UserSettingsPeriodAttribute,
         phone_number: models::UserSettingsPeriodAttribute,
         username: models::UserSettingsPeriodAttribute,
-        password: models::UserSettingsPeriodAttribute,
+        web3_wallet: models::UserSettingsPeriodAttribute,
         first_name: models::UserSettingsPeriodAttribute,
         last_name: models::UserSettingsPeriodAttribute,
-        ticket: models::UserSettingsPeriodAttribute,
-        web3_wallet: models::UserSettingsPeriodAttribute,
+        password: models::UserSettingsPeriodAttribute,
         authenticator_app: models::UserSettingsPeriodAttribute,
+        ticket: models::UserSettingsPeriodAttribute,
         backup_code: models::UserSettingsPeriodAttribute,
         passkey: models::UserSettingsPeriodAttribute,
     ) -> UserSettingsPeriodAttributes {
@@ -55,12 +55,12 @@ impl UserSettingsPeriodAttributes {
             email_address: Box::new(email_address),
             phone_number: Box::new(phone_number),
             username: Box::new(username),
-            password: Box::new(password),
+            web3_wallet: Box::new(web3_wallet),
             first_name: Box::new(first_name),
             last_name: Box::new(last_name),
-            ticket: Box::new(ticket),
-            web3_wallet: Box::new(web3_wallet),
+            password: Box::new(password),
             authenticator_app: Box::new(authenticator_app),
+            ticket: Box::new(ticket),
             backup_code: Box::new(backup_code),
             passkey: Box::new(passkey),
         }

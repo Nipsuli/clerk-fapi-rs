@@ -17,29 +17,40 @@ pub struct GoogleOneTap {
     pub status: Status,
     #[serde(rename = "strategy")]
     pub strategy: Strategy,
+    #[serde(rename = "expire_at", deserialize_with = "Option::deserialize")]
+    pub expire_at: Option<i32>,
+    #[serde(rename = "attempts", deserialize_with = "Option::deserialize")]
+    pub attempts: Option<i32>,
     #[serde(
-        rename = "expire_at",
+        rename = "verified_at_client",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub expire_at: Option<Option<i64>>,
+    pub verified_at_client: Option<Option<String>>,
     #[serde(
-        rename = "attempts",
+        rename = "error",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i64>>,
+    pub error: Option<Option<Box<models::OauthError>>>,
 }
 
 impl GoogleOneTap {
-    pub fn new(status: Status, strategy: Strategy) -> GoogleOneTap {
+    pub fn new(
+        status: Status,
+        strategy: Strategy,
+        expire_at: Option<i32>,
+        attempts: Option<i32>,
+    ) -> GoogleOneTap {
         GoogleOneTap {
             status,
             strategy,
-            expire_at: None,
-            attempts: None,
+            expire_at,
+            attempts,
+            verified_at_client: None,
+            error: None,
         }
     }
 }

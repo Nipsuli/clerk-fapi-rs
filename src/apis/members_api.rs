@@ -63,8 +63,6 @@ pub async fn create_organization_membership(
     organization_id: &str,
     user_id: Option<&str>,
     role: Option<&str>,
-    email_address: Option<&str>,
-    role2: Option<&str>,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationMembership,
     Error<CreateOrganizationMembershipError>,
@@ -81,14 +79,6 @@ pub async fn create_organization_membership(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
 
-    if let Some(ref local_var_str) = user_id {
-        local_var_req_builder =
-            local_var_req_builder.query(&[("user_id", &local_var_str.to_string())]);
-    }
-    if let Some(ref local_var_str) = role {
-        local_var_req_builder =
-            local_var_req_builder.query(&[("role", &local_var_str.to_string())]);
-    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -113,11 +103,21 @@ pub async fn create_organization_membership(
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };
     let mut local_var_form_params = std::collections::HashMap::new();
-    if let Some(local_var_param_value) = email_address {
-        local_var_form_params.insert("email_address", local_var_param_value.to_string());
+    match user_id {
+        Some(local_var_param_value) => {
+            local_var_form_params.insert("user_id", local_var_param_value.to_string());
+        }
+        None => {
+            local_var_form_params.insert("user_id", "");
+        }
     }
-    if let Some(local_var_param_value) = role2 {
-        local_var_form_params.insert("role", local_var_param_value.to_string());
+    match role {
+        Some(local_var_param_value) => {
+            local_var_form_params.insert("role", local_var_param_value.to_string());
+        }
+        None => {
+            local_var_form_params.insert("role", "");
+        }
     }
     local_var_req_builder = local_var_req_builder.form(&local_var_form_params);
 
@@ -145,8 +145,11 @@ pub async fn create_organization_membership(
 pub async fn list_organization_memberships(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<f64>,
-    offset: Option<f64>,
+    limit: Option<i32>,
+    offset: Option<i32>,
+    paginated: Option<bool>,
+    query: Option<&str>,
+    role: Option<&str>,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationMemberships,
     Error<ListOrganizationMembershipsError>,
@@ -170,6 +173,18 @@ pub async fn list_organization_memberships(
     if let Some(ref local_var_str) = offset {
         local_var_req_builder =
             local_var_req_builder.query(&[("offset", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = paginated {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("paginated", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = query {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("query", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = role {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("role", &local_var_str.to_string())]);
     }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();

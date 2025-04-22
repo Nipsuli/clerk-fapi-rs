@@ -172,7 +172,7 @@ pub async fn revoke_session(
     configuration: &configuration::Configuration,
     session_id: &str,
     _clerk_session_id: Option<&str>,
-) -> Result<models::ResponsesPeriodClientPeriodSession, Error<RevokeSessionError>> {
+) -> Result<models::ClientPeriodClientWrappedSession, Error<RevokeSessionError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;

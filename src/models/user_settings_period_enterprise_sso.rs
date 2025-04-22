@@ -13,12 +13,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodEnterpriseSso {
-    #[serde(rename = "enabled", skip_serializing_if = "Option::is_none")]
-    pub enabled: Option<bool>,
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
 }
 
 impl UserSettingsPeriodEnterpriseSso {
-    pub fn new() -> UserSettingsPeriodEnterpriseSso {
-        UserSettingsPeriodEnterpriseSso { enabled: None }
+    pub fn new(enabled: bool) -> UserSettingsPeriodEnterpriseSso {
+        UserSettingsPeriodEnterpriseSso { enabled }
     }
 }

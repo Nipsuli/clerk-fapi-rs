@@ -13,25 +13,39 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodOrganization {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
-    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "slug")]
+    pub slug: String,
+    #[serde(rename = "image_url", skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+    #[serde(rename = "has_image")]
+    pub has_image: bool,
+    #[serde(rename = "members_count", skip_serializing_if = "Option::is_none")]
+    pub members_count: Option<i32>,
     #[serde(
-        rename = "max_allowed_memberships",
+        rename = "pending_invitations_count",
         skip_serializing_if = "Option::is_none"
     )]
-    pub max_allowed_memberships: Option<i64>,
-    #[serde(
-        rename = "admin_delete_enabled",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub admin_delete_enabled: Option<bool>,
-    #[serde(rename = "slug", skip_serializing_if = "Option::is_none")]
-    pub slug: Option<String>,
+    pub pending_invitations_count: Option<i32>,
+    #[serde(rename = "max_allowed_memberships")]
+    pub max_allowed_memberships: i32,
+    #[serde(rename = "admin_delete_enabled")]
+    pub admin_delete_enabled: bool,
+    #[serde(rename = "public_metadata")]
+    pub public_metadata: std::collections::HashMap<String, serde_json::Value>,
+    /// Unix timestamp of creation.
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
+    /// Unix timestamp of last update.
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
+    /// Deprecated. Use `image_url` instead.
     #[serde(
         rename = "logo_url",
         default,
@@ -39,44 +53,36 @@ pub struct ClientPeriodOrganization {
         skip_serializing_if = "Option::is_none"
     )]
     pub logo_url: Option<Option<String>>,
-    #[serde(rename = "image_url", skip_serializing_if = "Option::is_none")]
-    pub image_url: Option<String>,
-    #[serde(rename = "has_image", skip_serializing_if = "Option::is_none")]
-    pub has_image: Option<bool>,
-    #[serde(rename = "members_count", skip_serializing_if = "Option::is_none")]
-    pub members_count: Option<i64>,
-    #[serde(
-        rename = "pending_invitations_count",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub pending_invitations_count: Option<i64>,
-    #[serde(rename = "public_metadata", skip_serializing_if = "Option::is_none")]
-    pub public_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
-    /// Unix timestamp of creation.
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
-    /// Unix timestamp of last update.
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
 }
 
 impl ClientPeriodOrganization {
-    pub fn new() -> ClientPeriodOrganization {
+    pub fn new(
+        id: String,
+        object: Object,
+        name: String,
+        slug: String,
+        has_image: bool,
+        max_allowed_memberships: i32,
+        admin_delete_enabled: bool,
+        public_metadata: std::collections::HashMap<String, serde_json::Value>,
+        created_at: i64,
+        updated_at: i64,
+    ) -> ClientPeriodOrganization {
         ClientPeriodOrganization {
-            id: None,
-            object: None,
-            name: None,
-            max_allowed_memberships: None,
-            admin_delete_enabled: None,
-            slug: None,
-            logo_url: None,
+            id,
+            object,
+            name,
+            slug,
             image_url: None,
-            has_image: None,
+            has_image,
             members_count: None,
             pending_invitations_count: None,
-            public_metadata: None,
-            created_at: None,
-            updated_at: None,
+            max_allowed_memberships,
+            admin_delete_enabled,
+            public_metadata,
+            created_at,
+            updated_at,
+            logo_url: None,
         }
     }
 }

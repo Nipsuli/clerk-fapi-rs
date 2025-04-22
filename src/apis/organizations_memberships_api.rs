@@ -266,6 +266,7 @@ pub async fn get_organization_memberships(
     configuration: &configuration::Configuration,
     limit: Option<i32>,
     offset: Option<i32>,
+    paginated: Option<bool>,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationMemberships,
     Error<GetOrganizationMembershipsError>,
@@ -288,6 +289,10 @@ pub async fn get_organization_memberships(
     if let Some(ref local_var_str) = offset {
         local_var_req_builder =
             local_var_req_builder.query(&[("offset", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = paginated {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("paginated", &local_var_str.to_string())]);
     }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
@@ -415,6 +420,7 @@ pub async fn get_users_organization_invitations(
     configuration: &configuration::Configuration,
     limit: Option<i32>,
     offset: Option<i32>,
+    status: Option<&str>,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationInvitationsUserContext,
     Error<GetUsersOrganizationInvitationsError>,
@@ -437,6 +443,10 @@ pub async fn get_users_organization_invitations(
     if let Some(ref local_var_str) = offset {
         local_var_req_builder =
             local_var_req_builder.query(&[("offset", &local_var_str.to_string())]);
+    }
+    if let Some(ref local_var_str) = status {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("status", &local_var_str.to_string())]);
     }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();

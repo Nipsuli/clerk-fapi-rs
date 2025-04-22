@@ -116,8 +116,8 @@ pub async fn accept_organization_membership_request(
 pub async fn list_organization_membership_requests(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<f64>,
-    offset: Option<f64>,
+    limit: Option<i32>,
+    offset: Option<i32>,
     status: Option<&str>,
 ) -> Result<
     models::ClientPeriodClientWrappedOrganizationMembershipRequests,

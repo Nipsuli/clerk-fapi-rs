@@ -23,14 +23,14 @@ pub struct StubsPeriodVerificationPeriodInvitation {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i64>>,
+    pub attempts: Option<Option<i32>>,
     #[serde(
         rename = "expire_at",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub expire_at: Option<Option<i64>>,
+    pub expire_at: Option<Option<i32>>,
 }
 
 impl StubsPeriodVerificationPeriodInvitation {

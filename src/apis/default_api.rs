@@ -20,16 +20,6 @@ pub enum ClearSiteDataError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`create_service_token`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum CreateServiceTokenError {
-    Status403(models::ClerkErrors),
-    Status404(models::ClerkErrors),
-    Status422(models::ClerkErrors),
-    UnknownValue(serde_json::Value),
-}
-
 /// struct for typed errors of method [`get_account_portal`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -53,9 +43,8 @@ pub enum GetDevBrowserInitError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetProxyHealthError {
-    Status400(),
-    Status404(),
-    Status503(models::GetProxyHealth503Response),
+    Status400(models::ClerkErrors),
+    Status503(models::GetHealth503Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -141,62 +130,6 @@ pub async fn clear_site_data(
     }
 }
 
-/// create a jwt for the requested user.
-pub async fn create_service_token(
-    configuration: &configuration::Configuration,
-) -> Result<models::Token, Error<CreateServiceTokenError>> {
-    let local_var_configuration = configuration;
-
-    let local_var_client = &local_var_configuration.client;
-
-    let local_var_uri_str = format!("{}/v1/me/tokens", local_var_configuration.base_path);
-    let mut local_var_req_builder =
-        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
-
-    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
-        let local_var_key = local_var_apikey.key.clone();
-        let local_var_value = match local_var_apikey.prefix {
-            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
-            None => local_var_key,
-        };
-        local_var_req_builder = local_var_req_builder.query(&[("_is_native", local_var_value)]);
-    }
-    if let Some(ref local_var_apikey) = local_var_configuration.api_key {
-        let local_var_key = local_var_apikey.key.clone();
-        let local_var_value = match local_var_apikey.prefix {
-            Some(ref local_var_prefix) => format!("{} {}", local_var_prefix, local_var_key),
-            None => local_var_key,
-        };
-        local_var_req_builder = local_var_req_builder.query(&[("__dev_session", local_var_value)]);
-    }
-    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
-        local_var_req_builder =
-            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
-    }
-    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
-        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
-    };
-
-    let local_var_req = local_var_req_builder.build()?;
-    let local_var_resp = local_var_client.execute(local_var_req).await?;
-
-    let local_var_status = local_var_resp.status();
-    let local_var_content = local_var_resp.text().await?;
-
-    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
-        serde_json::from_str(&local_var_content).map_err(Error::from)
-    } else {
-        let local_var_entity: Option<CreateServiceTokenError> =
-            serde_json::from_str(&local_var_content).ok();
-        let local_var_error = ResponseContent {
-            status: local_var_status,
-            content: local_var_content,
-            entity: local_var_entity,
-        };
-        Err(Error::ResponseError(local_var_error))
-    }
-}
-
 /// Get users account portal
 pub async fn get_account_portal(
     configuration: &configuration::Configuration,
@@ -256,6 +189,7 @@ pub async fn get_account_portal(
 /// get dev_browser/init
 pub async fn get_dev_browser_init(
     configuration: &configuration::Configuration,
+    origin: Option<&str>,
 ) -> Result<(), Error<GetDevBrowserInitError>> {
     let local_var_configuration = configuration;
 
@@ -265,6 +199,10 @@ pub async fn get_dev_browser_init(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
+    if let Some(ref local_var_str) = origin {
+        local_var_req_builder =
+            local_var_req_builder.query(&[("origin", &local_var_str.to_string())]);
+    }
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -312,6 +250,10 @@ pub async fn get_dev_browser_init(
 /// Use this endpoint to check the validity of a proxy configuration for a domain. Pass the instance ID and domain ID as query parameters.
 pub async fn get_proxy_health(
     configuration: &configuration::Configuration,
+    domain_id: &str,
+    clerk_proxy_url: &str,
+    clerk_secret_key: &str,
+    x_forwarded_for: &str,
 ) -> Result<models::GetProxyHealth200Response, Error<GetProxyHealthError>> {
     let local_var_configuration = configuration;
 
@@ -321,6 +263,7 @@ pub async fn get_proxy_health(
     let mut local_var_req_builder =
         local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
+    local_var_req_builder = local_var_req_builder.query(&[("domain_id", &domain_id.to_string())]);
     if let Some(ref local_var_apikey) = local_var_configuration.api_key {
         let local_var_key = local_var_apikey.key.clone();
         let local_var_value = match local_var_apikey.prefix {
@@ -341,6 +284,12 @@ pub async fn get_proxy_health(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    local_var_req_builder =
+        local_var_req_builder.header("Clerk-Proxy-Url", clerk_proxy_url.to_string());
+    local_var_req_builder =
+        local_var_req_builder.header("Clerk-Secret-Key", clerk_secret_key.to_string());
+    local_var_req_builder =
+        local_var_req_builder.header("X-Forwarded-For", x_forwarded_for.to_string());
     if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
         local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
     };

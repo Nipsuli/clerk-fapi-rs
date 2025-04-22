@@ -24,6 +24,7 @@ pub enum GetAndroidAssetLinksError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetAppleAppSiteAssociationError {
+    Status500(models::ClerkErrors),
     UnknownValue(serde_json::Value),
 }
 
@@ -31,6 +32,7 @@ pub enum GetAppleAppSiteAssociationError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetJwksError {
+    Status500(models::ClerkErrors),
     UnknownValue(serde_json::Value),
 }
 
@@ -84,7 +86,8 @@ pub async fn get_android_asset_links(
 /// Retrieve the Apple App Site Association file of the instance
 pub async fn get_apple_app_site_association(
     configuration: &configuration::Configuration,
-) -> Result<(), Error<GetAppleAppSiteAssociationError>> {
+) -> Result<models::WellKnownPeriodAppleAppSiteAssociation, Error<GetAppleAppSiteAssociationError>>
+{
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
@@ -108,7 +111,7 @@ pub async fn get_apple_app_site_association(
     let local_var_content = local_var_resp.text().await?;
 
     if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
-        Ok(())
+        serde_json::from_str(&local_var_content).map_err(Error::from)
     } else {
         let local_var_entity: Option<GetAppleAppSiteAssociationError> =
             serde_json::from_str(&local_var_content).ok();

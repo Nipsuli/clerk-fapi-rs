@@ -13,34 +13,58 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodOrganizationMembership {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
-    #[serde(rename = "role", skip_serializing_if = "Option::is_none")]
-    pub role: Option<String>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "public_metadata")]
+    pub public_metadata: std::collections::HashMap<String, serde_json::Value>,
+    #[serde(rename = "role")]
+    pub role: String,
+    #[serde(rename = "role_name")]
+    pub role_name: String,
+    #[serde(rename = "permissions", deserialize_with = "Option::deserialize")]
+    pub permissions: Option<Vec<String>>,
     /// Unix timestamp of creation.
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
     /// Unix timestamp of last update.
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
-    #[serde(rename = "organization", skip_serializing_if = "Option::is_none")]
-    pub organization: Option<Box<models::ClientPeriodOrganization>>,
-    #[serde(rename = "public_user_data", skip_serializing_if = "Option::is_none")]
-    pub public_user_data: Option<Box<models::ClientOrganizationMembershipPublicUserData>>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
+    #[serde(rename = "organization")]
+    pub organization: Box<models::ClientPeriodOrganization>,
+    #[serde(
+        rename = "public_user_data",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub public_user_data: Option<Option<Box<models::ClientPeriodPublicUserData>>>,
 }
 
 impl ClientPeriodOrganizationMembership {
-    pub fn new() -> ClientPeriodOrganizationMembership {
+    pub fn new(
+        id: String,
+        object: Object,
+        public_metadata: std::collections::HashMap<String, serde_json::Value>,
+        role: String,
+        role_name: String,
+        permissions: Option<Vec<String>>,
+        created_at: i64,
+        updated_at: i64,
+        organization: models::ClientPeriodOrganization,
+    ) -> ClientPeriodOrganizationMembership {
         ClientPeriodOrganizationMembership {
-            id: None,
-            object: None,
-            role: None,
-            created_at: None,
-            updated_at: None,
-            organization: None,
+            id,
+            object,
+            public_metadata,
+            role,
+            role_name,
+            permissions,
+            created_at,
+            updated_at,
+            organization: Box::new(organization),
             public_user_data: None,
         }
     }

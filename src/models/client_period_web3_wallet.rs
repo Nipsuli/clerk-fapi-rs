@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodWeb3Wallet {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
     #[serde(rename = "object")]
     pub object: Object,
@@ -32,6 +32,7 @@ pub struct ClientPeriodWeb3Wallet {
 
 impl ClientPeriodWeb3Wallet {
     pub fn new(
+        id: String,
         object: Object,
         web3_wallet: String,
         verification: Option<models::ClientWeb3WalletVerification>,
@@ -39,7 +40,7 @@ impl ClientPeriodWeb3Wallet {
         updated_at: i64,
     ) -> ClientPeriodWeb3Wallet {
         ClientPeriodWeb3Wallet {
-            id: None,
+            id,
             object,
             web3_wallet,
             verification: if let Some(x) = verification {

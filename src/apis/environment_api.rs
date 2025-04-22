@@ -78,6 +78,7 @@ pub async fn get_environment(
 /// Update environment using request origin
 pub async fn update_environment(
     configuration: &configuration::Configuration,
+    origin: &str,
 ) -> Result<models::ClientPeriodEnvironment, Error<UpdateEnvironmentError>> {
     let local_var_configuration = configuration;
 
@@ -99,6 +100,7 @@ pub async fn update_environment(
         local_var_req_builder =
             local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
     }
+    local_var_req_builder = local_var_req_builder.header("Origin", origin.to_string());
 
     let local_var_req = local_var_req_builder.build()?;
     let local_var_resp = local_var_client.execute(local_var_req).await?;

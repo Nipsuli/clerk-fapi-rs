@@ -15,8 +15,8 @@ use serde::{Deserialize, Serialize};
 pub struct ClientPeriodAccountPortal {
     #[serde(rename = "object")]
     pub object: Object,
-    #[serde(rename = "allowed", skip_serializing_if = "Option::is_none")]
-    pub allowed: Option<bool>,
+    #[serde(rename = "allowed")]
+    pub allowed: bool,
     #[serde(rename = "enabled")]
     pub enabled: bool,
     #[serde(rename = "internal_linking")]
@@ -25,35 +25,44 @@ pub struct ClientPeriodAccountPortal {
     pub after_sign_in_url: String,
     #[serde(rename = "after_sign_up_url")]
     pub after_sign_up_url: String,
+    #[serde(rename = "after_join_waitlist_url")]
+    pub after_join_waitlist_url: String,
     #[serde(rename = "after_create_organization_url")]
     pub after_create_organization_url: String,
     #[serde(rename = "after_leave_organization_url")]
     pub after_leave_organization_url: String,
     #[serde(rename = "logo_link_url")]
     pub logo_link_url: String,
+    #[serde(rename = "customization")]
+    pub customization: Box<models::ClientAccountPortalCustomization>,
 }
 
 impl ClientPeriodAccountPortal {
     pub fn new(
         object: Object,
+        allowed: bool,
         enabled: bool,
         internal_linking: bool,
         after_sign_in_url: String,
         after_sign_up_url: String,
+        after_join_waitlist_url: String,
         after_create_organization_url: String,
         after_leave_organization_url: String,
         logo_link_url: String,
+        customization: models::ClientAccountPortalCustomization,
     ) -> ClientPeriodAccountPortal {
         ClientPeriodAccountPortal {
             object,
-            allowed: None,
+            allowed,
             enabled,
             internal_linking,
             after_sign_in_url,
             after_sign_up_url,
+            after_join_waitlist_url,
             after_create_organization_url,
             after_leave_organization_url,
             logo_link_url,
+            customization: Box::new(customization),
         }
     }
 }

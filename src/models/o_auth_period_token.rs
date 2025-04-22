@@ -13,26 +13,29 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct OAuthPeriodToken {
-    #[serde(rename = "access_token", skip_serializing_if = "Option::is_none")]
-    pub access_token: Option<String>,
+    #[serde(rename = "access_token")]
+    pub access_token: String,
+    #[serde(rename = "token_type")]
+    pub token_type: String,
     #[serde(rename = "expires_in", skip_serializing_if = "Option::is_none")]
-    pub expires_in: Option<i64>,
+    pub expires_in: Option<i32>,
     #[serde(rename = "refresh_token", skip_serializing_if = "Option::is_none")]
     pub refresh_token: Option<String>,
     #[serde(rename = "scope", skip_serializing_if = "Option::is_none")]
     pub scope: Option<String>,
-    #[serde(rename = "token_type", skip_serializing_if = "Option::is_none")]
-    pub token_type: Option<String>,
+    #[serde(rename = "id_token", skip_serializing_if = "Option::is_none")]
+    pub id_token: Option<String>,
 }
 
 impl OAuthPeriodToken {
-    pub fn new() -> OAuthPeriodToken {
+    pub fn new(access_token: String, token_type: String) -> OAuthPeriodToken {
         OAuthPeriodToken {
-            access_token: None,
+            access_token,
+            token_type,
             expires_in: None,
             refresh_token: None,
             scope: None,
-            token_type: None,
+            id_token: None,
         }
     }
 }

@@ -1,5 +1,3 @@
-use anyhow::Error as AnyhowError;
-use reqwest_middleware::Error as MiddlewareError;
 use std::error;
 use std::fmt;
 
@@ -13,22 +11,18 @@ pub struct ResponseContent<T> {
 #[derive(Debug)]
 pub enum Error<T> {
     Reqwest(reqwest::Error),
-    Middleware(AnyhowError),
     Serde(serde_json::Error),
     Io(std::io::Error),
     ResponseError(ResponseContent<T>),
-    UrlParsing(url::ParseError),
 }
 
 impl<T> fmt::Display for Error<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (module, e) = match self {
             Error::Reqwest(e) => ("reqwest", e.to_string()),
-            Error::Middleware(e) => ("middleware", e.to_string()),
             Error::Serde(e) => ("serde", e.to_string()),
             Error::Io(e) => ("IO", e.to_string()),
             Error::ResponseError(e) => ("response", format!("status code {}", e.status)),
-            Error::UrlParsing(e) => ("URL parsing", e.to_string()),
         };
         write!(f, "error in {}: {}", module, e)
     }
@@ -36,29 +30,18 @@ impl<T> fmt::Display for Error<T> {
 
 impl<T: fmt::Debug> error::Error for Error<T> {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        match self {
-            Error::Reqwest(e) => Some(e),
-            Error::Middleware(e) => Some(e.as_ref()),
-            Error::Serde(e) => Some(e),
-            Error::Io(e) => Some(e),
-            Error::ResponseError(_) => None,
-            Error::UrlParsing(e) => Some(e),
-        }
+        Some(match self {
+            Error::Reqwest(e) => e,
+            Error::Serde(e) => e,
+            Error::Io(e) => e,
+            Error::ResponseError(_) => return None,
+        })
     }
 }
 
 impl<T> From<reqwest::Error> for Error<T> {
     fn from(e: reqwest::Error) -> Self {
         Error::Reqwest(e)
-    }
-}
-
-impl<T> From<MiddlewareError> for Error<T> {
-    fn from(e: MiddlewareError) -> Self {
-        match e {
-            MiddlewareError::Middleware(e) => Error::Middleware(e),
-            MiddlewareError::Reqwest(e) => Error::Reqwest(e),
-        }
     }
 }
 
@@ -71,12 +54,6 @@ impl<T> From<serde_json::Error> for Error<T> {
 impl<T> From<std::io::Error> for Error<T> {
     fn from(e: std::io::Error) -> Self {
         Error::Io(e)
-    }
-}
-
-impl<T> From<url::ParseError> for Error<T> {
-    fn from(e: url::ParseError) -> Self {
-        Error::UrlParsing(e)
     }
 }
 
@@ -141,6 +118,7 @@ pub mod sign_ins_api;
 pub mod sign_ups_api;
 pub mod totp_api;
 pub mod user_api;
+pub mod waitlist_api;
 pub mod web3_wallets_api;
 pub mod well_known_api;
 

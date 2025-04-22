@@ -18,7 +18,6 @@ pub enum ClientSignInFirstFactorVerification {
     StubsPeriodVerificationPeriodOauth(Box<models::StubsPeriodVerificationPeriodOauth>),
     StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
     StubsPeriodVerificationPeriodLink(Box<models::StubsPeriodVerificationPeriodLink>),
-    StubsPeriodVerificationPeriodCode(Box<models::StubsPeriodVerificationPeriodCode>),
     StubsPeriodVerificationPeriodWeb3Signature(
         Box<models::StubsPeriodVerificationPeriodWeb3Signature>,
     ),

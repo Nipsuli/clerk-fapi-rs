@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Totp {
     #[serde(rename = "object")]
-    pub object: String,
+    pub object: Object,
     #[serde(rename = "id")]
     pub id: String,
     #[serde(rename = "secret", deserialize_with = "Option::deserialize")]
@@ -30,15 +30,21 @@ pub struct Totp {
         skip_serializing_if = "Option::is_none"
     )]
     pub backup_codes: Option<Option<Vec<String>>>,
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl Totp {
     pub fn new(
-        object: String,
+        object: Object,
         id: String,
         secret: Option<String>,
         uri: Option<String>,
         verified: bool,
+        created_at: i64,
+        updated_at: i64,
     ) -> Totp {
         Totp {
             object,
@@ -47,6 +53,20 @@ impl Totp {
             uri,
             verified,
             backup_codes: None,
+            created_at,
+            updated_at,
         }
+    }
+}
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "totp")]
+    Totp,
+}
+
+impl Default for Object {
+    fn default() -> Object {
+        Self::Totp
     }
 }

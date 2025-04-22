@@ -11,14 +11,27 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct GetProxyHealth200Response {
-    #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GetProxyHealth200Response {
+    GetProxyHealth200ResponseOneOf(Box<models::GetProxyHealth200ResponseOneOf>),
+    GetHealth503Response(Box<models::GetHealth503Response>),
 }
 
-impl GetProxyHealth200Response {
-    pub fn new() -> GetProxyHealth200Response {
-        GetProxyHealth200Response { status: None }
+impl Default for GetProxyHealth200Response {
+    fn default() -> Self {
+        Self::GetProxyHealth200ResponseOneOf(Default::default())
+    }
+}
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Status {
+    #[serde(rename = "unhealthy")]
+    Unhealthy,
+}
+
+impl Default for Status {
+    fn default() -> Status {
+        Self::Unhealthy
     }
 }

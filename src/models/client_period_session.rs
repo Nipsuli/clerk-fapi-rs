@@ -13,67 +13,82 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodSession {
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// String representing the object's type. Objects of the same type share the same value.
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
+    #[serde(rename = "object")]
+    pub object: Object,
+    #[serde(rename = "status")]
+    pub status: Status,
+    #[serde(rename = "expire_at")]
+    pub expire_at: i64,
+    #[serde(rename = "abandon_at")]
+    pub abandon_at: i64,
+    #[serde(rename = "last_active_at")]
+    pub last_active_at: i64,
+    #[serde(
+        rename = "last_active_token",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub last_active_token: Option<Option<Box<models::Token>>>,
     #[serde(
         rename = "actor",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub actor: Option<Option<serde_json::Value>>,
-    #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
-    pub status: Option<Status>,
-    #[serde(rename = "last_active_at", skip_serializing_if = "Option::is_none")]
-    pub last_active_at: Option<i64>,
-    /* @Nipsuli: this is not in the api doc but exists in the response data  */
+    pub actor: Option<Option<std::collections::HashMap<String, serde_json::Value>>>,
     #[serde(
         rename = "last_active_organization_id",
-        skip_serializing_if = "Option::is_none"
+        deserialize_with = "Option::deserialize"
     )]
     pub last_active_organization_id: Option<String>,
-    #[serde(rename = "expire_at", skip_serializing_if = "Option::is_none")]
-    pub expire_at: Option<i64>,
-    #[serde(rename = "abandon_at", skip_serializing_if = "Option::is_none")]
-    pub abandon_at: Option<i64>,
-    #[serde(
-        rename = "user",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub user: Option<Option<Box<models::ClientPeriodUser>>>,
-    #[serde(
-        rename = "public_user_data",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub public_user_data: Option<Option<Box<models::ClientSessionAllOfPublicUserData>>>,
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
+    #[serde(rename = "user", skip_serializing_if = "Option::is_none")]
+    pub user: Option<Box<models::ClientPeriodUser>>,
+    #[serde(rename = "public_user_data", deserialize_with = "Option::deserialize")]
+    pub public_user_data: Option<serde_json::Value>,
+    /// Each item represents the minutes that have passed since the last time a first or second factor were verified.
+    #[serde(rename = "factor_verification_age")]
+    pub factor_verification_age: Vec<i32>,
+    /// Unix timestamp of creation.
+    #[serde(rename = "created_at")]
+    pub created_at: i64,
+    /// Unix timestamp of last update.
+    #[serde(rename = "updated_at")]
+    pub updated_at: i64,
 }
 
 impl ClientPeriodSession {
-    pub fn new() -> ClientPeriodSession {
+    pub fn new(
+        id: String,
+        object: Object,
+        status: Status,
+        expire_at: i64,
+        abandon_at: i64,
+        last_active_at: i64,
+        last_active_organization_id: Option<String>,
+        public_user_data: Option<serde_json::Value>,
+        factor_verification_age: Vec<i32>,
+        created_at: i64,
+        updated_at: i64,
+    ) -> ClientPeriodSession {
         ClientPeriodSession {
-            id: None,
-            object: None,
+            id,
+            object,
+            status,
+            expire_at,
+            abandon_at,
+            last_active_at,
+            last_active_token: None,
             actor: None,
-            status: None,
-            last_active_at: None,
-            last_active_organization_id: None,
-            expire_at: None,
-            abandon_at: None,
+            last_active_organization_id,
             user: None,
-            public_user_data: None,
-            created_at: None,
-            updated_at: None,
+            public_user_data,
+            factor_verification_age,
+            created_at,
+            updated_at,
         }
     }
 }

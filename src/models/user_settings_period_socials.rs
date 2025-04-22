@@ -13,14 +13,26 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettingsPeriodSocials {
+    #[serde(rename = "oauth_apple", skip_serializing_if = "Option::is_none")]
+    pub oauth_apple: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_atlassian", skip_serializing_if = "Option::is_none")]
     pub oauth_atlassian: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_bitbucket", skip_serializing_if = "Option::is_none")]
     pub oauth_bitbucket: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_box", skip_serializing_if = "Option::is_none")]
+    pub oauth_box: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_coinbase", skip_serializing_if = "Option::is_none")]
+    pub oauth_coinbase: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_custom_mock", skip_serializing_if = "Option::is_none")]
+    pub oauth_custom_mock: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_discord", skip_serializing_if = "Option::is_none")]
     pub oauth_discord: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_dropbox", skip_serializing_if = "Option::is_none")]
     pub oauth_dropbox: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_enstall", skip_serializing_if = "Option::is_none")]
+    pub oauth_enstall: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_expressen", skip_serializing_if = "Option::is_none")]
+    pub oauth_expressen: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_facebook", skip_serializing_if = "Option::is_none")]
     pub oauth_facebook: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_github", skip_serializing_if = "Option::is_none")]
@@ -31,14 +43,14 @@ pub struct UserSettingsPeriodSocials {
     pub oauth_google: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_hubspot", skip_serializing_if = "Option::is_none")]
     pub oauth_hubspot: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_microsoft", skip_serializing_if = "Option::is_none")]
-    pub oauth_microsoft: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_tiktok", skip_serializing_if = "Option::is_none")]
-    pub oauth_tiktok: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_twitch", skip_serializing_if = "Option::is_none")]
-    pub oauth_twitch: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_twitter", skip_serializing_if = "Option::is_none")]
-    pub oauth_twitter: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_huggingface", skip_serializing_if = "Option::is_none")]
+    pub oauth_huggingface: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_instagram", skip_serializing_if = "Option::is_none")]
+    pub oauth_instagram: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_line", skip_serializing_if = "Option::is_none")]
+    pub oauth_line: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_linear", skip_serializing_if = "Option::is_none")]
+    pub oauth_linear: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_linkedin", skip_serializing_if = "Option::is_none")]
     pub oauth_linkedin: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(
@@ -46,62 +58,62 @@ pub struct UserSettingsPeriodSocials {
         skip_serializing_if = "Option::is_none"
     )]
     pub oauth_linkedin_oidc: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_notion", skip_serializing_if = "Option::is_none")]
-    pub oauth_notion: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_apple", skip_serializing_if = "Option::is_none")]
-    pub oauth_apple: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_line", skip_serializing_if = "Option::is_none")]
-    pub oauth_line: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_coinbase", skip_serializing_if = "Option::is_none")]
-    pub oauth_coinbase: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_box", skip_serializing_if = "Option::is_none")]
-    pub oauth_box: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_xero", skip_serializing_if = "Option::is_none")]
-    pub oauth_xero: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_spotify", skip_serializing_if = "Option::is_none")]
-    pub oauth_spotify: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_slack", skip_serializing_if = "Option::is_none")]
-    pub oauth_slack: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_linear", skip_serializing_if = "Option::is_none")]
-    pub oauth_linear: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_x", skip_serializing_if = "Option::is_none")]
-    pub oauth_x: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_microsoft", skip_serializing_if = "Option::is_none")]
+    pub oauth_microsoft: Option<Box<models::UserSettingsPeriodSocial>>,
     #[serde(rename = "oauth_mock", skip_serializing_if = "Option::is_none")]
     pub oauth_mock: Option<Box<models::UserSettingsPeriodSocial>>,
-    #[serde(rename = "oauth_custom_mock", skip_serializing_if = "Option::is_none")]
-    pub oauth_custom_mock: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_notion", skip_serializing_if = "Option::is_none")]
+    pub oauth_notion: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_slack", skip_serializing_if = "Option::is_none")]
+    pub oauth_slack: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_spotify", skip_serializing_if = "Option::is_none")]
+    pub oauth_spotify: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_tiktok", skip_serializing_if = "Option::is_none")]
+    pub oauth_tiktok: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_twitch", skip_serializing_if = "Option::is_none")]
+    pub oauth_twitch: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_twitter", skip_serializing_if = "Option::is_none")]
+    pub oauth_twitter: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_x", skip_serializing_if = "Option::is_none")]
+    pub oauth_x: Option<Box<models::UserSettingsPeriodSocial>>,
+    #[serde(rename = "oauth_xero", skip_serializing_if = "Option::is_none")]
+    pub oauth_xero: Option<Box<models::UserSettingsPeriodSocial>>,
 }
 
 impl UserSettingsPeriodSocials {
     pub fn new() -> UserSettingsPeriodSocials {
         UserSettingsPeriodSocials {
+            oauth_apple: None,
             oauth_atlassian: None,
             oauth_bitbucket: None,
+            oauth_box: None,
+            oauth_coinbase: None,
+            oauth_custom_mock: None,
             oauth_discord: None,
             oauth_dropbox: None,
+            oauth_enstall: None,
+            oauth_expressen: None,
             oauth_facebook: None,
             oauth_github: None,
             oauth_gitlab: None,
             oauth_google: None,
             oauth_hubspot: None,
+            oauth_huggingface: None,
+            oauth_instagram: None,
+            oauth_line: None,
+            oauth_linear: None,
+            oauth_linkedin: None,
+            oauth_linkedin_oidc: None,
             oauth_microsoft: None,
+            oauth_mock: None,
+            oauth_notion: None,
+            oauth_slack: None,
+            oauth_spotify: None,
             oauth_tiktok: None,
             oauth_twitch: None,
             oauth_twitter: None,
-            oauth_linkedin: None,
-            oauth_linkedin_oidc: None,
-            oauth_notion: None,
-            oauth_apple: None,
-            oauth_line: None,
-            oauth_coinbase: None,
-            oauth_box: None,
-            oauth_xero: None,
-            oauth_spotify: None,
-            oauth_slack: None,
-            oauth_linear: None,
             oauth_x: None,
-            oauth_mock: None,
-            oauth_custom_mock: None,
+            oauth_xero: None,
         }
     }
 }

@@ -32,6 +32,13 @@ pub struct StubsPeriodSignInFactor {
         skip_serializing_if = "Option::is_none"
     )]
     pub primary: Option<Option<bool>>,
+    #[serde(
+        rename = "external_verification_redirect_url",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub external_verification_redirect_url: Option<Option<String>>,
     #[serde(rename = "default", skip_serializing_if = "Option::is_none")]
     pub default: Option<bool>,
 }
@@ -46,6 +53,7 @@ impl StubsPeriodSignInFactor {
             web3_wallet_id: None,
             passkey_id: None,
             primary: None,
+            external_verification_redirect_url: None,
             default: None,
         }
     }
@@ -67,6 +75,8 @@ pub enum Strategy {
     Web3MetamaskSignature,
     #[serde(rename = "web3_coinbase_wallet_signature")]
     Web3CoinbaseWalletSignature,
+    #[serde(rename = "web3_okx_wallet_signature")]
+    Web3OkxWalletSignature,
     #[serde(rename = "totp")]
     Totp,
     #[serde(rename = "backup_code")]

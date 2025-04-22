@@ -15,25 +15,22 @@ use serde::{Deserialize, Serialize};
 pub struct UserSettingsPeriodAttackProtectionSettingsPeriodUserLockout {
     #[serde(rename = "enabled")]
     pub enabled: bool,
-    #[serde(
-        rename = "duration_in_minutes",
-        deserialize_with = "Option::deserialize"
-    )]
-    pub duration_in_minutes: Option<i64>,
-    #[serde(rename = "max_attempts", deserialize_with = "Option::deserialize")]
-    pub max_attempts: Option<i64>,
+    #[serde(rename = "max_attempts")]
+    pub max_attempts: i32,
+    #[serde(rename = "duration_in_minutes")]
+    pub duration_in_minutes: i32,
 }
 
 impl UserSettingsPeriodAttackProtectionSettingsPeriodUserLockout {
     pub fn new(
         enabled: bool,
-        duration_in_minutes: Option<i64>,
-        max_attempts: Option<i64>,
+        max_attempts: i32,
+        duration_in_minutes: i32,
     ) -> UserSettingsPeriodAttackProtectionSettingsPeriodUserLockout {
         UserSettingsPeriodAttackProtectionSettingsPeriodUserLockout {
             enabled,
-            duration_in_minutes,
             max_attempts,
+            duration_in_minutes,
         }
     }
 }

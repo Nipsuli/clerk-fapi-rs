@@ -15,32 +15,49 @@ use serde::{Deserialize, Serialize};
 pub struct UserSettingsPeriodSignUp {
     #[serde(rename = "captcha_enabled")]
     pub captcha_enabled: bool,
-    #[serde(
-        rename = "captcha_widget_type",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub captcha_widget_type: Option<String>,
+    #[serde(rename = "captcha_widget_type")]
+    pub captcha_widget_type: CaptchaWidgetType,
     #[serde(rename = "custom_action_required")]
     pub custom_action_required: bool,
     #[serde(rename = "progressive")]
     pub progressive: bool,
-    #[serde(rename = "mode", skip_serializing_if = "Option::is_none")]
-    pub mode: Option<Mode>,
+    #[serde(rename = "mode")]
+    pub mode: Mode,
+    #[serde(rename = "legal_consent_enabled")]
+    pub legal_consent_enabled: bool,
 }
 
 impl UserSettingsPeriodSignUp {
     pub fn new(
         captcha_enabled: bool,
+        captcha_widget_type: CaptchaWidgetType,
         custom_action_required: bool,
         progressive: bool,
+        mode: Mode,
+        legal_consent_enabled: bool,
     ) -> UserSettingsPeriodSignUp {
         UserSettingsPeriodSignUp {
             captcha_enabled,
-            captcha_widget_type: None,
+            captcha_widget_type,
             custom_action_required,
             progressive,
-            mode: None,
+            mode,
+            legal_consent_enabled,
         }
+    }
+}
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum CaptchaWidgetType {
+    #[serde(rename = "smart")]
+    Smart,
+    #[serde(rename = "invisible")]
+    Invisible,
+}
+
+impl Default for CaptchaWidgetType {
+    fn default() -> CaptchaWidgetType {
+        Self::Smart
     }
 }
 ///
@@ -50,6 +67,8 @@ pub enum Mode {
     Public,
     #[serde(rename = "restricted")]
     Restricted,
+    #[serde(rename = "waitlist")]
+    Waitlist,
 }
 
 impl Default for Mode {

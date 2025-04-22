@@ -14,137 +14,115 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientPeriodSignUp {
     /// String representing the object's type. Objects of the same type share the same value.
-    #[serde(rename = "object", skip_serializing_if = "Option::is_none")]
-    pub object: Option<Object>,
+    #[serde(rename = "object")]
+    pub object: Object,
     /// Unique identifier for this sign up.
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
-    pub status: Option<Status>,
+    #[serde(rename = "id")]
+    pub id: String,
+    #[serde(rename = "status")]
+    pub status: Status,
     /// List of required fields which need to be supplied to the current sign-up. These fields are mandatory in order for the sign-up to satisfy the attached registration policy and be marked as complete.
-    #[serde(rename = "required_fields", skip_serializing_if = "Option::is_none")]
-    pub required_fields: Option<Vec<String>>,
+    #[serde(rename = "required_fields")]
+    pub required_fields: Vec<String>,
     /// List of optional fields which can be supplied to the current sign-up. These fields are not required and their absence does not prevent the sign-up to be marked as complete.
-    #[serde(rename = "optional_fields", skip_serializing_if = "Option::is_none")]
-    pub optional_fields: Option<Vec<String>>,
+    #[serde(rename = "optional_fields")]
+    pub optional_fields: Vec<String>,
     /// List of the missing fields which still need to be supplied to the current sign-up. These fields are mandatory in order for the sign-up to satisfy the attached registration policy and be marked as complete.
-    #[serde(rename = "missing_fields", skip_serializing_if = "Option::is_none")]
-    pub missing_fields: Option<Vec<String>>,
+    #[serde(rename = "missing_fields")]
+    pub missing_fields: Vec<String>,
     /// List of fields which are already supplied to the current sign-up but they need to be verified. Example of such fields are email addresses and phone numbers.
-    #[serde(rename = "unverified_fields", skip_serializing_if = "Option::is_none")]
-    pub unverified_fields: Option<Vec<String>>,
+    #[serde(rename = "unverified_fields")]
+    pub unverified_fields: Vec<String>,
     /// Group for all available verifications.
-    #[serde(rename = "verifications", skip_serializing_if = "Option::is_none")]
-    pub verifications: Option<Box<models::ClientPeriodSignUpPeriodVerifications>>,
-    #[serde(
-        rename = "username",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub username: Option<Option<String>>,
-    #[serde(
-        rename = "email_address",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub email_address: Option<Option<String>>,
-    #[serde(
-        rename = "phone_number",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub phone_number: Option<Option<String>>,
-    #[serde(
-        rename = "web3_wallet",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub web3_wallet: Option<Option<String>>,
-    #[serde(
-        rename = "password_enabled",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub password_enabled: Option<Option<bool>>,
-    #[serde(
-        rename = "first_name",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub first_name: Option<Option<String>>,
-    #[serde(
-        rename = "last_name",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub last_name: Option<Option<String>>,
+    #[serde(rename = "verifications")]
+    pub verifications: Box<models::ClientPeriodSignUpPeriodVerifications>,
+    #[serde(rename = "username", deserialize_with = "Option::deserialize")]
+    pub username: Option<String>,
+    #[serde(rename = "email_address", deserialize_with = "Option::deserialize")]
+    pub email_address: Option<String>,
+    #[serde(rename = "phone_number", deserialize_with = "Option::deserialize")]
+    pub phone_number: Option<String>,
+    #[serde(rename = "web3_wallet", deserialize_with = "Option::deserialize")]
+    pub web3_wallet: Option<String>,
+    #[serde(rename = "password_enabled")]
+    pub password_enabled: bool,
+    #[serde(rename = "first_name", deserialize_with = "Option::deserialize")]
+    pub first_name: Option<String>,
+    #[serde(rename = "last_name", deserialize_with = "Option::deserialize")]
+    pub last_name: Option<String>,
     /// Custom JSON that callers can use to store arbitrary values that make sense in the context of the current sign up.
     #[serde(rename = "unsafe_metadata", skip_serializing_if = "Option::is_none")]
     pub unsafe_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
     /// Custom JSON that can be used to store arbitrary values which will end up in the user's public metadata. This field can only be populated from the application's BE. At this point, this can be done via invitations.
     #[serde(rename = "public_metadata", skip_serializing_if = "Option::is_none")]
     pub public_metadata: Option<std::collections::HashMap<String, serde_json::Value>>,
-    #[serde(
-        rename = "external_id",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub external_id: Option<Option<String>>,
+    #[serde(rename = "custom_action")]
+    pub custom_action: bool,
+    #[serde(rename = "external_id", deserialize_with = "Option::deserialize")]
+    pub external_id: Option<String>,
     #[serde(
         rename = "created_session_id",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
+        deserialize_with = "Option::deserialize"
     )]
-    pub created_session_id: Option<Option<String>>,
-    #[serde(
-        rename = "created_user_id",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_user_id: Option<Option<String>>,
-    #[serde(
-        rename = "abandon_at",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub abandon_at: Option<Option<i64>>,
+    pub created_session_id: Option<String>,
+    #[serde(rename = "created_user_id", deserialize_with = "Option::deserialize")]
+    pub created_user_id: Option<String>,
+    /// Unix timestamp at which the sign up will be abandoned.
+    #[serde(rename = "abandon_at")]
+    pub abandon_at: i64,
+    /// Unix timestamp at which the user accepted the legal requirements.
+    #[serde(rename = "legal_accepted_at", deserialize_with = "Option::deserialize")]
+    pub legal_accepted_at: Option<i64>,
 }
 
 impl ClientPeriodSignUp {
-    pub fn new() -> ClientPeriodSignUp {
+    pub fn new(
+        object: Object,
+        id: String,
+        status: Status,
+        required_fields: Vec<String>,
+        optional_fields: Vec<String>,
+        missing_fields: Vec<String>,
+        unverified_fields: Vec<String>,
+        verifications: models::ClientPeriodSignUpPeriodVerifications,
+        username: Option<String>,
+        email_address: Option<String>,
+        phone_number: Option<String>,
+        web3_wallet: Option<String>,
+        password_enabled: bool,
+        first_name: Option<String>,
+        last_name: Option<String>,
+        custom_action: bool,
+        external_id: Option<String>,
+        created_session_id: Option<String>,
+        created_user_id: Option<String>,
+        abandon_at: i64,
+        legal_accepted_at: Option<i64>,
+    ) -> ClientPeriodSignUp {
         ClientPeriodSignUp {
-            object: None,
-            id: None,
-            status: None,
-            required_fields: None,
-            optional_fields: None,
-            missing_fields: None,
-            unverified_fields: None,
-            verifications: None,
-            username: None,
-            email_address: None,
-            phone_number: None,
-            web3_wallet: None,
-            password_enabled: None,
-            first_name: None,
-            last_name: None,
+            object,
+            id,
+            status,
+            required_fields,
+            optional_fields,
+            missing_fields,
+            unverified_fields,
+            verifications: Box::new(verifications),
+            username,
+            email_address,
+            phone_number,
+            web3_wallet,
+            password_enabled,
+            first_name,
+            last_name,
             unsafe_metadata: None,
             public_metadata: None,
-            external_id: None,
-            created_session_id: None,
-            created_user_id: None,
-            abandon_at: None,
+            custom_action,
+            external_id,
+            created_session_id,
+            created_user_id,
+            abandon_at,
+            legal_accepted_at,
         }
     }
 }

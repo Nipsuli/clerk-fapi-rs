@@ -11,37 +11,32 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct JwksKeysInner {
-    #[serde(rename = "use", skip_serializing_if = "Option::is_none")]
-    pub r#use: Option<String>,
-    #[serde(rename = "kty", skip_serializing_if = "Option::is_none")]
-    pub kty: Option<String>,
-    #[serde(rename = "kid", skip_serializing_if = "Option::is_none")]
-    pub kid: Option<String>,
-    #[serde(rename = "alg", skip_serializing_if = "Option::is_none")]
-    pub alg: Option<String>,
-    #[serde(rename = "n", skip_serializing_if = "Option::is_none")]
-    pub n: Option<String>,
-    #[serde(rename = "e", skip_serializing_if = "Option::is_none")]
-    pub e: Option<String>,
-    #[serde(rename = "x", skip_serializing_if = "Option::is_none")]
-    pub x: Option<String>,
-    #[serde(rename = "crv", skip_serializing_if = "Option::is_none")]
-    pub crv: Option<String>,
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum JwksKeysInner {
+    JwksPeriodEd25519PeriodPublicKey(Box<models::JwksPeriodEd25519PeriodPublicKey>),
+    JwksPeriodEcdsaPeriodPublicKey(Box<models::JwksPeriodEcdsaPeriodPublicKey>),
+    JwksPeriodRsaPeriodPublicKey(Box<models::JwksPeriodRsaPeriodPublicKey>),
+    JwksPeriodEd25519PeriodPrivateKey(Box<models::JwksPeriodEd25519PeriodPrivateKey>),
+    JwksPeriodEcdsaPeriodPrivateKey(Box<models::JwksPeriodEcdsaPeriodPrivateKey>),
+    JwksPeriodRsaPeriodPrivateKey(Box<models::JwksPeriodRsaPeriodPrivateKey>),
+    JwksPeriodSymmetricPeriodKey(Box<models::JwksPeriodSymmetricPeriodKey>),
 }
 
-impl JwksKeysInner {
-    pub fn new() -> JwksKeysInner {
-        JwksKeysInner {
-            r#use: None,
-            kty: None,
-            kid: None,
-            alg: None,
-            n: None,
-            e: None,
-            x: None,
-            crv: None,
-        }
+impl Default for JwksKeysInner {
+    fn default() -> Self {
+        Self::JwksPeriodEd25519PeriodPublicKey(Default::default())
+    }
+}
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Kty {
+    #[serde(rename = "oct")]
+    Oct,
+}
+
+impl Default for Kty {
+    fn default() -> Kty {
+        Self::Oct
     }
 }

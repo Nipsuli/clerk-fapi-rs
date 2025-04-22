@@ -15,15 +15,15 @@ use serde::{Deserialize, Serialize};
 pub struct ClientClientWrappedOrganizationInvitationsResponseOneOf {
     #[serde(rename = "data", skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<models::ClientPeriodOrganizationInvitation>>,
-    #[serde(rename = "total", skip_serializing_if = "Option::is_none")]
-    pub total: Option<i64>,
+    #[serde(rename = "total_count", skip_serializing_if = "Option::is_none")]
+    pub total_count: Option<i64>,
 }
 
 impl ClientClientWrappedOrganizationInvitationsResponseOneOf {
     pub fn new() -> ClientClientWrappedOrganizationInvitationsResponseOneOf {
         ClientClientWrappedOrganizationInvitationsResponseOneOf {
             data: None,
-            total: None,
+            total_count: None,
         }
     }
 }

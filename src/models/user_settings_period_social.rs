@@ -19,17 +19,25 @@ pub struct UserSettingsPeriodSocial {
     pub required: bool,
     #[serde(rename = "authenticatable")]
     pub authenticatable: bool,
-    #[serde(
-        rename = "block_email_subaddresses",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub block_email_subaddresses: Option<bool>,
+    #[serde(rename = "block_email_subaddresses")]
+    pub block_email_subaddresses: bool,
     #[serde(rename = "strategy")]
     pub strategy: String,
-    #[serde(rename = "not_selectable", skip_serializing_if = "Option::is_none")]
-    pub not_selectable: Option<bool>,
-    #[serde(rename = "deprecated", skip_serializing_if = "Option::is_none")]
-    pub deprecated: Option<bool>,
+    #[serde(rename = "not_selectable")]
+    pub not_selectable: bool,
+    #[serde(rename = "deprecated")]
+    pub deprecated: bool,
+    /// A human readable name for the social provider.
+    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// A URL pointing to the logo of the social provider.
+    #[serde(
+        rename = "logo_url",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub logo_url: Option<Option<String>>,
 }
 
 impl UserSettingsPeriodSocial {
@@ -37,16 +45,21 @@ impl UserSettingsPeriodSocial {
         enabled: bool,
         required: bool,
         authenticatable: bool,
+        block_email_subaddresses: bool,
         strategy: String,
+        not_selectable: bool,
+        deprecated: bool,
     ) -> UserSettingsPeriodSocial {
         UserSettingsPeriodSocial {
             enabled,
             required,
             authenticatable,
-            block_email_subaddresses: None,
+            block_email_subaddresses,
             strategy,
-            not_selectable: None,
-            deprecated: None,
+            not_selectable,
+            deprecated,
+            name: None,
+            logo_url: None,
         }
     }
 }
