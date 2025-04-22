@@ -14,23 +14,16 @@ use std::sync::Mutex;
 use std::time::Duration;
 use tokio::sync::{RwLock, RwLockWriteGuard};
 
+pub type Listener =
+    Box<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
+
 /// The main client for interacting with Clerk's Frontend API
 #[derive(Clone, Default)]
 pub struct Clerk {
     config: Arc<ClerkFapiConfiguration>,
     state: Arc<RwLock<ClerkState>>,
     api_client: Arc<ClerkFapiClient>,
-    listeners: Arc<
-        RwLock<
-            Vec<
-                Box<
-                    dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>)
-                        + Send
-                        + Sync,
-                >,
-            >,
-        >,
-    >,
+    listeners: Arc<RwLock<Vec<Listener>>>,
 }
 
 #[derive(Default)]

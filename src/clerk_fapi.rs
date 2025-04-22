@@ -84,22 +84,17 @@ impl Middleware for AuthorizationMiddleware {
     }
 }
 
+/// Type definition for the client update callback function
+type ClientUpdateCallback = Box<
+    dyn FnMut(client_period_client::ClientPeriodClient) -> Pin<Box<dyn Future<Output = ()> + Send>>
+        + Send,
+>;
+
 /// The main client for interacting with Clerk's Frontend API
 #[derive(Clone)]
 pub struct ClerkFapiClient {
     config: Arc<ApiConfiguration>,
-    update_client_callback: Option<
-        Arc<
-            Mutex<
-                Box<
-                    dyn FnMut(
-                            client_period_client::ClientPeriodClient,
-                        ) -> Pin<Box<dyn Future<Output = ()> + Send>>
-                        + Send,
-                >,
-            >,
-        >,
-    >,
+    update_client_callback: Option<Arc<Mutex<ClientUpdateCallback>>>,
 }
 
 impl ClerkFapiClient {
