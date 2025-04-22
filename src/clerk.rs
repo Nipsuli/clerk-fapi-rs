@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 pub type Listener =
-    Box<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
+    Arc<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
 
 /// The main client for interacting with Clerk's Frontend API
 #[derive(Clone, Default)]
@@ -228,43 +228,33 @@ impl Clerk {
 
     /// Notifies all registered listeners with the current state
     fn notify_listeners(&self) {
-        // Get all state with minimal lock time
         let client_opt;
         let current_session;
         let current_user;
         let current_organization;
 
-        // First, get the state data without holding locks during calls
         {
             let state = self.state.read();
-
-            // Early return if no client
             if state.client.is_none() {
                 return;
             }
-
-            // Clone all the data we need
             client_opt = state.client.clone();
             current_session = state.session.clone();
             current_user = state.user.clone();
             current_organization = state.organization.clone();
         }
 
-        // Extract client - we already checked it's Some
-        let client = client_opt.unwrap();
-
-        // Read the listeners and call each one
-        // We have to hold the lock during iteration, but not during the individual calls
-        let listeners = self.listeners.read();
-        for listener in listeners.iter() {
-            // Make the call after releasing the lock for this iteration
-            let client_clone = client.clone();
-            let session_clone = current_session.clone();
-            let user_clone = current_user.clone();
-            let org_clone = current_organization.clone();
-
-            // Call the listener with cloned data
-            listener(client_clone, session_clone, user_clone, org_clone);
+        if let Some(client) = client_opt {
+            let listeners = {
+                self.listeners.read().clone() // cheap Arc clones
+            };
+            for listener in listeners.iter() {
+                let client_clone = client.clone();
+                let session_clone = current_session.clone();
+                let user_clone = current_user.clone();
+                let org_clone = current_organization.clone();
+                listener(client_clone, session_clone, user_clone, org_clone);
+            }
         }
     }
 
@@ -634,7 +624,7 @@ impl Clerk {
         // First add the listener
         {
             let mut listeners = self.listeners.write();
-            listeners.push(Box::new(callback.clone()));
+            listeners.push(Arc::new(callback.clone()));
         }
 
         // Then separately call the callback if we have a loaded client
