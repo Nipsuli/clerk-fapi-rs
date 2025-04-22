@@ -138,31 +138,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ...
     let clerk = todo!("Load the way you want");
     // ...
-    clerk
-        .add_listener(|client, session, user, organization| {
-            println!("Client: {:?}", client);
-            println!("Session: {:?}", session);
-            println!("User: {:?}", user);
-            println!("Organization: {:?}", organization);
-        })
-        .await;
+    // Add a listener that will be called whenever the client state changes
+    clerk.add_listener(|client, session, user, organization| {
+        println!("Client: {:?}", client);
+        println!("Session: {:?}", session);
+        println!("User: {:?}", user);
+        println!("Organization: {:?}", organization);
+    });
 }
 ```
 
 There are some other helper methods such as:
 ```rust
+use clerk_fapi_rs::models::{
+    ClientPeriodClient as Client, ClientPeriodEnvironment as Environment,
+    ClientPeriodOrganization as Organization, ClientPeriodSession as Session,
+    ClientPeriodUser as User,
+};
+
 #[tokio::main]  
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ...
     let clerk = todo!("Load the way you want");
     // ...
-    clerk.loaded().await?;
-    clerk.environment().await?;
-    clerk.client().await?;
-    clerk.session().await?;
-    clerk.user().await?;
-    clerk.organization().await?;
-    clerk.get_token(None, None).await?;
+    // Check if the client is loaded
+    let is_loaded: bool = clerk.loaded();
+    
+    // Get the current environment information
+    let env: Option<Environment> = clerk.environment();
+    
+    // Get the current client data 
+    let client: Option<Client> = clerk.client();
+    
+    // Get the current session
+    let session: Option<Session> = clerk.session();
+    
+    // Get the authenticated user
+    let user: Option<User> = clerk.user();
+    
+    // Get the active organization
+    let org: Option<Organization> = clerk.organization();
+    
+    // Get a session JWT token
+    let token: Option<String> = clerk.get_token(None, None).await?;
 }
 ```
 
