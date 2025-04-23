@@ -12,7 +12,7 @@ readme = "README.md"
 
 [dependencies]
 reqwest = { version = "0.12.0", features = ["json", "multipart"] }
-reqwest-middleware = { version = "0.4.0", features = ["multipart"] }
+js-sys = "=0.3.77"
 anyhow = "1.0.0"
 serde = { version = "^1.0", features = ["derive"] }
 serde_with = { version = "^3.8", default-features = false, features = [
@@ -30,10 +30,14 @@ parking_lot = "0.12"
 pin-project-lite = "0.2"
 futures = "0.3"
 chrono = "0.4.38"
-async-trait = "0.1"
+
 
 [dev-dependencies]
 clerk-fapi-rs = { path = "." }
 dotenv = "0.15"
 tokio = { version = "1.0", features = ["full", "test-util", "rt-multi-thread"] }
 mockito = "1.2"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+uuid = { version = "^1.8", features = ["serde", "v4", "rng-getrandom"] }

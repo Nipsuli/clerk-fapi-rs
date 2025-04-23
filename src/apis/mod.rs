@@ -1,5 +1,4 @@
 use anyhow::Error as AnyhowError;
-use reqwest_middleware::Error as MiddlewareError;
 use std::error;
 use std::fmt;
 
@@ -50,15 +49,6 @@ impl<T> From<reqwest::Error> for Error<T> {
     }
 }
 
-impl<T> From<MiddlewareError> for Error<T> {
-    fn from(e: MiddlewareError) -> Self {
-        match e {
-            MiddlewareError::Middleware(e) => Error::Middleware(e),
-            MiddlewareError::Reqwest(e) => Error::Reqwest(e),
-        }
-    }
-}
-
 impl<T> From<serde_json::Error> for Error<T> {
     fn from(e: serde_json::Error) -> Self {
         Error::Serde(e)
@@ -68,6 +58,12 @@ impl<T> From<serde_json::Error> for Error<T> {
 impl<T> From<std::io::Error> for Error<T> {
     fn from(e: std::io::Error) -> Self {
         Error::Io(e)
+    }
+}
+
+impl<T> From<anyhow::Error> for Error<T> {
+    fn from(e: anyhow::Error) -> Self {
+        Error::Middleware(e)
     }
 }
 

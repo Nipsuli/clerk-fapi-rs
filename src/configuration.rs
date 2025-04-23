@@ -107,7 +107,7 @@ pub trait Store: Send + Sync + std::fmt::Debug {
 }
 
 #[derive(Clone, Default, Debug)]
-struct DefaultStore {
+pub struct DefaultStore {
     inner: Arc<RwLock<HashMap<String, JsonValue>>>,
 }
 

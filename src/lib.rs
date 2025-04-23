@@ -13,3 +13,7 @@ pub mod clerk;
 pub mod clerk_fapi;
 pub mod configuration;
 pub mod models;
+
+// Re-export main types
+pub use clerk_fapi::{ClerkFapiClient, ClerkHttpClient};
+pub use configuration::ClerkFapiConfiguration;

@@ -2,65 +2,42 @@ use crate::apis::configuration::Configuration as ApiConfiguration;
 use crate::apis::*;
 use crate::configuration::{ClerkFapiConfiguration, Store};
 use crate::models::*;
-use async_trait::async_trait;
-use http::Extensions as HttpExtensions;
 use parking_lot::Mutex;
 use reqwest::header::{HeaderMap, HeaderValue};
-use reqwest::Client;
-use reqwest::{Request, Response};
-use reqwest_middleware::{
-    ClientBuilder, ClientWithMiddleware, Middleware, Next, Result as ReqwestResult,
-};
+use reqwest::{Client, Request, Response};
 use serde_json::Value as JsonValue;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 
-// Add middleware definitions
-#[derive(Clone)]
-struct DefaultQueryMiddleware;
-
-#[async_trait]
-impl Middleware for DefaultQueryMiddleware {
-    async fn handle(
-        &self,
-        mut req: Request,
-        extensions: &mut HttpExtensions,
-        next: Next<'_>,
-    ) -> ReqwestResult<Response> {
-        let url = req.url_mut();
-        url.query_pairs_mut().append_pair("_is_native", "1");
-        next.run(req, extensions).await
-    }
-}
-
-#[derive(Clone)]
-struct AuthorizationMiddleware {
+/// Custom client wrapper that behaves like reqwest::Client but adds Clerk-specific functionality
+#[derive(Debug)]
+pub struct ClerkHttpClient {
+    inner: Client,
     store: Arc<dyn Store>,
     store_prefix: String,
 }
 
-impl AuthorizationMiddleware {
-    fn new(store: Arc<dyn Store>, store_prefix: String) -> Self {
+impl ClerkHttpClient {
+    /// Creates a new ClerkHttpClient
+    pub fn new(client: Client, store: Arc<dyn Store>, store_prefix: String) -> Self {
         Self {
+            inner: client,
             store,
             store_prefix,
         }
     }
 
+    /// Returns the auth key name
     fn get_auth_key(&self) -> String {
         format!("{}authorization", self.store_prefix)
     }
-}
 
-#[async_trait]
-impl Middleware for AuthorizationMiddleware {
-    async fn handle(
-        &self,
-        mut req: Request,
-        extensions: &mut HttpExtensions,
-        next: Next<'_>,
-    ) -> ReqwestResult<Response> {
+    /// Process the request before sending
+    fn process_request(&self, mut req: Request) -> Request {
+        // Add _is_native query parameter
+        let url = req.url_mut();
+        url.query_pairs_mut().append_pair("_is_native", "1");
+
+        // Add Authorization header if available
         if let Some(auth) = self.store.get(&self.get_auth_key()) {
             if let Some(auth_str) = auth.as_str() {
                 if let Ok(value) = HeaderValue::from_str(auth_str) {
@@ -69,18 +46,78 @@ impl Middleware for AuthorizationMiddleware {
             }
         }
 
-        let store = self.store.clone();
-        let auth_key = self.get_auth_key();
+        req
+    }
 
-        let resp = next.run(req, extensions).await?;
-
+    /// Process the response after receiving
+    fn process_response(&self, resp: &Response) {
+        // Store Authorization header if present
         if let Some(auth_header) = resp.headers().get("Authorization") {
             if let Ok(auth_str) = auth_header.to_str() {
-                store.set(&auth_key, JsonValue::String(auth_str.to_string()));
+                self.store.set(
+                    &self.get_auth_key(),
+                    JsonValue::String(auth_str.to_string()),
+                );
             }
         }
+    }
 
-        Ok(resp)
+    /// Send a request with pre and post processing
+    pub async fn execute(&self, request: Request) -> Result<Response, reqwest::Error> {
+        // Process the request to add query params and authorization
+        let processed_request = self.process_request(request);
+
+        // Send the request
+        let response = self.inner.execute(processed_request).await?;
+
+        // Process the response to store authorization tokens
+        self.process_response(&response);
+
+        Ok(response)
+    }
+
+    /// Access the inner reqwest client
+    pub fn get_inner(&self) -> &Client {
+        &self.inner
+    }
+
+    /// Build a request with the given HTTP method
+    pub fn request<U: reqwest::IntoUrl>(
+        &self,
+        method: reqwest::Method,
+        url: U,
+    ) -> reqwest::RequestBuilder {
+        self.inner.request(method, url)
+    }
+
+    /// Issue a GET request
+    pub fn get<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
+        self.inner.get(url)
+    }
+
+    /// Issue a POST request
+    pub fn post<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
+        self.inner.post(url)
+    }
+
+    /// Issue a PUT request
+    pub fn put<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
+        self.inner.put(url)
+    }
+
+    /// Issue a PATCH request
+    pub fn patch<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
+        self.inner.patch(url)
+    }
+
+    /// Issue a DELETE request
+    pub fn delete<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
+        self.inner.delete(url)
+    }
+
+    /// Issue a HEAD request
+    pub fn head<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
+        self.inner.head(url)
     }
 }
 
@@ -102,26 +139,25 @@ impl ClerkFapiClient {
         headers.insert("x-mobile", HeaderValue::from_static("1"));
         headers.insert("x-no-origin", HeaderValue::from_static("1"));
 
-        // Create client with default headers and middleware
+        // Create client with default headers
         let http_client = Client::builder()
             .default_headers(headers)
             .user_agent(&config.user_agent)
             .build()
             .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
-        let client = ClientBuilder::new(http_client)
-            .with(DefaultQueryMiddleware)
-            .with(AuthorizationMiddleware::new(
-                config.store.clone(),
-                config.store_prefix.clone(),
-            ))
-            .build();
+        // Create custom client
+        let client = ClerkHttpClient::new(
+            http_client,
+            config.store.clone(),
+            config.store_prefix.clone(),
+        );
 
         // Create API configuration
         let mut api_config = ApiConfiguration::new();
         api_config.base_path = config.base_url.clone();
         api_config.user_agent = Some(config.user_agent.clone());
-        api_config.client = client.clone();
+        api_config.client = client;
 
         Ok(Self {
             config: Arc::new(api_config),
@@ -2050,6 +2086,39 @@ impl Default for ClerkFapiClient {
                 update_client_callback: None,
             }
         })
+    }
+}
+
+// Add these implementations to make ClerkHttpClient compatible with reqwest::Client
+impl Clone for ClerkHttpClient {
+    fn clone(&self) -> Self {
+        ClerkHttpClient {
+            inner: self.inner.clone(),
+            store: self.store.clone(),
+            store_prefix: self.store_prefix.clone(),
+        }
+    }
+}
+
+// Add Send and Sync implementations
+unsafe impl Send for ClerkHttpClient {}
+unsafe impl Sync for ClerkHttpClient {}
+
+// Standard traits
+impl std::fmt::Display for ClerkHttpClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ClerkHttpClient")
+    }
+}
+
+// Implement convenience methods to wrap RequestBuilder
+impl ClerkHttpClient {
+    pub async fn intercept_builder_request(
+        &self,
+        builder: reqwest::RequestBuilder,
+    ) -> Result<Response, reqwest::Error> {
+        let request = builder.build()?;
+        self.execute(request).await
     }
 }
 
