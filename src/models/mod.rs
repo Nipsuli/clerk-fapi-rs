@@ -196,7 +196,8 @@ pub mod external_account_with_verification;
 pub use self::external_account_with_verification::ExternalAccountWithVerification;
 pub mod external_account_with_verification_verification;
 pub use self::external_account_with_verification_verification::{
-    ExternalAccountWithVerificationVerification, SimpleVerification, Status, Strategy
+    ExternalAccountWithVerificationVerification, SimpleVerification, 
+    Status as ExternalAccountStatus, Strategy as ExternalAccountStrategy
 };
 pub mod fraud_settings_period_native_settings;
 pub use self::fraud_settings_period_native_settings::FraudSettingsPeriodNativeSettings;
