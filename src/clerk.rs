@@ -6,9 +6,7 @@ use crate::models::{
     ClientPeriodOrganization as Organization, ClientPeriodSession as Session,
     ClientPeriodUser as User,
 };
-use parking_lot::{Mutex, RwLock, RwLockWriteGuard};
-use std::future::Future;
-use std::pin::Pin;
+use parking_lot::{RwLock, RwLockWriteGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
