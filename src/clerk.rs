@@ -507,7 +507,7 @@ impl Clerk {
                 _ => return Err("No user data found in session".to_string()),
             };
 
-            let target_organization_id = if let Some(org_id_or_slug) = organization_id_or_slug {
+            let target_organization_id = if let Some(org_id_or_slug) = organization_id_or_slug.clone() {
                 if org_id_or_slug.starts_with("org_") {
                     // It's an organization ID - verify it exists in user's memberships
                     let org_exists = user
@@ -520,7 +520,7 @@ impl Clerk {
                         })
                         .unwrap_or(false);
                     if !org_exists {
-                        None
+                        return Err(format!("Organization with ID {} not found in user's memberships", org_id_or_slug));
                     } else {
                         Some(org_id_or_slug)
                     }
@@ -538,7 +538,12 @@ impl Clerk {
                                 }
                             })
                         });
-
+                    
+                    // Return an error if organization is not found by slug
+                    if org_id.is_none() {
+                        return Err(format!("Organization with slug '{}' not found in user's memberships", org_id_or_slug));
+                    }
+                    
                     org_id
                 }
             } else {
