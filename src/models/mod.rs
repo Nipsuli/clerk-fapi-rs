@@ -29,7 +29,9 @@ pub use self::client_commerce_settings_billing::ClientCommerceSettingsBilling;
 pub mod client_email_address_verification;
 pub use self::client_email_address_verification::ClientEmailAddressVerification;
 pub mod client_passkey_verification;
-pub use self::client_passkey_verification::ClientPasskeyVerification;
+pub use self::client_passkey_verification::{
+    ClientPasskeyVerification, SimplePasskeyVerification, Status, Strategy
+};
 pub mod client_period_account_portal;
 pub use self::client_period_account_portal::ClientPeriodAccountPortal;
 pub mod client_period_active_session;
