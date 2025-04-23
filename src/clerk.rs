@@ -507,48 +507,55 @@ impl Clerk {
                 _ => return Err("No user data found in session".to_string()),
             };
 
-            let target_organization_id = if let Some(org_id_or_slug) = organization_id_or_slug.clone() {
-                if org_id_or_slug.starts_with("org_") {
-                    // It's an organization ID - verify it exists in user's memberships
-                    let org_exists = user
-                        .organization_memberships
-                        .as_ref()
-                        .map(|memberships| {
-                            memberships
-                                .iter()
-                                .any(|m| m.organization.id == org_id_or_slug)
-                        })
-                        .unwrap_or(false);
-                    if !org_exists {
-                        return Err(format!("Organization with ID {} not found in user's memberships", org_id_or_slug));
+            let target_organization_id =
+                if let Some(org_id_or_slug) = organization_id_or_slug.clone() {
+                    if org_id_or_slug.starts_with("org_") {
+                        // It's an organization ID - verify it exists in user's memberships
+                        let org_exists = user
+                            .organization_memberships
+                            .as_ref()
+                            .map(|memberships| {
+                                memberships
+                                    .iter()
+                                    .any(|m| m.organization.id == org_id_or_slug)
+                            })
+                            .unwrap_or(false);
+                        if !org_exists {
+                            return Err(format!(
+                                "Organization with ID {} not found in user's memberships",
+                                org_id_or_slug
+                            ));
+                        } else {
+                            Some(org_id_or_slug)
+                        }
                     } else {
-                        Some(org_id_or_slug)
+                        // Try to find organization by slug
+                        let org_id =
+                            user.organization_memberships
+                                .as_ref()
+                                .and_then(|memberships| {
+                                    memberships.iter().find_map(|m| {
+                                        if m.organization.slug == org_id_or_slug {
+                                            Some(m.organization.id.clone())
+                                        } else {
+                                            None
+                                        }
+                                    })
+                                });
+
+                        // Return an error if organization is not found by slug
+                        if org_id.is_none() {
+                            return Err(format!(
+                                "Organization with slug '{}' not found in user's memberships",
+                                org_id_or_slug
+                            ));
+                        }
+
+                        org_id
                     }
                 } else {
-                    // Try to find organization by slug
-                    let org_id = user
-                        .organization_memberships
-                        .as_ref()
-                        .and_then(|memberships| {
-                            memberships.iter().find_map(|m| {
-                                if m.organization.slug == org_id_or_slug {
-                                    Some(m.organization.id.clone())
-                                } else {
-                                    None
-                                }
-                            })
-                        });
-                    
-                    // Return an error if organization is not found by slug
-                    if org_id.is_none() {
-                        return Err(format!("Organization with slug '{}' not found in user's memberships", org_id_or_slug));
-                    }
-                    
-                    org_id
-                }
-            } else {
-                None
-            };
+                    None
+                };
 
             // Save for API call
             session_id_to_touch = target_session.id;
