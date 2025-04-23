@@ -4,6 +4,7 @@ use crate::configuration::{ClerkFapiConfiguration, Store};
 use crate::models::*;
 use async_trait::async_trait;
 use http::Extensions as HttpExtensions;
+use parking_lot::Mutex;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use reqwest::{Request, Response};
@@ -14,7 +15,6 @@ use serde_json::Value as JsonValue;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 // Add middleware definitions
 #[derive(Clone)]
@@ -85,10 +85,7 @@ impl Middleware for AuthorizationMiddleware {
 }
 
 /// Type definition for the client update callback function
-type ClientUpdateCallback = Box<
-    dyn FnMut(client_period_client::ClientPeriodClient) -> Pin<Box<dyn Future<Output = ()> + Send>>
-        + Send,
->;
+type ClientUpdateCallback = Box<dyn FnMut(client_period_client::ClientPeriodClient) + Send>;
 
 /// The main client for interacting with Clerk's Frontend API
 #[derive(Clone)]
@@ -133,28 +130,17 @@ impl ClerkFapiClient {
     }
 
     /// Sets the callback for client updates
-    pub fn set_update_client_callback<F, Fut>(&mut self, callback: F)
+    pub fn set_update_client_callback<F>(&mut self, callback: F)
     where
-        F: FnMut(client_period_client::ClientPeriodClient) -> Fut + Send + 'static,
-        Fut: Future<Output = ()> + Send + 'static,
+        F: FnMut(client_period_client::ClientPeriodClient) + Send + 'static,
     {
-        let mut callback = callback;
-        self.update_client_callback = Some(Arc::new(Mutex::new(Box::new(move |client| {
-            // Wrap the future in a Pin<Box<>> for storage
-            Box::pin(callback(client))
-        }))));
+        self.update_client_callback = Some(Arc::new(Mutex::new(Box::new(callback))));
     }
 
-    async fn handle_client_update(
-        &self,
-        client: client_period_client::ClientPeriodClient,
-    ) -> Result<(), String> {
+    fn handle_client_update(&self, client: client_period_client::ClientPeriodClient) {
         if let Some(cb) = &self.update_client_callback {
-            let mut cb = cb.lock().await; // Lock the Mutex to get mutable access
-            (cb)(client).await; // Await the async callback
-            Ok(())
-        } else {
-            Ok(())
+            let mut cb = cb.lock();
+            (cb)(client);
         }
     }
 
@@ -187,7 +173,7 @@ impl ClerkFapiClient {
         let response =
             active_sessions_api::revoke_session(&self.config, session_id, clerk_session_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -198,9 +184,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedBackupCodes, Error<backup_codes_api::CreateBackupCodesError>>
     {
         let response = backup_codes_api::create_backup_codes(&self.config).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -210,7 +194,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodDeleteSession, Error<client_api::DeleteClientSessionsError>> {
         let response = client_api::delete_client_sessions(&self.config).await?;
         if let Some(client) = response.response.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -332,9 +316,7 @@ impl ClerkFapiClient {
             code,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -348,9 +330,7 @@ impl ClerkFapiClient {
     > {
         let response =
             domains_api::create_organization_domain(&self.config, organization_id, name).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -366,7 +346,7 @@ impl ClerkFapiClient {
             domains_api::delete_organization_domain(&self.config, organization_id, domain_id)
                 .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -381,9 +361,7 @@ impl ClerkFapiClient {
     > {
         let response =
             domains_api::get_organization_domain(&self.config, organization_id, domain_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -407,9 +385,7 @@ impl ClerkFapiClient {
             enrollment_mode,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -429,9 +405,7 @@ impl ClerkFapiClient {
             affiliation_email_address,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -453,9 +427,7 @@ impl ClerkFapiClient {
             delete_pending,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -474,9 +446,7 @@ impl ClerkFapiClient {
             _clerk_session_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -492,7 +462,7 @@ impl ClerkFapiClient {
             email_addresses_api::delete_email_address(&self.config, email_id, clerk_session_id)
                 .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -508,9 +478,7 @@ impl ClerkFapiClient {
         let response =
             email_addresses_api::get_email_address(&self.config, email_id, clerk_session_id)
                 .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -542,9 +510,7 @@ impl ClerkFapiClient {
             action_complete_redirect_url,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -564,9 +530,7 @@ impl ClerkFapiClient {
             _clerk_session_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -596,7 +560,7 @@ impl ClerkFapiClient {
             external_accounts_api::delete_external_account(&self.config, external_account_id)
                 .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -629,9 +593,7 @@ impl ClerkFapiClient {
             oidc_prompt,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -657,9 +619,7 @@ impl ClerkFapiClient {
             oidc_prompt,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -675,9 +635,7 @@ impl ClerkFapiClient {
             external_account_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -705,9 +663,7 @@ impl ClerkFapiClient {
             role,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -727,9 +683,7 @@ impl ClerkFapiClient {
             role,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -745,9 +699,7 @@ impl ClerkFapiClient {
             organization_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -769,9 +721,7 @@ impl ClerkFapiClient {
             status,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -789,9 +739,7 @@ impl ClerkFapiClient {
             invitation_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -812,9 +760,7 @@ impl ClerkFapiClient {
             role,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -840,9 +786,7 @@ impl ClerkFapiClient {
             role,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -856,9 +800,7 @@ impl ClerkFapiClient {
     > {
         let response =
             members_api::remove_organization_member(&self.config, organization_id, user_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -878,9 +820,7 @@ impl ClerkFapiClient {
             role,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -899,9 +839,7 @@ impl ClerkFapiClient {
             request_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -923,9 +861,7 @@ impl ClerkFapiClient {
             status,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -943,9 +879,7 @@ impl ClerkFapiClient {
             request_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -999,9 +933,7 @@ impl ClerkFapiClient {
         Error<organization_api::CreateOrganizationError>,
     > {
         let response = organization_api::create_organization(&self.config, name).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1014,7 +946,7 @@ impl ClerkFapiClient {
     > {
         let response = organization_api::delete_organization(&self.config, organization_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1029,7 +961,7 @@ impl ClerkFapiClient {
         let response =
             organization_api::delete_organization_logo(&self.config, organization_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1040,9 +972,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedOrganization, Error<organization_api::GetOrganizationError>>
     {
         let response = organization_api::get_organization(&self.config, organization_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1058,9 +988,7 @@ impl ClerkFapiClient {
         let response =
             organization_api::update_organization(&self.config, organization_id, name, slug)
                 .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1074,9 +1002,7 @@ impl ClerkFapiClient {
     > {
         let response =
             organization_api::update_organization_logo(&self.config, organization_id, file).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1093,9 +1019,7 @@ impl ClerkFapiClient {
             invitation_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1111,9 +1035,7 @@ impl ClerkFapiClient {
             suggestion_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1130,7 +1052,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1151,9 +1073,7 @@ impl ClerkFapiClient {
             paginated,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1173,9 +1093,7 @@ impl ClerkFapiClient {
             status,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1195,9 +1113,7 @@ impl ClerkFapiClient {
             status,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1220,9 +1136,7 @@ impl ClerkFapiClient {
             public_key_credential,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1233,7 +1147,7 @@ impl ClerkFapiClient {
     {
         let response = passkeys_api::delete_passkey(&self.config, passkey_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1244,9 +1158,7 @@ impl ClerkFapiClient {
         name: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedPasskey, Error<passkeys_api::PatchPasskeyError>> {
         let response = passkeys_api::patch_passkey(&self.config, passkey_id, name).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1259,9 +1171,7 @@ impl ClerkFapiClient {
         let response =
             passkeys_api::post_passkey(&self.config, _clerk_session_id, origin, x_original_host)
                 .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1270,9 +1180,7 @@ impl ClerkFapiClient {
         passkey_id: &str,
     ) -> Result<ClientPeriodClientWrappedPasskey, Error<passkeys_api::ReadPasskeyError>> {
         let response = passkeys_api::read_passkey(&self.config, passkey_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1289,7 +1197,7 @@ impl ClerkFapiClient {
             phone_numbers_api::delete_phone_number(&self.config, phone_number_id, clerk_session_id)
                 .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1315,9 +1223,7 @@ impl ClerkFapiClient {
             reserved_for_second_factor,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1330,9 +1236,7 @@ impl ClerkFapiClient {
         let response =
             phone_numbers_api::read_phone_number(&self.config, phone_number_id, clerk_session_id)
                 .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1352,9 +1256,7 @@ impl ClerkFapiClient {
             _clerk_session_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1376,9 +1278,7 @@ impl ClerkFapiClient {
             default_second_factor,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1398,9 +1298,7 @@ impl ClerkFapiClient {
             _clerk_session_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1414,9 +1312,7 @@ impl ClerkFapiClient {
         let response =
             roles_api::list_organization_roles(&self.config, organization_id, limit, offset)
                 .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1459,7 +1355,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedSession, Error<sessions_api::EndSessionError>> {
         let response = sessions_api::end_session(&self.config, session_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -1470,7 +1366,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedSession, Error<sessions_api::GetSessionError>> {
         let response = sessions_api::get_session(&self.config, session_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -1483,7 +1379,7 @@ impl ClerkFapiClient {
     > {
         let response = sessions_api::remove_client_sessions_and_retain_cookie(&self.config).await?;
         if let Some(client) = response.response.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -1494,7 +1390,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedSession, Error<sessions_api::RemoveSessionError>> {
         let response = sessions_api::remove_session(&self.config, session_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -1507,7 +1403,7 @@ impl ClerkFapiClient {
         let response =
             sessions_api::touch_session(&self.config, session_id, active_organization_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -1547,7 +1443,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -1564,7 +1460,7 @@ impl ClerkFapiClient {
                 .await?;
 
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1601,7 +1497,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1612,7 +1508,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedSignIn, Error<sign_ins_api::GetSignInError>> {
         let response = sign_ins_api::get_sign_in(&self.config, sign_in_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1648,7 +1544,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1668,7 +1564,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1687,7 +1583,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1718,7 +1614,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1777,7 +1673,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1788,7 +1684,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedSignUp, Error<sign_ups_api::GetSignUpsError>> {
         let response = sign_ups_api::get_sign_ups(&self.config, sign_up_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1816,7 +1712,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1869,7 +1765,7 @@ impl ClerkFapiClient {
         )
         .await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         };
         Ok(response)
     }
@@ -1880,7 +1776,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedDeletedObject, Error<totp_api::DeleteTotpError>> {
         let response = totp_api::delete_totp(&self.config).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1889,9 +1785,7 @@ impl ClerkFapiClient {
         &self,
     ) -> Result<ClientPeriodClientWrappedTotp, Error<totp_api::PostTotpError>> {
         let response = totp_api::post_totp(&self.config).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1900,9 +1794,7 @@ impl ClerkFapiClient {
         code: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedTotp, Error<totp_api::VerifyTotpError>> {
         let response = totp_api::verify_totp(&self.config, code).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1930,9 +1822,7 @@ impl ClerkFapiClient {
             sign_out_of_other_sessions,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -1943,7 +1833,7 @@ impl ClerkFapiClient {
     {
         let response = user_api::delete_profile_image(&self.config, _clerk_session_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1954,7 +1844,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedDeletedObject, Error<user_api::DeleteUserError>> {
         let response = user_api::delete_user(&self.config, _clerk_session_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -1964,9 +1854,7 @@ impl ClerkFapiClient {
         _clerk_session_id: Option<&str>,
     ) -> Result<ClientPeriodClientWrappedUser, Error<user_api::GetUserError>> {
         let response = user_api::get_user(&self.config, _clerk_session_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -2001,9 +1889,7 @@ impl ClerkFapiClient {
             profile_image_id,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -2014,9 +1900,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedUser, Error<user_api::RemovePasswordError>> {
         let response =
             user_api::remove_password(&self.config, current_password, _clerk_session_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -2029,7 +1913,7 @@ impl ClerkFapiClient {
         let response =
             user_api::update_profile_image(&self.config, _clerk_session_id, _file).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap();
+            self.handle_client_update(*client);
         }
         Ok(response)
     }
@@ -2051,9 +1935,7 @@ impl ClerkFapiClient {
             origin,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -2066,7 +1948,7 @@ impl ClerkFapiClient {
     > {
         let response = web3_wallets_api::delete_web3_wallet(&self.config, web3_wallet_id).await?;
         if let Some(client) = response.client.clone() {
-            self.handle_client_update(*client).await.unwrap()
+            self.handle_client_update(*client)
         }
         Ok(response)
     }
@@ -2087,9 +1969,7 @@ impl ClerkFapiClient {
         let response =
             web3_wallets_api::post_web3_wallets(&self.config, web3_wallet, _clerk_session_id)
                 .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -2111,9 +1991,7 @@ impl ClerkFapiClient {
             redirect_url,
         )
         .await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
@@ -2123,9 +2001,7 @@ impl ClerkFapiClient {
     ) -> Result<ClientPeriodClientWrappedWeb3Wallet, Error<web3_wallets_api::ReadWeb3WalletError>>
     {
         let response = web3_wallets_api::read_web3_wallet(&self.config, web3_wallet_id).await?;
-        self.handle_client_update(*response.client.clone())
-            .await
-            .unwrap();
+        self.handle_client_update(*response.client.clone());
         Ok(response)
     }
 
