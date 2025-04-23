@@ -193,7 +193,9 @@ pub use self::create_session_token_200_response::CreateSessionToken200Response;
 pub mod external_account_with_verification;
 pub use self::external_account_with_verification::ExternalAccountWithVerification;
 pub mod external_account_with_verification_verification;
-pub use self::external_account_with_verification_verification::ExternalAccountWithVerificationVerification;
+pub use self::external_account_with_verification_verification::{
+    ExternalAccountWithVerificationVerification, SimpleVerification, Status, Strategy
+};
 pub mod fraud_settings_period_native_settings;
 pub use self::fraud_settings_period_native_settings::FraudSettingsPeriodNativeSettings;
 pub mod get_health_200_response;
@@ -252,6 +254,8 @@ pub mod stubs_period_verification_period_admin;
 pub use self::stubs_period_verification_period_admin::StubsPeriodVerificationPeriodAdmin;
 pub mod stubs_period_verification_period_backup_code;
 pub use self::stubs_period_verification_period_backup_code::StubsPeriodVerificationPeriodBackupCode;
+pub mod stubs_period_verification_period_code;
+pub use self::stubs_period_verification_period_code::StubsPeriodVerificationPeriodCode;
 pub mod stubs_period_verification_period_from_oauth;
 pub use self::stubs_period_verification_period_from_oauth::StubsPeriodVerificationPeriodFromOauth;
 pub mod stubs_period_verification_period_google_one_tap;

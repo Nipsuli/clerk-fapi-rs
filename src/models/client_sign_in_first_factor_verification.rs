@@ -27,6 +27,7 @@ pub enum ClientSignInFirstFactorVerification {
     StubsPeriodVerificationPeriodGoogleOneTap(
         Box<models::StubsPeriodVerificationPeriodGoogleOneTap>,
     ),
+    StubsPeriodVerificationPeriodCode(Box<models::StubsPeriodVerificationPeriodCode>),
 }
 
 impl Default for ClientSignInFirstFactorVerification {
