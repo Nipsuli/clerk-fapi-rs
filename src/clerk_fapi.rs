@@ -84,6 +84,53 @@ impl Middleware for AuthorizationMiddleware {
     }
 }
 
+#[derive(Clone, Default)]
+struct DebugMiddleware;
+
+#[async_trait]
+impl Middleware for DebugMiddleware {
+    async fn handle(
+        &self,
+        req: Request,
+        extensions: &mut HttpExtensions,
+        next: Next<'_>,
+    ) -> ReqwestResult<Response> {
+        // Get request information for context
+        let method = req.method().clone();
+        let url = req.url().clone();
+
+        // Execute the request
+        let resp = next.run(req, extensions).await?;
+
+        // Save status and headers before consuming the response
+        let status = resp.status();
+        let version = resp.version();
+        let headers = resp.headers().clone();
+
+        // Clone the response text to print it
+        let resp_text = resp.text().await?;
+
+        // Debug print the response details
+        println!("[DEBUG] Request {} {} -> Response {}", method, url, status);
+        println!("[DEBUG] Response body: {}", resp_text);
+
+        // We need to recreate the response since we consumed it
+        // Build a new response with the same status, headers and body
+        let mut builder = http::Response::builder().status(status).version(version);
+
+        // Add all headers back
+        let builder_headers = builder.headers_mut().unwrap();
+        for (key, value) in headers.iter() {
+            builder_headers.insert(key, value.clone());
+        }
+
+        // Create the response with the original body
+        let resp = Response::from(builder.body(resp_text).unwrap());
+
+        Ok(resp)
+    }
+}
+
 /// Type definition for the client update callback function
 type ClientUpdateCallback = Box<dyn FnMut(client_period_client::ClientPeriodClient) + Send>;
 
@@ -115,6 +162,7 @@ impl ClerkFapiClient {
                 config.store.clone(),
                 config.store_prefix.clone(),
             ))
+            .with(DebugMiddleware)
             .build();
 
         // Create API configuration
