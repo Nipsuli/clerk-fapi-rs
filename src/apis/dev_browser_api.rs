@@ -21,31 +21,43 @@ pub enum CreateDevBrowserError {
     UnknownValue(serde_json::Value),
 }
 
+/* Example dev_browser response
+{
+    "id":"dvb_2wBEszr0o5v3XbETMqF0Ykerrf3",
+    "instance_id":"ins_2gXOIJSz5hpsl5tA0NMptraBFJk",
+    "token":"ey...",
+    "client_id":null,
+    "created_at":"2025-04-24T14:59:37.240941608Z",
+    "updated_at":"2025-04-24T14:59:37.240941608Z",
+    "home_origin":null
+}
+*/
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DevBrowser {
+    pub id: String,
+    pub instance_id: String,
+    pub token: String,
+    pub client_id: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    pub home_origin: Option<String>,
+}
+
 /// Generate an Dev Browser API token.  This is used to authenticate Development Instances with the `DevBrowser` scheme. It must be set before making any request to a dev instance, even for endpoints that are public.
 pub async fn create_dev_browser(
     configuration: &configuration::Configuration,
-) -> Result<(), Error<CreateDevBrowserError>> {
+) -> Result<DevBrowser, Error<CreateDevBrowserError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
-
     let local_var_uri_str = format!("{}/v1/dev_browser", local_var_configuration.base_path);
-    let mut local_var_req_builder =
-        local_var_client.request(reqwest::Method::POST, local_var_uri_str.as_str());
 
-    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
-        local_var_req_builder =
-            local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
-    }
-
-    let local_var_req = local_var_req_builder.build()?;
-    let local_var_resp = local_var_client.execute(local_var_req).await?;
-
+    let local_var_resp = local_var_client.post(local_var_uri_str).send().await?;
     let local_var_status = local_var_resp.status();
     let local_var_content = local_var_resp.text().await?;
 
     if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
-        Ok(())
+        serde_json::from_str(&local_var_content).map_err(Error::from)
     } else {
         let local_var_entity: Option<CreateDevBrowserError> =
             serde_json::from_str(&local_var_content).ok();

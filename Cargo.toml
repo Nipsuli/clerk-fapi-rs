@@ -12,7 +12,6 @@ readme = "README.md"
 
 [dependencies]
 reqwest = { version = "0.12.0", features = ["json", "multipart"] }
-js-sys = "=0.3.77"
 anyhow = "1.0.0"
 serde = { version = "^1.0", features = ["derive"] }
 serde_with = { version = "^3.8", default-features = false, features = [
@@ -21,16 +20,13 @@ serde_with = { version = "^3.8", default-features = false, features = [
     "macros",
 ] }
 serde_json = "^1.0"
-serde_repr = "^0.1"
 url = "^2.5.4"
-uuid = { version = "^1.8", features = ["serde", "v4"] }
 http = "1.0.0"
 base64 = "0.22.1"
 parking_lot = "0.12"
 pin-project-lite = "0.2"
 futures = "0.3"
-chrono = "0.4.38"
-
+log = "0.4"
 
 [dev-dependencies]
 clerk-fapi-rs = { path = "." }

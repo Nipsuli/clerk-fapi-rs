@@ -1,5 +1,5 @@
-use dioxus::prelude::*;
 use crate::use_clerk::*;
+use dioxus::prelude::*;
 
 mod use_clerk;
 
@@ -13,13 +13,11 @@ enum Route {
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
-const HEADER_SVG: Asset = asset!("/assets/header.svg");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
     // Initialize logging for the error messages
     wasm_logger::init(wasm_logger::Config::default());
-    
     dioxus::launch(App);
 }
 
@@ -27,9 +25,9 @@ fn main() {
 fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS } 
+        document::Link { rel: "stylesheet", href: MAIN_CSS }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-        
+
         // Wrap the entire app with the Clerk provider
         ClerkProvider {
             Router::<Route> {}
@@ -42,152 +40,64 @@ fn App() -> Element {
 fn Home() -> Element {
     // Use our improved clerk custom hooks
     let clerk_ctx = use_clerk();
-    let _is_signed_in = use_is_signed_in();
-    let user = use_user();
-    
-    // For sign-in functionality
-    let (mut email, mut password, mut sign_in_result) = use_sign_in_state();
-    let mut sign_out_result = use_sign_out_state();
-    
-    // Handle sign-in form submission
-    let handle_sign_in = move |e: FormEvent| {
-        e.prevent_default();
-        
-        let client = clerk_ctx.read().client.clone();
-        let email_value = email.read().clone();
-        let password_value = password.read().clone();
-        
-        spawn(async move {
-            let result = sign_in(&client, &email_value, &password_value).await;
-            sign_in_result.set(Some(result));
-        });
-    };
-    
-    // Handle sign-out button click
-    let handle_sign_out = move |_| {
-        let client = clerk_ctx.read().client.clone();
-        
-        spawn(async move {
-            let result = sign_out(&client).await;
-            sign_out_result.set(Some(result));
-        });
-    };
-    
+
     rsx! {
         div { class: "container mx-auto p-4",
-            div { 
+            div {
                 id: "clerk-status",
                 class: "bg-white shadow-md rounded p-4 mb-4",
-                h2 { class: "text-xl font-semibold mb-2", "Clerk Status" }
-                
-                div {
-                    match &clerk_ctx.read().status {
-                        ClerkStatus::Loading => rsx! {
-                            div { class: "text-gray-600 p-4 text-center", "Initializing Clerk..." }
-                        },
-                        ClerkStatus::Error(err) => rsx! {
-                            div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded", 
-                                "Error: {err}" 
-                            }
-                        },
-                        ClerkStatus::SignedIn(_) => rsx! {
-                            div { class: "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4",
-                                "You are signed in!" 
-                                
-                                if let Some(user) = user.clone() {
-                                    div { class: "mt-2",
-                                        "User ID: ", span { class: "font-mono", "{user.id}" }
-                                        "Email: "
-                                        if let Some(email) = &user.email_addresses.first() {
-                                            span { class: "font-mono", "{email.email_address}" }
-                                        } else {
-                                            span { class: "font-mono", "No email" }
-                                        }
-                                        "Name: " 
-                                        span { 
-                                            class: "font-mono",
-                                            "{user.first_name.as_deref().unwrap_or(\"\")}"
-                                            " "
-                                            "{user.last_name.as_deref().unwrap_or(\"\")}"
-                                        }
-                                    }
-                                }
-                                
-                                // Sign out button with loading state
-                                match sign_out_result.read().as_ref() {
-                                    Some(Ok(_)) => rsx! { "Signed out successfully" },
-                                    Some(Err(e)) => rsx! {
-                                        div { class: "text-red-500 mb-2", "Error: {e}" }
-                                        button {
-                                            class: "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded",
-                                            onclick: handle_sign_out,
-                                            "Try Again"
-                                        }
-                                    },
-                                    None => rsx! {
-                                        button {
-                                            class: "bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded",
-                                            onclick: handle_sign_out,
-                                            "Sign Out"
-                                        }
-                                    }
+                h2 { class: "text-xl text-black font-semibold mb-2", "Clerk Status" }
+
+                div { class: "mt-2",
+                    // Display different content based on auth status
+                    match clerk_ctx.read().status {
+                        ClerkStatus::Loading => {
+                            rsx! {
+                                div { class: "p-2 bg-blue-100 text-blue-800 rounded",
+                                    "Loading authentication status..."
                                 }
                             }
                         },
-                        ClerkStatus::SignedOut => rsx! {
-                            div { class: "bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4",
-                                "You are not signed in."
+                        ClerkStatus::SignedIn(ref user) => {
+                            let display_name = match (&user.first_name, &user.last_name) {
+                                (Some(first), Some(last)) => format!("{} {}", first, last),
+                                (Some(first), None) => first.clone(),
+                                (None, Some(last)) => last.clone(),
+                                (None, None) => "User".to_string()
+                            };
+
+                            let email_display = match &user.primary_email_address_id {
+                                Some(email_id) => format!("Email: {}", email_id),
+                                None => "No email provided".to_string()
+                            };
+
+                            let user_id = format!("User ID: {}", user.id);
+
+                            rsx! {
+                                div { class: "p-2 bg-green-100 text-green-800 rounded",
+                                    div {
+                                        "Signed in as: ",
+                                        strong { "{display_name}" }
+                                    }
+                                    p { class: "mt-2", "{email_display}" }
+                                    p { class: "text-xs text-gray-500 mt-1", "{user_id}" }
+                                }
                             }
-                            
-                            div { class: "bg-white border rounded p-4",
-                                h3 { class: "font-semibold mb-4", "Sign In" }
-                                
-                                form { 
-                                    class: "space-y-4",
-                                    onsubmit: handle_sign_in,
-                                    
-                                    div { class: "mb-4",
-                                        label { class: "block text-gray-700 text-sm font-bold mb-2", "Email:" }
-                                        input { 
-                                            class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline",
-                                            r#type: "email",
-                                            placeholder: "Email",
-                                            value: "{email}",
-                                            oninput: move |e| email.set(e.value().clone())
-                                        }
-                                    }
-                                    
-                                    div { class: "mb-6",
-                                        label { class: "block text-gray-700 text-sm font-bold mb-2", "Password:" }
-                                        input { 
-                                            class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline",
-                                            r#type: "password",
-                                            placeholder: "******************",
-                                            value: "{password}",
-                                            oninput: move |e| password.set(e.value().clone())
-                                        }
-                                    }
-                                    
-                                    // Handle different states of the sign-in resource
-                                    match sign_in_result.read().as_ref() {
-                                        Some(Ok(_)) => rsx! {
-                                            div { class: "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4",
-                                                "Sign in successful!"
-                                            }
-                                        },
-                                        Some(Err(e)) => rsx! {
-                                            div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
-                                                "Error: {e}"
-                                            }
-                                        },
-                                        None => rsx!{ "" }
-                                    }
-                                    
-                                    button {
-                                        class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline",
-                                        r#type: "submit",
-                                        "Sign In"
-                                    }
+                        },
+                        ClerkStatus::SignedOut => {
+                            rsx! {
+                                div { class: "p-2 bg-yellow-100 text-yellow-800 rounded mb-4",
+                                    "You are not signed in"
+                                }
+
+                                // Show the sign-in form
+                                SignIn {}
+                            }
+                        },
+                        ClerkStatus::Error(ref err) => {
+                            rsx! {
+                                div { class: "p-2 bg-red-100 text-red-800 rounded",
+                                    "Error: {err}"
                                 }
                             }
                         }
@@ -201,15 +111,11 @@ fn Home() -> Element {
 /// Shared navbar component.
 #[component]
 fn Navbar() -> Element {
-    // Access auth state for conditional rendering
-    let is_signed_in = use_is_signed_in();
-    let user = use_user();
-    
     rsx! {
         header { class: "bg-gray-800 text-white p-4",
             div { class: "container mx-auto flex justify-between items-center",
                 div { class: "text-xl font-bold", "Clerk Dioxus Example" }
-                
+
                 nav {
                     ul { class: "flex space-x-4 items-center",
                         li {
@@ -219,31 +125,252 @@ fn Navbar() -> Element {
                                 "Home"
                             }
                         }
-                        
-                        // Show user info in nav if signed in
-                        if is_signed_in {
-                            if let Some(user) = user {
-                                li { class: "ml-4 flex items-center",
-                                    span { class: "text-sm mr-2", "Welcome," }
-                                    span { class: "font-semibold", 
-                                        if let Some(first_name) = &user.first_name {
-                                            if !first_name.is_empty() {
-                                                "{first_name}"
-                                            } else {
-                                                "User"
-                                            }
-                                        } else {
-                                            "User"
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
         }
 
         Outlet::<Route> {}
+    }
+}
+
+/// SignIn component for email authentication
+#[component]
+fn SignIn() -> Element {
+    let clerk_ctx = use_clerk();
+
+    let mut email = use_signal(String::new);
+    let mut code = use_signal(String::new);
+    let mut status = use_signal(|| None::<String>);
+    let sign_in_id = use_signal(|| None::<String>);
+
+    // Track sign-in flow step
+    // 0: Initial email input
+    // 1: Code verification
+    let step = use_signal(|| 0);
+
+    let on_send_email_code = move |_| {
+        // Basic email validation
+        let email_value = email.read().trim().to_string();
+        if email_value.is_empty() {
+            status.set(Some("Please enter an email address".to_string()));
+            return;
+        }
+
+        if !email_value.contains('@') {
+            status.set(Some("Please enter a valid email address".to_string()));
+            return;
+        }
+
+        status.set(Some("Sending email code...".to_string()));
+
+        let email_value = email_value.clone();
+        to_owned![status, step, sign_in_id, clerk_ctx];
+
+        spawn(async move {
+            if let Ok(sign_in_response) = clerk_ctx
+                .read()
+                .client
+                .get_fapi_client()
+                .create_sign_in(
+                    None,               // origin
+                    Some("email_code"), // strategy
+                    Some(&email_value), // identifier
+                    None,               // password
+                    None,               // ticket
+                    None,               // redirect_url
+                    None,               // action_complete_redirect_url
+                    None,               // transfer
+                    None,               // code
+                    None,               // token
+                    None,               // oidc_login_hint
+                    None,               // oidc_prompt
+                )
+                .await
+            {
+                sign_in_id.set(Some(sign_in_response.response.id));
+
+                status.set(Some(
+                    "Code sent! Check your email and enter the code below.".to_string(),
+                ));
+                step.set(1);
+            }
+        });
+    };
+
+    let on_verify_code = move |_| {
+        let code_value = code.read().trim().to_string();
+        if code_value.is_empty() {
+            status.set(Some("Please enter the verification code".to_string()));
+            return;
+        }
+
+        if code_value.len() != 6 {
+            status.set(Some("Please enter a valid verification code".to_string()));
+            return;
+        }
+
+        status.set(Some("Verifying code...".to_string()));
+
+        let code_value = code_value.clone();
+        to_owned![status, clerk_ctx, sign_in_id];
+
+        spawn(async move {
+            if let Some(sign_in_id) = sign_in_id.read().as_ref() {
+                if let Ok(_verify_response) = clerk_ctx
+                    .read()
+                    .client
+                    .get_fapi_client()
+                    .attempt_sign_in_factor_one(
+                        sign_in_id,
+                        "email_code",      // strategy
+                        None,              // origin
+                        Some(&code_value), // code
+                        None,              // password
+                        None,              // signature
+                        None,              // token
+                        None,              // ticket
+                        None,              // public_key_credential
+                    )
+                    .await
+                {
+                    // Update UI state
+                    status.set(Some(
+                        "Verification successful! Signing you in...".to_string(),
+                    ));
+                } else {
+                    status.set(Some("Failed to verify code. Please try again.".to_string()));
+                }
+            } else {
+                status.set(Some("No sign-in in progress. Please restart.".to_string()));
+            }
+        });
+    };
+
+    // Handle resend code button click
+    let on_resend_code = move |_| {
+        status.set(Some("Resending code...".to_string()));
+
+        // Actually resend the code
+        to_owned![status, sign_in_id, clerk_ctx];
+        spawn(async move {
+            if let Some(sign_in_id) = sign_in_id.read().as_ref() {
+                // Resend the verification code
+                if (clerk_ctx
+                    .read()
+                    .client
+                    .get_fapi_client()
+                    .prepare_sign_in_factor_one(
+                        sign_in_id,
+                        "email_code", // strategy
+                        None,         // origin
+                        None,         // email_address_id
+                        None,         // phone_number_id
+                        None,         // web3_wallet_id
+                        None,         // passkey_id
+                        None,         // redirect_url
+                        None,         // action_complete_redirect_url
+                        None,         // oidc_login_hint
+                        None,         // oidc_prompt
+                    )
+                    .await)
+                    .is_ok()
+                {
+                    // Update UI state
+                    status.set(Some("New code sent! Check your email.".to_string()));
+                } else {
+                    status.set(Some("Failed to resend code. Please try again.".to_string()));
+                }
+            } else {
+                status.set(Some("No sign-in in progress. Please restart.".to_string()));
+            }
+        });
+    };
+
+    rsx! {
+        div { class: "bg-white shadow-md rounded p-4",
+            h2 { class: "text-xl font-semibold mb-4", "Sign In with Email" }
+
+            div {
+                class: "space-y-4",
+
+                // Email input field (always shown)
+                div { class: "flex flex-col",
+                    label { class: "mb-1 text-sm font-medium text-gray-700", r#for: "email", "Email Address" }
+                    input {
+                        id: "email",
+                        r#type: "email",
+                        placeholder: "Enter your email",
+                        value: "{email}",
+                        oninput: move |evt| email.set(evt.value().clone()),
+                        class: "p-2 border border-gray-300 rounded text-black focus:outline-none focus:ring-2 focus:ring-blue-400",
+                        disabled: *step.read() == 1,
+                    }
+                }
+
+                // Show status message if any
+                {
+                    match status.read().as_ref() {
+                        Some(message) => {
+                            let status_class = if message.starts_with("Please") {
+                                "p-2 bg-red-100 text-red-800 rounded text-sm my-2"
+                            } else if message.contains("successful") {
+                                "p-2 bg-green-100 text-green-800 rounded text-sm my-2"
+                            } else {
+                                "p-2 bg-blue-100 text-blue-800 rounded text-sm my-2"
+                            };
+
+                            rsx! {
+                                div { class: status_class, "{message}" }
+                            }
+                        },
+                        None => rsx!{}
+                    }
+                }
+
+                // Show the appropriate button or input based on the current step
+                {
+                    match *step.read() {
+                        0 => rsx! {
+                            // Initial step - show send code button
+                            button {
+                                onclick: on_send_email_code,
+                                class: "w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-400",
+                                "Send Email Code"
+                            }
+                        },
+                        1 => rsx! {
+                            // Code verification step
+                            div { class: "mt-4 flex flex-col",
+                                label { class: "mb-1 text-sm font-medium text-gray-700", r#for: "code", "Verification Code" }
+                                input {
+                                    id: "code",
+                                    r#type: "text",
+                                    placeholder: "Enter verification code",
+                                    value: "{code}",
+                                    oninput: move |evt| code.set(evt.value().clone()),
+                                    class: "p-2 border border-gray-300 rounded text-black focus:outline-none focus:ring-2 focus:ring-blue-400",
+                                }
+
+                                div { class: "flex flex-col space-y-2 mt-4 sm:flex-row sm:space-y-0 sm:space-x-2",
+                                    button {
+                                        onclick: on_verify_code,
+                                        class: "flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-400",
+                                        "Verify Code"
+                                    }
+
+                                    button {
+                                        onclick: on_resend_code,
+                                        class: "flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-400",
+                                        "Resend Code"
+                                    }
+                                }
+                            }
+                        },
+                        _ => rsx!{} // Shouldn't happen but handle gracefully
+                    }
+                }
+            }
+        }
     }
 }

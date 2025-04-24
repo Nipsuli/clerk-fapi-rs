@@ -1,11 +1,13 @@
 use crate::apis::configuration::Configuration as ApiConfiguration;
 use crate::clerk_fapi::ClerkFapiClient;
-use crate::configuration::ClerkFapiConfiguration;
+use crate::configuration::{ClerkFapiConfiguration, ClientKind};
 use crate::models::{
     ClientPeriodClient as Client, ClientPeriodEnvironment as Environment,
     ClientPeriodOrganization as Organization, ClientPeriodSession as Session,
     ClientPeriodUser as User,
 };
+use futures::TryFutureExt;
+use log::warn;
 use parking_lot::{RwLock, RwLockWriteGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -155,6 +157,15 @@ impl Clerk {
             return Ok(self.clone());
         }
 
+        if self.config.is_development() && self.config.kind == ClientKind::Browser {
+            let dev_browser = self
+                .api_client
+                .create_dev_browser()
+                .await
+                .map_err(|e| e.to_string())?;
+            self.api_client.set_dev_browser_token_id(dev_browser.id);
+        }
+
         self.load_environment().await?;
         self.load_client().await?;
 
@@ -162,6 +173,10 @@ impl Clerk {
         {
             let mut state = self.state.write();
             state.loaded = true;
+        }
+
+        if self.config.is_development() {
+            warn!("Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview")
         }
 
         Ok(self.clone())
