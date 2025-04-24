@@ -1,0 +1,12 @@
+{
+  "name": "dioxus-example",
+  "version": "1.0.0",
+  "description": "Dioxus example for clerk-fapi-rs",
+  "scripts": {
+    "build:css": "tailwindcss -i ./input.css -o ./assets/tailwind.css",
+    "watch:css": "tailwindcss -i ./input.css -o ./assets/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

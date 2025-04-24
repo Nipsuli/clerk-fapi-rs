@@ -30,7 +30,7 @@ pub mod client_email_address_verification;
 pub use self::client_email_address_verification::ClientEmailAddressVerification;
 pub mod client_passkey_verification;
 pub use self::client_passkey_verification::{
-    ClientPasskeyVerification, SimplePasskeyVerification, Status, Strategy
+    ClientPasskeyVerification, SimplePasskeyVerification, Status, Strategy,
 };
 pub mod client_period_account_portal;
 pub use self::client_period_account_portal::ClientPeriodAccountPortal;
@@ -196,8 +196,8 @@ pub mod external_account_with_verification;
 pub use self::external_account_with_verification::ExternalAccountWithVerification;
 pub mod external_account_with_verification_verification;
 pub use self::external_account_with_verification_verification::{
-    ExternalAccountWithVerificationVerification, SimpleVerification, 
-    Status as ExternalAccountStatus, Strategy as ExternalAccountStrategy
+    ExternalAccountWithVerificationVerification, SimpleVerification,
+    Status as ExternalAccountStatus, Strategy as ExternalAccountStrategy,
 };
 pub mod fraud_settings_period_native_settings;
 pub use self::fraud_settings_period_native_settings::FraudSettingsPeriodNativeSettings;

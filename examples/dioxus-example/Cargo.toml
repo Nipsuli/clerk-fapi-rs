@@ -1,0 +1,31 @@
+[package]
+name = "dioxus-example"
+version = "0.1.0"
+authors = ["niko <n.p.ahonen@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+dioxus = { version = "0.6.0", features = ["router", "fullstack"] }
+clerk-fapi-rs = { path = "../.." }
+log = "0.4"
+wasm-logger = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+futures = "0.3"
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"

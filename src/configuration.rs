@@ -1,4 +1,5 @@
 use crate::apis::configuration::Configuration as ApiConfiguration;
+use crate::clerk_fapi::ClerkHttpClient;
 use base64::{engine::general_purpose, Engine as _};
 use futures::future::BoxFuture;
 use parking_lot::RwLock;
@@ -11,7 +12,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::str;
 use std::sync::Arc;
-use std::task::{Context, Poll};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -107,7 +107,7 @@ pub trait Store: Send + Sync + std::fmt::Debug {
 }
 
 #[derive(Clone, Default, Debug)]
-struct DefaultStore {
+pub struct DefaultStore {
     inner: Arc<RwLock<HashMap<String, JsonValue>>>,
 }
 
@@ -133,6 +133,12 @@ impl Store for DefaultStore {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ClientKind {
+    Browser,
+    NonBrowser,
+}
+
 #[derive(Debug, Clone)]
 pub struct ClerkFapiConfiguration {
     pub(crate) base_url: String,
@@ -141,6 +147,7 @@ pub struct ClerkFapiConfiguration {
     pub(crate) user_agent: String,
     pub(crate) store: Arc<dyn Store>,
     pub(crate) store_prefix: String,
+    pub(crate) kind: ClientKind,
 }
 
 impl ClerkFapiConfiguration {
@@ -150,7 +157,16 @@ impl ClerkFapiConfiguration {
         proxy_url: Option<String>,
         domain: Option<String>,
     ) -> Result<Self, String> {
-        Self::new_with_store(key, proxy_url, domain, None, None)
+        Self::new_with_store(key, proxy_url, domain, None, None, ClientKind::NonBrowser)
+    }
+
+    /// Creates a new ClerkFapiConfiguration with custom store and/or prefix
+    pub fn new_browser(
+        key: String,
+        proxy_url: Option<String>,
+        domain: Option<String>,
+    ) -> Result<Self, String> {
+        Self::new_with_store(key, proxy_url, domain, None, None, ClientKind::Browser)
     }
 
     /// Creates a new ClerkFapiConfiguration with custom store and/or prefix
@@ -160,6 +176,7 @@ impl ClerkFapiConfiguration {
         domain: Option<String>,
         store: Option<Arc<dyn Store>>,
         store_prefix: Option<String>,
+        kind: ClientKind,
     ) -> Result<Self, String> {
         let parsed_key = parse_publishable_key(&key, domain.clone(), proxy_url.clone())?;
         let user_agent = format!("{}/{}", NAME, VERSION);
@@ -180,6 +197,7 @@ impl ClerkFapiConfiguration {
             user_agent,
             store,
             store_prefix,
+            kind,
         })
     }
 
@@ -253,18 +271,21 @@ impl ClerkFapiConfiguration {
     }
 
     /// Convert this configuration into an API configuration that can be used with generated API methods
-    pub fn into_api_configuration(&self) -> ApiConfiguration {
-        let mut api_config = ApiConfiguration::new();
-        api_config.base_path = self.base_url.clone();
-        api_config.user_agent = Some(self.user_agent.clone());
+    pub fn into_api_configuration(&self, client: Arc<ClerkHttpClient>) -> ApiConfiguration {
+        let user_agent = match self.kind {
+            ClientKind::Browser => None,
+            ClientKind::NonBrowser => Some(self.user_agent.clone()),
+        };
 
-        // The generated Configuration uses Option<String> for these
-        api_config.bearer_access_token = None; // We handle this via middleware
-        api_config.api_key = None; // We don't need this for FAPI
-        api_config.basic_auth = None;
-        api_config.oauth_access_token = None;
-
-        api_config
+        ApiConfiguration {
+            base_path: self.base_url.clone(),
+            client,
+            api_key: None,
+            basic_auth: None,
+            oauth_access_token: None,
+            user_agent,
+            bearer_access_token: None,
+        }
     }
 }
 
@@ -287,6 +308,7 @@ impl Default for ClerkFapiConfiguration {
             user_agent: format!("{}/{}", NAME, VERSION),
             store: Arc::new(DefaultStore::default()),
             store_prefix: "ClerkFapi:".to_string(),
+            kind: ClientKind::NonBrowser,
         }
     }
 }
@@ -412,6 +434,7 @@ mod tests {
             None,
             Some(mock_store.clone()),
             None,
+            ClientKind::NonBrowser,
         )
         .unwrap();
 
@@ -452,6 +475,7 @@ mod tests {
             None,
             None,
             Some("CustomPrefix:".to_string()),
+            ClientKind::NonBrowser,
         )
         .unwrap();
 
@@ -469,6 +493,7 @@ mod tests {
             None,
             None,
             Some("Test:".to_string()),
+            ClientKind::NonBrowser,
         )
         .unwrap();
 
