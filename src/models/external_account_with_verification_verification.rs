@@ -16,12 +16,25 @@ use serde::{Deserialize, Serialize};
 pub enum ExternalAccountWithVerificationVerification {
     Oauth(Box<models::Oauth>),
     GoogleOneTap(Box<models::GoogleOneTap>),
+    Simple(Box<SimpleVerification>),
 }
 
 impl Default for ExternalAccountWithVerificationVerification {
     fn default() -> Self {
         Self::Oauth(Default::default())
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SimpleVerification {
+    #[serde(rename = "status")]
+    pub status: Status,
+    #[serde(rename = "strategy")]
+    pub strategy: Strategy,
+    #[serde(rename = "attempts")]
+    pub attempts: Option<i32>,
+    #[serde(rename = "expire_at")]
+    pub expire_at: i64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
@@ -42,6 +55,34 @@ impl Default for Status {
 pub enum Strategy {
     #[serde(rename = "google_one_tap")]
     GoogleOneTap,
+    #[serde(rename = "oauth_google")]
+    OauthGoogle,
+    #[serde(rename = "oauth_facebook")]
+    OauthFacebook,
+    #[serde(rename = "oauth_github")]
+    OauthGithub,
+    #[serde(rename = "oauth_gitlab")]
+    OauthGitlab,
+    #[serde(rename = "oauth_discord")]
+    OauthDiscord,
+    #[serde(rename = "oauth_twitch")]
+    OauthTwitch,
+    #[serde(rename = "oauth_linkedin")]
+    OauthLinkedin,
+    #[serde(rename = "oauth_twitter")]
+    OauthTwitter,
+    #[serde(rename = "oauth_microsoft")]
+    OauthMicrosoft,
+    #[serde(rename = "oauth_hubspot")]
+    OauthHubspot,
+    #[serde(rename = "oauth_dropbox")]
+    OauthDropbox,
+    #[serde(rename = "oauth_tiktok")]
+    OauthTiktok,
+    #[serde(rename = "oauth_slack")]
+    OauthSlack,
+    #[serde(rename = "oauth_notion")]
+    OauthNotion,
 }
 
 impl Default for Strategy {

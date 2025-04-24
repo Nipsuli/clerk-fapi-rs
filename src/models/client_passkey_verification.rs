@@ -15,12 +15,25 @@ use serde::{Deserialize, Serialize};
 #[serde(untagged)]
 pub enum ClientPasskeyVerification {
     StubsPeriodVerificationPeriodPasskey(Box<models::StubsPeriodVerificationPeriodPasskey>),
+    Simple(Box<SimplePasskeyVerification>),
 }
 
 impl Default for ClientPasskeyVerification {
     fn default() -> Self {
         Self::StubsPeriodVerificationPeriodPasskey(Default::default())
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SimplePasskeyVerification {
+    #[serde(rename = "status")]
+    pub status: Status,
+    #[serde(rename = "strategy")]
+    pub strategy: Strategy,
+    #[serde(rename = "attempts")]
+    pub attempts: i32,
+    #[serde(rename = "expire_at")]
+    pub expire_at: i64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
