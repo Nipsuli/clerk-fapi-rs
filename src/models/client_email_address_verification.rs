@@ -14,13 +14,20 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientEmailAddressVerification {
-    StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
+    StubsPeriodVerificationPeriodAdmin(Box<models::StubsPeriodVerificationPeriodAdmin>),
+    StubsPeriodVerificationPeriodBackupCode(Box<models::StubsPeriodVerificationPeriodBackupCode>),
+    StubsPeriodVerificationPeriodCode(Box<models::StubsPeriodVerificationPeriodCode>),
+    StubsPeriodVerificationPeriodFromOauth(Box<models::StubsPeriodVerificationPeriodFromOauth>),
+    StubsPeriodVerificationPeriodGoogleOneTap(
+        Box<models::StubsPeriodVerificationPeriodGoogleOneTap>,
+    ),
     StubsPeriodVerificationPeriodInvitation(Box<models::StubsPeriodVerificationPeriodInvitation>),
     StubsPeriodVerificationPeriodLink(Box<models::StubsPeriodVerificationPeriodLink>),
-    StubsPeriodVerificationPeriodTicket(Box<models::StubsPeriodVerificationPeriodTicket>),
-    StubsPeriodVerificationPeriodAdmin(Box<models::StubsPeriodVerificationPeriodAdmin>),
-    StubsPeriodVerificationPeriodFromOauth(Box<models::StubsPeriodVerificationPeriodFromOauth>),
+    StubsPeriodVerificationPeriodOauth(Box<models::StubsPeriodVerificationPeriodOauth>),
+    StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
+    StubsPeriodVerificationPeriodPasskey(Box<models::StubsPeriodVerificationPeriodPasskey>),
     StubsPeriodVerificationPeriodSaml(Box<models::StubsPeriodVerificationPeriodSaml>),
+    StubsPeriodVerificationPeriodTicket(Box<models::StubsPeriodVerificationPeriodTicket>),
 }
 
 impl Default for ClientEmailAddressVerification {

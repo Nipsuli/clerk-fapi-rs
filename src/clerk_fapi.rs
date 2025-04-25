@@ -102,7 +102,6 @@ impl ClerkHttpClient {
         // Store Authorization header if present
         if let Some(auth_header) = resp.headers().get("Authorization") {
             if let Ok(auth_str) = auth_header.to_str() {
-                println!("GOT AUTH BACK IN RES");
                 self.store.set(
                     &self.get_auth_key(),
                     JsonValue::String(auth_str.to_string()),
@@ -113,15 +112,30 @@ impl ClerkHttpClient {
 
     /// Send a request with pre and post processing
     pub async fn execute(&self, request: Request) -> Result<Response, reqwest::Error> {
-        // Process the request to add query params and authorization
-        let processed_request = self.process_request(request);
+        // FOR DEBUG
+        // let method = request.method().clone();
+        // let url = request.url().clone();
+        // END FOR DEBUG
 
-        // Send the request
+        let processed_request = self.process_request(request);
         let response = self.inner.execute(processed_request).await?;
 
-        // Process the response to store authorization tokens
-        self.process_response(&response);
+        // FOR DEBUG
+        // let status = response.status();
+        // let version = response.version();
+        // let headers = response.headers().clone();
+        // let resp_text = response.text().await?;
+        // println!("[DEBUG] Request {} {} -> Response {}", method, url, status);
+        // println!("[DEBUG] Response body: {}", resp_text);
+        // let mut builder = http::Response::builder().status(status).version(version);
+        // let builder_headers = builder.headers_mut().unwrap();
+        // for (key, value) in headers.iter() {
+        //     builder_headers.insert(key, value.clone());
+        // }
+        // let response = Response::from(builder.body(resp_text).unwrap());
+        // END FOR DEBUG
 
+        self.process_response(&response);
         Ok(response)
     }
 

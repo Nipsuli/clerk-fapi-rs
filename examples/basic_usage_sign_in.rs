@@ -21,7 +21,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
 
     // Get the PUBLIC_KEY from environment variables
-    let public_key = env::var("PUBLIC_KEY").expect("PUBLIC_KEY environment variable is required");
+    let public_key =
+        env::var("CLERK_PUBLISHABLE_KEY").expect("PUBLIC_KEY environment variable is required");
 
     // Create configuration
     let config = ClerkFapiConfiguration::new(
