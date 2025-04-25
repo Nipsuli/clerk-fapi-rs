@@ -3,8 +3,8 @@ use crate::clerk_fapi::ClerkFapiClient;
 use crate::configuration::{ClerkFapiConfiguration, ClientKind};
 use crate::models::{
     ClientPeriodClient as Client, ClientPeriodEnvironment as Environment,
-    ClientPeriodOrganization as Organization, ClientPeriodSession as Session,
-    ClientPeriodUser as User,
+    ClientPeriodOrganization as Organization, ClientPeriodOrganizationMembership,
+    ClientPeriodSession as Session, ClientPeriodUser as User,
 };
 use futures::TryFutureExt;
 use log::warn;
@@ -493,17 +493,11 @@ impl Clerk {
             return Err("Cannot set active session before client is loaded".to_string());
         }
 
-        // Get the client, target session, and organization information
-        // while keeping the lock scope as small as possible
-        let session_id_to_touch;
-        let target_organization_id_option;
-
-        {
-            let mut state = self.state.write();
+        let target_session = {
+            let state = self.state.read();
             let client = state.client.as_ref().ok_or("Client not found")?;
-
             // Get the target session either from the argument or current session
-            let target_session = if let Some(sid) = session_id.clone() {
+            if let Some(sid) = session_id.clone() {
                 client
                     .sessions
                     .iter()
@@ -515,69 +509,53 @@ impl Clerk {
                     .session
                     .clone()
                     .ok_or("No active session and no session_id provided")?
-            };
+            }
+        };
+        let session_id_to_touch = target_session.id;
 
+        let mut target_organization_id_option = None::<String>;
+
+        if let Some(organization_id_or_slug) = organization_id_or_slug {
             let user = match &target_session.user {
                 Some(user_value) => *user_value.clone(),
                 _ => return Err("No user data found in session".to_string()),
             };
 
-            let target_organization_id =
-                if let Some(org_id_or_slug) = organization_id_or_slug.clone() {
-                    if org_id_or_slug.starts_with("org_") {
-                        // It's an organization ID - verify it exists in user's memberships
-                        let org_exists = user
-                            .organization_memberships
-                            .as_ref()
-                            .map(|memberships| {
-                                memberships
-                                    .iter()
-                                    .any(|m| m.organization.id == org_id_or_slug)
-                            })
-                            .unwrap_or(false);
-                        if !org_exists {
-                            return Err(format!(
-                                "Organization with ID {} not found in user's memberships",
-                                org_id_or_slug
-                            ));
-                        } else {
-                            Some(org_id_or_slug)
-                        }
-                    } else {
-                        // Try to find organization by slug
-                        let org_id =
-                            user.organization_memberships
-                                .as_ref()
-                                .and_then(|memberships| {
-                                    memberships.iter().find_map(|m| {
-                                        if m.organization.slug == org_id_or_slug {
-                                            Some(m.organization.id.clone())
-                                        } else {
-                                            None
-                                        }
-                                    })
-                                });
+            if let Some(user_org_memberships) = user.organization_memberships {
+                target_organization_id_option = find_organization_id_from_memberships(
+                    user_org_memberships,
+                    organization_id_or_slug.clone(),
+                )
+                .map(|m| m.organization.id);
+            }
 
-                        // Return an error if organization is not found by slug
-                        if org_id.is_none() {
-                            return Err(format!(
-                                "Organization with slug '{}' not found in user's memberships",
-                                org_id_or_slug
-                            ));
-                        }
+            if target_organization_id_option.is_none() {
+                // we couldn't find the org, perhaps the org is new
+                // and we just don't have it yet so let's check from the api!
+                let user = *self
+                    .api_client
+                    .get_user(Some(&session_id_to_touch))
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .response;
+                if let Some(user_org_memberships) = user.organization_memberships {
+                    target_organization_id_option = find_organization_id_from_memberships(
+                        user_org_memberships,
+                        organization_id_or_slug,
+                    )
+                    .map(|m| m.organization.id);
+                }
+            }
 
-                        org_id
-                    }
-                } else {
-                    None
-                };
+            if target_organization_id_option.is_none() {
+                // if we still couldn't find the org we need to error out
+                return Err("Could not find organization".into());
+            }
+        }
 
-            // Save for API call
-            session_id_to_touch = target_session.id;
-            target_organization_id_option = target_organization_id.clone();
-
-            // Update state
-            state.target_organization_id = Some(target_organization_id);
+        {
+            let mut state = self.state.write();
+            state.target_organization_id = Some(target_organization_id_option.clone());
         }
 
         // Now make the API call without holding any locks
@@ -660,6 +638,23 @@ impl Clerk {
         if let Some(client) = maybe_client {
             listener(client, maybe_session, maybe_user, maybe_organization);
         }
+    }
+}
+
+fn find_organization_id_from_memberships(
+    memberships: Vec<ClientPeriodOrganizationMembership>,
+    organization_id_or_slug: String,
+) -> Option<ClientPeriodOrganizationMembership> {
+    if organization_id_or_slug.starts_with("org_") {
+        // It's an organization ID - verify it exists in memberships
+        memberships
+            .into_iter()
+            .find(|m| m.organization.id == organization_id_or_slug)
+    } else {
+        // It's a slug
+        memberships
+            .into_iter()
+            .find(|m| m.organization.slug == organization_id_or_slug)
     }
 }
 
