@@ -2,9 +2,9 @@ use crate::apis::configuration::Configuration as ApiConfiguration;
 use crate::clerk_fapi::ClerkFapiClient;
 use crate::configuration::{ClerkFapiConfiguration, ClientKind};
 use crate::models::{
-    ClientPeriodClient as Client, ClientPeriodEnvironment as Environment,
-    ClientPeriodOrganization as Organization, ClientPeriodOrganizationMembership,
-    ClientPeriodSession as Session, ClientPeriodUser as User,
+    ClientClientWrappedOrganizationMembershipsResponse, ClientPeriodClient as Client,
+    ClientPeriodEnvironment as Environment, ClientPeriodOrganization as Organization,
+    ClientPeriodOrganizationMembership, ClientPeriodSession as Session, ClientPeriodUser as User,
 };
 use futures::TryFutureExt;
 use log::warn;
@@ -541,10 +541,38 @@ impl Clerk {
                 if let Some(user_org_memberships) = user.organization_memberships {
                     target_organization_id_option = find_organization_id_from_memberships(
                         user_org_memberships,
-                        organization_id_or_slug,
+                        organization_id_or_slug.clone(),
                     )
                     .map(|m| m.organization.id);
                 }
+            }
+
+            if target_organization_id_option.is_none() {
+                // still could not find! Let's try to forcefully pull all the orgs
+                let org_memberships = *self
+                    .api_client
+                    .get_organization_memberships(
+                        None, // limit
+                        None, // offset
+                        None, // paginated
+                    )
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .response;
+
+                let user_org_memberships = match org_memberships {
+                    ClientClientWrappedOrganizationMembershipsResponse::Array(memberships) => {
+                        memberships
+                    },
+                    ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(memberships) => {
+                        memberships.data.unwrap()
+                    }
+                };
+                target_organization_id_option = find_organization_id_from_memberships(
+                    user_org_memberships,
+                    organization_id_or_slug.clone(),
+                )
+                .map(|m| m.organization.id);
             }
 
             if target_organization_id_option.is_none() {
