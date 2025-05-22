@@ -1,5 +1,5 @@
 use crate::apis::configuration::Configuration as ApiConfiguration;
-use crate::clerk_fapi::ClerkHttpClient;
+use crate::clerk_http_client::ClerkHttpClient;
 use base64::{engine::general_purpose, Engine as _};
 use futures::future::BoxFuture;
 use parking_lot::RwLock;

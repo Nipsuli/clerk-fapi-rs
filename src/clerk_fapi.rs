@@ -1,9 +1,11 @@
 use crate::apis::configuration::Configuration as ApiConfiguration;
 use crate::apis::*;
+use crate::clerk_http_client::ClerkHttpClient;
+use crate::clerk_state::ClerkState;
 use crate::configuration::{ClerkFapiConfiguration, ClientKind, DefaultStore, Store};
 use crate::models::*;
 use dev_browser_api::DevBrowser;
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Client, Request, Response};
 use serde_json::Value as JsonValue;
@@ -12,192 +14,20 @@ use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::Arc;
 
-/// Custom client wrapper that behaves like reqwest::Client but adds Clerk-specific functionality
-#[derive(Debug)]
-pub struct ClerkHttpClient {
-    inner: Client,
-    store: Arc<dyn Store>,
-    store_prefix: String,
-    client_kind: ClientKind,
-    dev_browser_token_id: std::sync::RwLock<Option<String>>,
-}
-
-impl Default for ClerkHttpClient {
-    fn default() -> Self {
-        ClerkHttpClient {
-            inner: Client::default(),
-            store: Arc::new(DefaultStore::default()),
-            store_prefix: String::new(),
-            client_kind: ClientKind::NonBrowser,
-            dev_browser_token_id: std::sync::RwLock::new(None),
-        }
-    }
-}
-
-impl std::fmt::Display for ClerkHttpClient {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ClerkHttpClient")
-    }
-}
-
-impl ClerkHttpClient {
-    /// Creates a new ClerkHttpClient
-    pub fn new(
-        client: Client,
-        store: Arc<dyn Store>,
-        store_prefix: String,
-        client_kind: ClientKind,
-    ) -> Self {
-        Self {
-            inner: client,
-            store,
-            store_prefix,
-            client_kind,
-            dev_browser_token_id: std::sync::RwLock::new(None),
-        }
-    }
-
-    fn set_dev_browser_token_id(&self, token_id: String) {
-        let mut write_guard = self.dev_browser_token_id.write().unwrap();
-        *write_guard = Some(token_id);
-    }
-
-    /// Returns the auth key name
-    fn get_auth_key(&self) -> String {
-        format!("{}authorization", self.store_prefix)
-    }
-
-    /// Process the request before sending
-    fn process_request(&self, mut req: Request) -> Request {
-        // Add _is_native query parameter
-        let url = req.url_mut();
-        if self.client_kind == ClientKind::NonBrowser {
-            url.query_pairs_mut().append_pair("_is_native", "1");
-        }
-
-        let token_id = {
-            let read_guard = self.dev_browser_token_id.read().unwrap();
-            read_guard.clone()
-        };
-
-        if let Some(dev_browser_token_id) = token_id {
-            url.query_pairs_mut()
-                .append_pair("__clerk_db_jwt", &dev_browser_token_id);
-        }
-
-        // Add Authorization header if available
-        if let Some(auth) = self.store.get(&self.get_auth_key()) {
-            if let Some(auth_str) = auth.as_str() {
-                if let Ok(value) = HeaderValue::from_str(auth_str) {
-                    req.headers_mut().insert("Authorization", value);
-                }
-            }
-        }
-
-        req
-    }
-
-    /// Process the response after receiving
-    fn process_response(&self, resp: &Response) {
-        // Store Authorization header if present
-        if let Some(auth_header) = resp.headers().get("Authorization") {
-            if let Ok(auth_str) = auth_header.to_str() {
-                self.store.set(
-                    &self.get_auth_key(),
-                    JsonValue::String(auth_str.to_string()),
-                );
-            }
-        }
-    }
-
-    /// Send a request with pre and post processing
-    pub async fn execute(&self, request: Request) -> Result<Response, reqwest::Error> {
-        // FOR DEBUG
-        // let method = request.method().clone();
-        // let url = request.url().clone();
-        // END FOR DEBUG
-
-        let processed_request = self.process_request(request);
-        let response = self.inner.execute(processed_request).await?;
-
-        // FOR DEBUG
-        // let status = response.status();
-        // let version = response.version();
-        // let headers = response.headers().clone();
-        // let resp_text = response.text().await?;
-        // println!("[DEBUG] Request {} {} -> Response {}", method, url, status);
-        // println!("[DEBUG] Response body: {}", resp_text);
-        // let mut builder = http::Response::builder().status(status).version(version);
-        // let builder_headers = builder.headers_mut().unwrap();
-        // for (key, value) in headers.iter() {
-        //     builder_headers.insert(key, value.clone());
-        // }
-        // let response = Response::from(builder.body(resp_text).unwrap());
-        // END FOR DEBUG
-
-        self.process_response(&response);
-        Ok(response)
-    }
-
-    /// Access the inner reqwest client
-    pub fn get_inner(&self) -> &Client {
-        &self.inner
-    }
-
-    /// Build a request with the given HTTP method
-    pub fn request<U: reqwest::IntoUrl>(
-        &self,
-        method: reqwest::Method,
-        url: U,
-    ) -> reqwest::RequestBuilder {
-        self.inner.request(method, url)
-    }
-
-    /// Issue a GET request
-    pub fn get<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
-        self.inner.get(url)
-    }
-
-    /// Issue a POST request
-    pub fn post<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
-        self.inner.post(url)
-    }
-
-    /// Issue a PUT request
-    pub fn put<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
-        self.inner.put(url)
-    }
-
-    /// Issue a PATCH request
-    pub fn patch<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
-        self.inner.patch(url)
-    }
-
-    /// Issue a DELETE request
-    pub fn delete<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
-        self.inner.delete(url)
-    }
-
-    /// Issue a HEAD request
-    pub fn head<U: reqwest::IntoUrl>(&self, url: U) -> reqwest::RequestBuilder {
-        self.inner.head(url)
-    }
-}
-
-/// Type definition for the client update callback function
-type ClientUpdateCallback = Box<dyn FnMut(client_period_client::ClientPeriodClient) + Send>;
-
 /// The main client for interacting with Clerk's Frontend API
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct ClerkFapiClient {
     client: Arc<ClerkHttpClient>,
     config: ClerkFapiConfiguration,
-    update_client_callback: Option<Arc<Mutex<ClientUpdateCallback>>>,
+    state: Arc<RwLock<ClerkState>>,
 }
 
 impl ClerkFapiClient {
     /// Creates a new ClerkFapiClient with the provided configuration
-    pub fn new(config: ClerkFapiConfiguration) -> Result<Self, String> {
+    pub fn new(
+        config: ClerkFapiConfiguration,
+        state: Arc<RwLock<ClerkState>>,
+    ) -> Result<Self, String> {
         // Create default headers
         let mut headers = HeaderMap::new();
         if config.kind == ClientKind::NonBrowser {
@@ -213,17 +43,12 @@ impl ClerkFapiClient {
             .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
         // Create custom client
-        let client = ClerkHttpClient::new(
-            http_client,
-            config.store.clone(),
-            config.store_prefix.clone(),
-            config.kind,
-        );
+        let client = ClerkHttpClient::new(http_client, state.clone(), config.kind);
 
         Ok(Self {
             client: Arc::new(client),
             config,
-            update_client_callback: None,
+            state,
         })
     }
 
@@ -235,19 +60,15 @@ impl ClerkFapiClient {
         self.client.set_dev_browser_token_id(token_id);
     }
 
-    /// Sets the callback for client updates
-    pub fn set_update_client_callback<F>(&mut self, callback: F)
-    where
-        F: FnMut(client_period_client::ClientPeriodClient) + Send + 'static,
-    {
-        self.update_client_callback = Some(Arc::new(Mutex::new(Box::new(callback))));
-    }
-
     fn handle_client_update(&self, client: client_period_client::ClientPeriodClient) {
-        if let Some(cb) = &self.update_client_callback {
-            let mut cb = cb.lock();
-            (cb)(client);
+        {
+            // minimize write lock time
+            let mut state = self.state.write();
+            state.set_client(client);
         }
+        // emit state while not holding write lock anymore
+        let state = self.state.read();
+        state.emit_state();
     }
 
     // Active Sessions API methods

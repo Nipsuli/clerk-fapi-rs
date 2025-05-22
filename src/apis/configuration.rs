@@ -10,7 +10,7 @@
 
 use std::sync::Arc;
 
-use crate::{clerk_fapi::ClerkHttpClient, configuration::ClientKind};
+use crate::{clerk_http_client::ClerkHttpClient, configuration::ClientKind};
 
 #[derive(Debug)]
 pub struct Configuration {
@@ -29,34 +29,4 @@ pub type BasicAuth = (String, Option<String>);
 pub struct ApiKey {
     pub prefix: Option<String>,
     pub key: String,
-}
-
-impl Configuration {
-    pub fn new() -> Configuration {
-        Configuration::default()
-    }
-}
-
-impl Default for Configuration {
-    fn default() -> Self {
-        // Create a simple client for the default instance, which will be replaced
-        // when creating a real ClerkFapiClient
-        let client = reqwest::Client::new();
-        let store = std::sync::Arc::new(crate::configuration::DefaultStore::default());
-
-        Configuration {
-            base_path: "https://example-destined-camel-13.clerk.accounts.dev".to_owned(),
-            user_agent: None,
-            client: Arc::new(ClerkHttpClient::new(
-                client,
-                store,
-                "ClerkFapi:".to_string(),
-                ClientKind::NonBrowser,
-            )),
-            basic_auth: None,
-            oauth_access_token: None,
-            bearer_access_token: None,
-            api_key: None,
-        }
-    }
 }
