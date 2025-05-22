@@ -428,11 +428,11 @@ async fn test_init() {
         .unwrap(),
     );
 
-    let result = clerk.clone().load().await.unwrap();
+    clerk.load(false).await.unwrap();
 
     env_mock.assert_async().await;
     client_mock.assert_async().await;
-    assert!(result.environment().is_some());
+    assert!(clerk.environment().is_ok());
 }
 
 #[tokio::test]
@@ -456,7 +456,7 @@ async fn test_init_environment_failure() {
     let client = Clerk::new(config);
 
     // Test initialization fails
-    let result = client.load().await;
+    let result = client.load(false).await;
     assert!(result.is_err());
 
     // Verify the mock was called
@@ -1048,18 +1048,18 @@ async fn test_init_uses_update_client() {
     .unwrap();
 
     let client = Clerk::new(config);
-    let initialized_client = client.load().await.unwrap();
+    client.load(false).await.unwrap();
 
     // Verify all mocks were called
     env_mock.assert_async().await;
     client_mock.assert_async().await;
 
     // Verify all state was set
-    assert!(initialized_client.loaded());
-    assert!(initialized_client.environment().is_some());
-    assert!(initialized_client.client().is_some());
-    assert!(initialized_client.session().is_some());
-    assert!(initialized_client.user().is_some());
+    assert!(client.loaded());
+    assert!(client.environment().is_ok());
+    assert!(client.client().is_ok());
+    assert!(client.session().unwrap().is_some());
+    assert!(client.user().unwrap().is_some());
 }
 
 #[tokio::test]
@@ -1482,7 +1482,7 @@ async fn test_get_token() {
     let client = Clerk::new(config);
 
     // Load the client state properly
-    client.load().await.unwrap();
+    client.load(false).await.unwrap();
 
     // Test successful token creation
     let token = client.get_token(None, None).await.unwrap();
@@ -1912,7 +1912,7 @@ async fn test_listener() {
     });
 
     // Load the client to trigger the callbacks
-    clerk.load().await.unwrap();
+    clerk.load(false).await.unwrap();
 
     // Verify listener was called
     assert!(was_called.load(Ordering::SeqCst));
