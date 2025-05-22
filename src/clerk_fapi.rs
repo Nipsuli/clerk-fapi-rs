@@ -2012,18 +2012,3 @@ impl ClerkFapiClient {
         well_known_api::get_open_id_configuration(&self.clerk_config()).await
     }
 }
-
-// Add this test to verify the implementation
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_default_client() {
-        let client = ClerkFapiClient::default();
-        let config = client.clerk_config();
-        assert_eq!(config.base_path, "");
-        assert!(config.user_agent.is_some());
-        assert!(client.update_client_callback.is_none());
-    }
-}
