@@ -2,10 +2,10 @@
 
 use clerk_fapi_rs::clerk::Clerk;
 use clerk_fapi_rs::configuration::ClerkFapiConfiguration;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use mockito::Server;
 use serde_json;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 #[test]
 fn test_client_cloning() {
@@ -1480,14 +1480,14 @@ async fn test_get_token() {
     .unwrap();
 
     let client = Clerk::new(config);
-    
+
     // Load the client state properly
     client.load().await.unwrap();
-    
+
     // Test successful token creation
     let token = client.get_token(None, None).await.unwrap();
     assert_eq!(token, Some("test.jwt.token".to_string()));
-    
+
     // Verify all mocks were called
     client_mock.assert_async().await;
     env_mock.assert_async().await;
@@ -1497,7 +1497,7 @@ async fn test_get_token() {
 #[tokio::test]
 async fn test_listener() {
     let mut server = Server::new_async().await;
-    
+
     // Mock the client endpoint for update_client
     let client_mock = server
         .mock("GET", "/v1/client?_is_native=1")
@@ -1895,7 +1895,8 @@ async fn test_listener() {
         "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k".to_string(),
         Some(server.url()),
         None,
-    ).unwrap();
+    )
+    .unwrap();
 
     let clerk = Clerk::new(config);
     let was_called = Arc::new(AtomicBool::new(false));
@@ -1915,7 +1916,7 @@ async fn test_listener() {
 
     // Verify listener was called
     assert!(was_called.load(Ordering::SeqCst));
-    
+
     // Verify all mocks were called
     client_mock.assert_async().await;
     env_mock.assert_async().await;
