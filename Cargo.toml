@@ -1,6 +1,6 @@
 [package]
 name = "clerk-fapi-rs"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["@Nipsuli"]
 homepage = "https://github.com/TheGrowthEngineeringCompany/clerk-fapi-rs/"
 repository = "https://github.com/TheGrowthEngineeringCompany/clerk-fapi-rs/"
@@ -30,9 +30,12 @@ log = "0.4"
 
 [dev-dependencies]
 clerk-fapi-rs = { path = "." }
-dotenv = "0.15"
 tokio = { version = "1.0", features = ["full", "test-util", "rt-multi-thread"] }
+dotenv = "0.15"
 mockito = "1.2"
+
+[workspace]
+members = ["examples"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.3", features = ["wasm_js"] }

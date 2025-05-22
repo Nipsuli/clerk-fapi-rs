@@ -1,0 +1,18 @@
+[package]
+name = "clerk-fapi-rs-examples"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+clerk-fapi-rs = { path = ".." }
+tokio = { version = "1.0", features = ["full", "rt-multi-thread"] }
+dotenv = "0.15"
+
+[[bin]]
+name = "basic_usage_sign_in"
+path = "../examples/basic_usage_sign_in.rs"
+
+[[bin]]
+name = "basic_usage_sign_up"
+path = "../examples/basic_usage_sign_up.rs"

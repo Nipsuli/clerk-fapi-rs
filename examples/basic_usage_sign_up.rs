@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clerk = Clerk::new(config);
 
     // Load the client (this fetches initial data)
-    let clerk = clerk.load().await?;
+    clerk.load(false).await?;
 
     println!("Welcome to the Clerk authentication example!");
 
@@ -107,7 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     sleep(Duration::from_millis(500)).await;
 
     // Get and display user information
-    if let Some(user) = clerk.user() {
+    if let Some(user) = clerk.user().unwrap() {
         println!("\nUser Information:");
         println!(
             "Name: {:?} {:?}",
