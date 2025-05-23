@@ -62,23 +62,19 @@ impl ClerkFapiClient {
     }
 
     fn handle_client_update(&self, client: client_period_client::ClientPeriodClient) {
-        let old_client = { self.state.read().client() };
-
-        let should_emit = match old_client {
-            Err(_) => {
-                error!("ClerkFapiClient: unpexected state, state doesn't have Client");
-                true
-            }
-            Ok(old_client) => old_client != client,
-        };
-
-        // Change only if needed
+        let should_emit = self
+            .state
+            .read()
+            .should_emit_client_change(client.clone())
+            .unwrap_or(true);
+        {
+            // we anyways write the new state always
+            // minimize write lock time
+            let mut state = self.state.write();
+            state.set_client(client);
+        }
+        // Emit only if needed
         if should_emit {
-            {
-                // minimize write lock time
-                let mut state = self.state.write();
-                state.set_client(client);
-            }
             let state = self.state.read();
             state.emit_state();
         }

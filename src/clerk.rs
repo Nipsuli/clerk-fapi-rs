@@ -256,15 +256,18 @@ impl Clerk {
         if !self.loaded() {
             Err(ClerkNotLoadedError::NotLoaded)
         } else {
-            let old_client = { self.state.read().client()? };
-            let should_emit = client != old_client;
-
-            // Change only if needed to avoid possible event loops
+            let should_emit = {
+                self.state
+                    .read()
+                    .should_emit_client_change(client.clone())?
+            };
+            {
+                // We anyways write the client
+                let mut state = self.state.write();
+                state.set_client(client);
+            };
+            // Emit only if needed to avoid possible event loops
             if should_emit {
-                {
-                    let mut state = self.state.write();
-                    state.set_client(client);
-                };
                 let state = self.state.read();
                 state.emit_state();
             }

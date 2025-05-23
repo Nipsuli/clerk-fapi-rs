@@ -42,7 +42,7 @@ pub struct ClerkState {
     /// When activating new organization this flag is set to identify
     /// which organization from user to attach to the the organization
     /// field from the Client Session
-    target_organization_id: Option<Option<String>>,
+    pub target_organization_id: Option<Option<String>>,
     /// Config to access the store
     config: ClerkFapiConfiguration,
     /// Callback for Client state change
@@ -98,6 +98,21 @@ impl ClerkState {
         self.set_environment(environment);
         self.set_client(client);
         self.loaded = true;
+    }
+
+    /// Call this before setting new client to determine if one should
+    /// also emit change after setting client. Useful to avoid emiting
+    /// extra events when nothing has changed
+    pub fn should_emit_client_change(&self, client: Client) -> Result<bool, ClerkNotLoadedError> {
+        if !self.loaded {
+            Err(ClerkNotLoadedError::NotLoaded)
+        } else {
+            match (self.client.clone(), self.target_organization_id.clone()) {
+                (None, _) => Ok(true),    // No client yet, definitely emit
+                (_, Some(_)) => Ok(true), // We have target_organization_id so we're going though org activation
+                (Some(old_client), _) => Ok(client != old_client), // Othewise let's check if the client changed
+            }
+        }
     }
 
     pub fn emit_state(&self) {
