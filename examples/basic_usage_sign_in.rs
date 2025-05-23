@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clerk = Clerk::new(config);
 
     // Load the client (this fetches initial data)
-    clerk.load(false).await?;
+    clerk.load().await?;
 
     println!("Welcome to the Clerk authentication example!");
     println!("Please select your sign-in method:");

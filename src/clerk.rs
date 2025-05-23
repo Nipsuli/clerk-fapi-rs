@@ -81,12 +81,6 @@ impl fmt::Display for ClerkGetTokenError {
 }
 impl Error for ClerkGetTokenError {}
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct ClerkLoadResult {
-    pub environment_loaded_from_cache: bool,
-    pub client_loaded_from_cache: bool,
-}
-
 impl Clerk {
     /// Creates a new Clerk client with the provided configuration
     ///
@@ -173,42 +167,27 @@ impl Clerk {
         Ok(*client_res)
     }
 
-    /// Initializes Clerk, one can optionally load the Environment and Client
-    /// From the cache. Example if one uses persisted ClerkStore one can pass
-    /// prefer_cache: True to prefer loading from the persisted state to load
-    /// Clerk without needing to do network calls in case where one has loaded
-    /// the client already once before.
-    pub async fn load(&self, prefer_cache: bool) -> Result<ClerkLoadResult, ClerkLoadError> {
-        let mut environment = None;
-        let mut client = None;
+    /// Initializes Clerk, tries to pull Environment and Client from API
+    /// in case that fails tries to pull them from cache. Example if
+    /// there wasn't internet connection
+    pub async fn load(&self) -> Result<(), ClerkLoadError> {
+        let mut environment = self.load_environment_from_api().await.ok();
+        let mut client = self.load_client_from_api().await.ok();
 
-        let mut res = ClerkLoadResult {
-            environment_loaded_from_cache: false,
-            client_loaded_from_cache: false,
-        };
-
-        if prefer_cache {
+        if environment.is_none() {
             environment = self.load_environment_from_cache();
-            if environment.is_some() {
-                res.environment_loaded_from_cache = true;
-            }
-            client = self.load_client_from_cache();
-            if client.is_some() {
-                res.client_loaded_from_cache = true;
-            }
         }
 
-        let environment = match environment {
-            Some(e) => e,
-            None => self.load_environment_from_api().await?,
-        };
-        let client = match client {
-            Some(c) => c,
-            None => self.load_client_from_api().await?,
-        };
+        if client.is_none() {
+            client = self.load_client_from_cache();
+        }
+
+        let environment = environment.ok_or(ClerkLoadError::FailedToLoadEnv)?;
+        let client = client.ok_or(ClerkLoadError::FailedToLoadClient)?;
+
         self.set_loaded(environment, client);
 
-        Ok(res)
+        Ok(())
     }
 
     /// set_loaded is public method, example in scenario where we endup
@@ -270,8 +249,28 @@ impl Clerk {
     //
     // To be able to use Clerk example in Tauri app where one needs to
     // hook to the fapi request hooks in js side we expose the client
-    // authorization header getter and setter
+    // authorization header getter and setter and setter for Client
     //
+
+    pub fn set_client(&self, client: Client) -> Result<(), ClerkNotLoadedError> {
+        if !self.loaded() {
+            Err(ClerkNotLoadedError::NotLoaded)
+        } else {
+            let old_client = { self.state.read().client()? };
+            let should_emit = client != old_client;
+
+            // Change only if needed to avoid possible event loops
+            if should_emit {
+                {
+                    let mut state = self.state.write();
+                    state.set_client(client);
+                };
+                let state = self.state.read();
+                state.emit_state();
+            }
+            Ok(())
+        }
+    }
 
     pub fn get_client_authorization_header(&self) -> Result<Option<String>, ClerkNotLoadedError> {
         self.state.write().authorization_header()
@@ -283,7 +282,8 @@ impl Clerk {
         if !self.loaded() {
             Err(ClerkNotLoadedError::NotLoaded)
         } else {
-            Ok(self.state.write().set_authorization_header(header))
+            self.state.write().set_authorization_header(header);
+            Ok(())
         }
     }
 
@@ -397,7 +397,7 @@ impl Clerk {
     ) -> Result<Option<String>, ClerkGetTokenError> {
         let session = match self
             .session()
-            .map_err(|e| ClerkGetTokenError::ClerkNotLoadedError(e))?
+            .map_err(ClerkGetTokenError::ClerkNotLoadedError)?
         {
             Some(s) => s,
             None => {
@@ -408,7 +408,7 @@ impl Clerk {
 
         if self
             .user()
-            .map_err(|e| ClerkGetTokenError::ClerkNotLoadedError(e))?
+            .map_err(ClerkGetTokenError::ClerkNotLoadedError)?
             .is_none()
         {
             // session but no user
@@ -499,14 +499,14 @@ impl Clerk {
             let state = self.state.read();
             let client = state
                 .client()
-                .map_err(|e| ClerkSetActiveError::ClerkNotLoadedError(e))?;
+                .map_err(ClerkSetActiveError::ClerkNotLoadedError)?;
             if let Some(session_id) = session_id.clone() {
                 find_target_session(client.clone(), session_id)
-                    .map_err(|e| ClerkSetActiveError::ClerkSessionFindingError(e))?
+                    .map_err(ClerkSetActiveError::ClerkSessionFindingError)?
             } else {
                 state
                     .session()
-                    .map_err(|e| ClerkSetActiveError::ClerkNotLoadedError(e))?
+                    .map_err(ClerkSetActiveError::ClerkNotLoadedError)?
                     .ok_or(ClerkSetActiveError::ClerkSessionFindingError(
                         ClerkSessionFindingError::NoSession,
                     ))?
@@ -524,7 +524,7 @@ impl Clerk {
                 )
                 .await
                 .map(|o| o.id)
-                .map_err(|e| ClerkSetActiveError::ClerkOrgFindingError(e))?;
+                .map_err(ClerkSetActiveError::ClerkOrgFindingError)?;
                 {
                     // We found target org, we need to store the target org
                     // to the state, so that after the session touching we know

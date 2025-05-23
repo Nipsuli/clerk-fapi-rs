@@ -90,7 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clerk = Clerk::new(config);
 
     // Load client, it loads the Environment and Client from API
-    clerk.load(false).await?;
+    clerk.load().await?;
 
     // If one uses persisted store and want to use cached values
     clerk.load(true).await?;

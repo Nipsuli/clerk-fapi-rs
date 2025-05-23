@@ -428,7 +428,7 @@ async fn test_init() {
         .unwrap(),
     );
 
-    clerk.load(false).await.unwrap();
+    clerk.load().await.unwrap();
 
     env_mock.assert_async().await;
     client_mock.assert_async().await;
@@ -456,7 +456,7 @@ async fn test_init_environment_failure() {
     let client = Clerk::new(config);
 
     // Test initialization fails
-    let result = client.load(false).await;
+    let result = client.load().await;
     assert!(result.is_err());
 
     // Verify the mock was called
@@ -1048,7 +1048,7 @@ async fn test_init_uses_update_client() {
     .unwrap();
 
     let client = Clerk::new(config);
-    client.load(false).await.unwrap();
+    client.load().await.unwrap();
 
     // Verify all mocks were called
     env_mock.assert_async().await;
@@ -1482,7 +1482,7 @@ async fn test_get_token() {
     let client = Clerk::new(config);
 
     // Load the client state properly
-    client.load(false).await.unwrap();
+    client.load().await.unwrap();
 
     // Test successful token creation
     let token = client.get_token(None, None).await.unwrap();
@@ -1912,7 +1912,7 @@ async fn test_listener() {
     });
 
     // Load the client to trigger the callbacks
-    clerk.load(false).await.unwrap();
+    clerk.load().await.unwrap();
 
     // Verify listener was called
     assert!(was_called.load(Ordering::SeqCst));

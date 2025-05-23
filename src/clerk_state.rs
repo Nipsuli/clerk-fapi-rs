@@ -11,6 +11,10 @@ use crate::{
 use log::{error, warn};
 use std::{error::Error, fmt, sync::Arc};
 
+pub type ClerkStateCallback = Arc<
+    dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync + 'static,
+>;
+
 /// Internal state of our Clerk
 pub struct ClerkState {
     /// Clerk environment describing current Clerk instance capabilities
@@ -42,9 +46,7 @@ pub struct ClerkState {
     /// Config to access the store
     config: ClerkFapiConfiguration,
     /// Callback for Client state change
-    callback: Arc<
-        dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync + 'static,
-    >,
+    callback: ClerkStateCallback,
 }
 
 impl fmt::Debug for ClerkState {

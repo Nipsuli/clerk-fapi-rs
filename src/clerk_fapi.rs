@@ -5,6 +5,7 @@ use crate::clerk_state::ClerkState;
 use crate::configuration::{ClerkFapiConfiguration, ClientKind, DefaultStore, Store};
 use crate::models::*;
 use dev_browser_api::DevBrowser;
+use log::error;
 use parking_lot::{Mutex, RwLock};
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Client, Request, Response};
@@ -61,14 +62,26 @@ impl ClerkFapiClient {
     }
 
     fn handle_client_update(&self, client: client_period_client::ClientPeriodClient) {
-        {
-            // minimize write lock time
-            let mut state = self.state.write();
-            state.set_client(client);
+        let old_client = { self.state.read().client() };
+
+        let should_emit = match old_client {
+            Err(_) => {
+                error!("ClerkFapiClient: unpexected state, state doesn't have Client");
+                true
+            }
+            Ok(old_client) => old_client != client,
+        };
+
+        // Change only if needed
+        if should_emit {
+            {
+                // minimize write lock time
+                let mut state = self.state.write();
+                state.set_client(client);
+            }
+            let state = self.state.read();
+            state.emit_state();
         }
-        // emit state while not holding write lock anymore
-        let state = self.state.read();
-        state.emit_state();
     }
 
     // Active Sessions API methods
