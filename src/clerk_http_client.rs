@@ -70,18 +70,15 @@ impl ClerkHttpClient {
         {
             let mut state = self.state.write();
             match state.authorization_header() {
-                Ok(Some(auth)) => {
+                Some(auth) => {
                     if let Ok(value) = HeaderValue::from_str(auth.as_str()) {
                         req.headers_mut().insert("Authorization", value);
                     } else {
                         error!("ClerkHttpClient: Failed to parse authorization header");
                     }
                 }
-                Ok(None) => {
+                None => {
                     warn!("ClerkHttpClient: No authorization header available");
-                }
-                Err(_) => {
-                    error!("ClerkHttpClient: Failed to get authorization header");
                 }
             }
         }

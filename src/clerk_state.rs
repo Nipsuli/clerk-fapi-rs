@@ -211,29 +211,24 @@ impl ClerkState {
         }
     }
 
-    pub fn authorization_header(&mut self) -> Result<Option<String>, ClerkNotLoadedError> {
-        if !self.loaded {
-            Err(ClerkNotLoadedError::NotLoaded)
-        } else {
-            match self.authorization_header.clone() {
-                Some(token) => Ok(Some(token)),
-                None => {
-                    // try to load from store
-                    let stored_token = self.config.get_store_value("authorization_header");
-                    match stored_token {
-                        Some(token_value) => {
-                            if let Ok(token) = serde_json::from_value::<Option<String>>(token_value)
-                            {
-                                // there was a token! let's updat also internal state
-                                self.authorization_header = token.clone();
-                                Ok(token)
-                            } else {
-                                warn!("Failed to parse stored authorization header");
-                                Ok(None)
-                            }
+    pub fn authorization_header(&mut self) -> Option<String> {
+        match self.authorization_header.clone() {
+            Some(token) => Some(token),
+            None => {
+                // try to load from store
+                let stored_token = self.config.get_store_value("authorization_header");
+                match stored_token {
+                    Some(token_value) => {
+                        if let Ok(token) = serde_json::from_value::<Option<String>>(token_value) {
+                            // there was a token! let's update also internal state
+                            self.authorization_header = token.clone();
+                            token
+                        } else {
+                            warn!("Failed to parse stored authorization header");
+                            None
                         }
-                        None => Ok(None),
                     }
+                    None => None,
                 }
             }
         }

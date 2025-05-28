@@ -251,6 +251,10 @@ impl Clerk {
     // hook to the fapi request hooks in js side we expose the client
     // authorization header getter and setter and setter for Client
     //
+    // The Authorization header methods work even if Clerk has not been
+    // loaded yet. In case we have persisted store we can load and store
+    // even if the client haven't been loaded yet
+    //
 
     pub fn set_client(&self, client: Client) -> Result<(), ClerkNotLoadedError> {
         if !self.loaded() {
@@ -275,19 +279,11 @@ impl Clerk {
         }
     }
 
-    pub fn get_client_authorization_header(&self) -> Result<Option<String>, ClerkNotLoadedError> {
+    pub fn get_client_authorization_header(&self) -> Option<String> {
         self.state.write().authorization_header()
     }
-    pub fn set_client_authorization_header(
-        &self,
-        header: Option<String>,
-    ) -> Result<(), ClerkNotLoadedError> {
-        if !self.loaded() {
-            Err(ClerkNotLoadedError::NotLoaded)
-        } else {
-            self.state.write().set_authorization_header(header);
-            Ok(())
-        }
+    pub fn set_client_authorization_header(&self, header: Option<String>) {
+        self.state.write().set_authorization_header(header);
     }
 
     //
