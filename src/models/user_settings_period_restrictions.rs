@@ -21,8 +21,12 @@ pub struct UserSettingsPeriodRestrictions {
     pub block_email_subaddresses: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
     #[serde(rename = "block_disposable_email_domains")]
     pub block_disposable_email_domains: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
-    #[serde(rename = "ignore_dots_for_gmail_addresses")]
-    pub ignore_dots_for_gmail_addresses: Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>,
+    #[serde(
+        rename = "ignore_dots_for_gmail_addresses",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub ignore_dots_for_gmail_addresses:
+        Option<Box<models::UserSettingsPeriodRestrictionsPeriodEnabled>>,
 }
 
 impl UserSettingsPeriodRestrictions {
@@ -31,14 +35,16 @@ impl UserSettingsPeriodRestrictions {
         blocklist: models::UserSettingsPeriodRestrictionsPeriodEnabled,
         block_email_subaddresses: models::UserSettingsPeriodRestrictionsPeriodEnabled,
         block_disposable_email_domains: models::UserSettingsPeriodRestrictionsPeriodEnabled,
-        ignore_dots_for_gmail_addresses: models::UserSettingsPeriodRestrictionsPeriodEnabled,
+        ignore_dots_for_gmail_addresses: Option<
+            models::UserSettingsPeriodRestrictionsPeriodEnabled,
+        >,
     ) -> UserSettingsPeriodRestrictions {
         UserSettingsPeriodRestrictions {
             allowlist: Box::new(allowlist),
             blocklist: Box::new(blocklist),
             block_email_subaddresses: Box::new(block_email_subaddresses),
             block_disposable_email_domains: Box::new(block_disposable_email_domains),
-            ignore_dots_for_gmail_addresses: Box::new(ignore_dots_for_gmail_addresses),
+            ignore_dots_for_gmail_addresses: ignore_dots_for_gmail_addresses.map(Box::new),
         }
     }
 }
