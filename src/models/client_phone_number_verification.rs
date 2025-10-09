@@ -14,16 +14,28 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientPhoneNumberVerification {
-    StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
-    StubsPeriodVerificationPeriodAdmin(Box<models::StubsPeriodVerificationPeriodAdmin>),
+    StubsVerificationOtp(Box<models::StubsVerificationOtp>),
+    StubsVerificationAdmin(Box<models::StubsVerificationAdmin>),
 }
 
 impl Default for ClientPhoneNumberVerification {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodOtp(Default::default())
+        Self::StubsVerificationOtp(Default::default())
     }
 }
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_admin")]
+    VerificationAdmin,
+}
 
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationAdmin
+    }
+}
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "verified")]
@@ -35,7 +47,7 @@ impl Default for Status {
         Self::Verified
     }
 }
-
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "admin")]

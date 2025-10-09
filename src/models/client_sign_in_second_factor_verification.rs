@@ -14,18 +14,30 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientSignInSecondFactorVerification {
-    StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
-    StubsPeriodVerificationPeriodTotp(Box<models::StubsPeriodVerificationPeriodTotp>),
-    StubsPeriodVerificationPeriodTicket(Box<models::StubsPeriodVerificationPeriodTicket>),
-    StubsPeriodVerificationPeriodBackupCode(Box<models::StubsPeriodVerificationPeriodBackupCode>),
+    StubsVerificationOtp(Box<models::StubsVerificationOtp>),
+    StubsVerificationTotp(Box<models::StubsVerificationTotp>),
+    StubsVerificationTicket(Box<models::StubsVerificationTicket>),
+    StubsVerificationBackupCode(Box<models::StubsVerificationBackupCode>),
 }
 
 impl Default for ClientSignInSecondFactorVerification {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodOtp(Default::default())
+        Self::StubsVerificationOtp(Default::default())
     }
 }
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_backup_code")]
+    VerificationBackupCode,
+}
 
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationBackupCode
+    }
+}
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -39,7 +51,7 @@ impl Default for Status {
         Self::Unverified
     }
 }
-
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "backup_code")]

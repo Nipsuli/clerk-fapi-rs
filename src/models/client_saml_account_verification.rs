@@ -14,16 +14,28 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientSamlAccountVerification {
-    StubsPeriodVerificationPeriodSaml(Box<models::StubsPeriodVerificationPeriodSaml>),
-    StubsPeriodVerificationPeriodTicket(Box<models::StubsPeriodVerificationPeriodTicket>),
+    StubsVerificationSaml(Box<models::StubsVerificationSaml>),
+    StubsVerificationTicket(Box<models::StubsVerificationTicket>),
 }
 
 impl Default for ClientSamlAccountVerification {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodSaml(Default::default())
+        Self::StubsVerificationSaml(Default::default())
     }
 }
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_ticket")]
+    VerificationTicket,
+}
 
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationTicket
+    }
+}
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -39,7 +51,7 @@ impl Default for Status {
         Self::Unverified
     }
 }
-
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "ticket")]

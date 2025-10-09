@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientClientWrappedOrganizationInvitationsResponse {
-    Array(Vec<models::ClientPeriodOrganizationInvitation>),
+    ArrayVecmodelsClientOrganizationInvitation(Vec<models::ClientOrganizationInvitation>),
     ClientClientWrappedOrganizationInvitationsResponseOneOf(
         Box<models::ClientClientWrappedOrganizationInvitationsResponseOneOf>,
     ),
@@ -22,6 +22,6 @@ pub enum ClientClientWrappedOrganizationInvitationsResponse {
 
 impl Default for ClientClientWrappedOrganizationInvitationsResponse {
     fn default() -> Self {
-        Self::Array(Default::default())
+        Self::ArrayVecmodelsClientOrganizationInvitation(Default::default())
     }
 }

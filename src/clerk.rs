@@ -3,9 +3,9 @@ use crate::clerk_fapi::ClerkFapiClient;
 use crate::clerk_state::{ClerkNotLoadedError, ClerkState};
 use crate::configuration::{ClerkFapiConfiguration, ClientKind};
 use crate::models::{
-    ClientClientWrappedOrganizationMembershipsResponse, ClientPeriodClient as Client,
-    ClientPeriodEnvironment as Environment, ClientPeriodOrganization as Organization,
-    ClientPeriodOrganizationMembership, ClientPeriodSession as Session, ClientPeriodUser as User,
+    ClientClient as Client, ClientClientWrappedOrganizationMembershipsResponse,
+    ClientEnvironment as Environment, ClientOrganization as Organization,
+    ClientOrganizationMembership, ClientSession as Session, ClientUser as User,
 };
 use crate::utils::{
     find_organization_id_from_memberships, find_target_organization, find_target_session,

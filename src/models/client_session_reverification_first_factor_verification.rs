@@ -14,17 +14,29 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientSessionReverificationFirstFactorVerification {
-    StubsPeriodVerificationPeriodPassword(Box<models::StubsPeriodVerificationPeriodPassword>),
-    StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
-    StubsPeriodVerificationPeriodPasskey(Box<models::StubsPeriodVerificationPeriodPasskey>),
+    StubsVerificationPassword(Box<models::StubsVerificationPassword>),
+    StubsVerificationOtp(Box<models::StubsVerificationOtp>),
+    StubsVerificationPasskey(Box<models::StubsVerificationPasskey>),
 }
 
 impl Default for ClientSessionReverificationFirstFactorVerification {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodPassword(Default::default())
+        Self::StubsVerificationPassword(Default::default())
     }
 }
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_passkey")]
+    VerificationPasskey,
+}
 
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationPasskey
+    }
+}
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -42,7 +54,7 @@ impl Default for Status {
         Self::Unverified
     }
 }
-
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "passkey")]

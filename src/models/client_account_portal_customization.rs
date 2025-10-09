@@ -54,7 +54,7 @@ impl ClientAccountPortalCustomization {
         }
     }
 }
-
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Appearance {
     #[serde(rename = "auto")]

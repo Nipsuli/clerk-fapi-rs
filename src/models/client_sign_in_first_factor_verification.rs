@@ -14,28 +14,35 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientSignInFirstFactorVerification {
-    StubsPeriodVerificationPeriodPassword(Box<models::StubsPeriodVerificationPeriodPassword>),
-    StubsPeriodVerificationPeriodOauth(Box<models::StubsPeriodVerificationPeriodOauth>),
-    StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
-    StubsPeriodVerificationPeriodLink(Box<models::StubsPeriodVerificationPeriodLink>),
-    StubsPeriodVerificationPeriodWeb3Signature(
-        Box<models::StubsPeriodVerificationPeriodWeb3Signature>,
-    ),
-    StubsPeriodVerificationPeriodTicket(Box<models::StubsPeriodVerificationPeriodTicket>),
-    StubsPeriodVerificationPeriodSaml(Box<models::StubsPeriodVerificationPeriodSaml>),
-    StubsPeriodVerificationPeriodPasskey(Box<models::StubsPeriodVerificationPeriodPasskey>),
-    StubsPeriodVerificationPeriodGoogleOneTap(
-        Box<models::StubsPeriodVerificationPeriodGoogleOneTap>,
-    ),
-    StubsPeriodVerificationPeriodCode(Box<models::StubsPeriodVerificationPeriodCode>),
+    StubsVerificationPassword(Box<models::StubsVerificationPassword>),
+    StubsVerificationOauth(Box<models::StubsVerificationOauth>),
+    StubsVerificationOtp(Box<models::StubsVerificationOtp>),
+    StubsVerificationLink(Box<models::StubsVerificationLink>),
+    StubsVerificationWeb3Signature(Box<models::StubsVerificationWeb3Signature>),
+    StubsVerificationTicket(Box<models::StubsVerificationTicket>),
+    StubsVerificationSaml(Box<models::StubsVerificationSaml>),
+    StubsVerificationPasskey(Box<models::StubsVerificationPasskey>),
+    StubsVerificationGoogleOneTap(Box<models::StubsVerificationGoogleOneTap>),
 }
 
 impl Default for ClientSignInFirstFactorVerification {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodPassword(Default::default())
+        Self::StubsVerificationPassword(Default::default())
     }
 }
+///
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_google_one_tap")]
+    VerificationGoogleOneTap,
+}
 
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationGoogleOneTap
+    }
+}
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -49,7 +56,7 @@ impl Default for Status {
         Self::Unverified
     }
 }
-
+///
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "google_one_tap")]

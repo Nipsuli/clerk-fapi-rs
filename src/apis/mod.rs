@@ -67,6 +67,25 @@ impl<T> From<anyhow::Error> for Error<T> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ContentType {
+    Json,
+    Text,
+    Unsupported(String),
+}
+
+impl From<&str> for ContentType {
+    fn from(s: &str) -> Self {
+        if s.contains("application/json") {
+            ContentType::Json
+        } else if s.contains("text/plain") {
+            ContentType::Text
+        } else {
+            ContentType::Unsupported(s.to_string())
+        }
+    }
+}
+
 pub fn urlencode<T: AsRef<str>>(s: T) -> String {
     ::url::form_urlencoded::byte_serialize(s.as_ref().as_bytes()).collect()
 }
@@ -105,6 +124,7 @@ pub fn parse_deep_object(prefix: &str, value: &serde_json::Value) -> Vec<(String
 pub mod active_sessions_api;
 pub mod backup_codes_api;
 pub mod client_api;
+pub mod configuration;
 pub mod default_api;
 pub mod dev_browser_api;
 pub mod domains_api;
@@ -121,6 +141,7 @@ pub mod organization_api;
 pub mod organizations_memberships_api;
 pub mod passkeys_api;
 pub mod phone_numbers_api;
+pub mod redirect_api;
 pub mod roles_api;
 pub mod saml_api;
 pub mod sessions_api;
@@ -131,5 +152,3 @@ pub mod user_api;
 pub mod waitlist_api;
 pub mod web3_wallets_api;
 pub mod well_known_api;
-
-pub mod configuration;

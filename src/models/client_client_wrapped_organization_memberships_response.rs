@@ -17,7 +17,7 @@ pub enum ClientClientWrappedOrganizationMembershipsResponse {
     ClientClientWrappedOrganizationMembershipsResponseOneOf(
         Box<models::ClientClientWrappedOrganizationMembershipsResponseOneOf>,
     ),
-    Array(Vec<models::ClientPeriodOrganizationMembership>),
+    ArrayVecmodelsClientOrganizationMembership(Vec<models::ClientOrganizationMembership>),
 }
 
 impl Default for ClientClientWrappedOrganizationMembershipsResponse {

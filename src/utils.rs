@@ -5,15 +5,15 @@ use log::error;
 use crate::{
     clerk_fapi::ClerkFapiClient,
     models::{
-        ClientClientWrappedOrganizationMembershipsResponse, ClientPeriodClient,
-        ClientPeriodOrganization, ClientPeriodOrganizationMembership, ClientPeriodSession,
+        ClientClient, ClientClientWrappedOrganizationMembershipsResponse, ClientOrganization,
+        ClientOrganizationMembership, ClientSession,
     },
 };
 
 pub fn find_organization_id_from_memberships(
-    memberships: Vec<ClientPeriodOrganizationMembership>,
+    memberships: Vec<ClientOrganizationMembership>,
     organization_id_or_slug: String,
-) -> Option<ClientPeriodOrganizationMembership> {
+) -> Option<ClientOrganizationMembership> {
     if organization_id_or_slug.starts_with("org_") {
         // It's an organization ID - verify it exists in memberships
         memberships
@@ -46,9 +46,9 @@ impl Error for ClerkOrgFindingError {}
 
 pub async fn find_target_organization(
     fapi: &ClerkFapiClient,
-    session: ClientPeriodSession,
+    session: ClientSession,
     organization_id_or_slug: String,
-) -> Result<ClientPeriodOrganization, ClerkOrgFindingError> {
+) -> Result<ClientOrganization, ClerkOrgFindingError> {
     let user = match session.user {
         Some(user) => *user.clone(),
         None => return Err(ClerkOrgFindingError::NoUserFound),
@@ -101,7 +101,7 @@ pub async fn find_target_organization(
         .response;
 
     let user_org_memberships = match org_memberships {
-        ClientClientWrappedOrganizationMembershipsResponse::Array(memberships) => {
+        ClientClientWrappedOrganizationMembershipsResponse::ArrayVecmodelsClientOrganizationMembership(memberships) => {
             memberships
         },
         ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(memberships) => {
@@ -136,9 +136,9 @@ impl fmt::Display for ClerkSessionFindingError {
 impl Error for ClerkSessionFindingError {}
 
 pub fn find_target_session(
-    client: ClientPeriodClient,
+    client: ClientClient,
     session_id: String,
-) -> Result<ClientPeriodSession, ClerkSessionFindingError> {
+) -> Result<ClientSession, ClerkSessionFindingError> {
     client
         .sessions
         .iter()

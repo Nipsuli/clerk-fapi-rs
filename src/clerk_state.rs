@@ -1,10 +1,9 @@
 use crate::{
     configuration::Store,
     models::{
-        ClientClientWrappedOrganizationMembershipsResponse, ClientPeriodClient as Client,
-        ClientPeriodEnvironment as Environment, ClientPeriodOrganization as Organization,
-        ClientPeriodOrganizationMembership, ClientPeriodSession as Session,
-        ClientPeriodUser as User,
+        ClientClient as Client, ClientClientWrappedOrganizationMembershipsResponse,
+        ClientEnvironment as Environment, ClientOrganization as Organization,
+        ClientOrganizationMembership, ClientSession as Session, ClientUser as User,
     },
     ClerkFapiConfiguration,
 };

@@ -29,6 +29,10 @@ pub struct ClientCommerceSettingsBilling {
     pub has_paid_user_plans: Option<bool>,
     #[serde(rename = "has_paid_org_plans", skip_serializing_if = "Option::is_none")]
     pub has_paid_org_plans: Option<bool>,
+    #[serde(rename = "user", skip_serializing_if = "Option::is_none")]
+    pub user: Option<Box<models::ClientCommerceSettingsBillingUser>>,
+    #[serde(rename = "organization", skip_serializing_if = "Option::is_none")]
+    pub organization: Option<Box<models::ClientCommerceSettingsBillingUser>>,
 }
 
 impl ClientCommerceSettingsBilling {
@@ -38,6 +42,8 @@ impl ClientCommerceSettingsBilling {
             stripe_publishable_key: None,
             has_paid_user_plans: None,
             has_paid_org_plans: None,
+            user: None,
+            organization: None,
         }
     }
 }
