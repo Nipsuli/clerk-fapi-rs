@@ -85,7 +85,7 @@ pub async fn find_target_organization(
     }
 
     // Still no matching organization found!
-    // let's try one more time, le'ts pull the org memberships!
+    // let's try one more time, let's pull the org memberships!
 
     let org_memberships = *fapi
         .get_organization_memberships(

@@ -16,9 +16,9 @@ methods as example the Javscript Clerk does, only the direct FAPI
 endpoints. But it does keep the current state of the client in sync
 allowing one signin and call api methods as signed in user.
 
-The `src/apis` and `src/models` are generated based on the `fapi_swagger.json`. There seesm to be small issues in the clerk API
-spec and it does not reflect the reality in all of the cases. Those
-cases where I've run into are fixed by hand.
+The `src/apis` and `src/models` are generated based on the `fapi_swagger.json`.
+There seems to be small issues in the clerk API spec and it does not reflect the
+reality in all of the cases. Those cases where I've run into are fixed by hand.
 
 By default the state is stored in in `HashMap` but if one wants to
 add some persistent state one can provide anything that implments
