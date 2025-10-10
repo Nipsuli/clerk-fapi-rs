@@ -62,16 +62,8 @@ impl ClientClient {
             object,
             id,
             sessions,
-            sign_in: if let Some(x) = sign_in {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            sign_up: if let Some(x) = sign_up {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            sign_in: sign_in.map(Box::new),
+            sign_up: sign_up.map(Box::new),
             last_active_session_id,
             cookie_expires_at,
             captcha_bypass,
@@ -80,11 +72,37 @@ impl ClientClient {
         }
     }
 }
+
+impl From<models::schemas_client_client::SchemasClientClient> for ClientClient {
+    fn from(value: models::schemas_client_client::SchemasClientClient) -> Self {
+        ClientClient {
+            object: Object::Client,
+            id: value.id,
+            sessions: value.sessions.into_iter().map(|s| s.into()).collect(),
+            sign_in: value.sign_in,
+            sign_up: value.sign_up,
+            last_active_session_id: value.last_active_session_id,
+            cookie_expires_at: value.cookie_expires_at,
+            captcha_bypass: value.captcha_bypass,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+        }
+    }
+}
+
 /// String representing the object's type. Objects of the same type share the same value.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "client")]
     Client,
+}
+
+impl From<models::schemas_client_client::Object> for Object {
+    fn from(value: models::schemas_client_client::Object) -> Self {
+        match value {
+            models::schemas_client_client::Object::Client => Object::Client,
+        }
+    }
 }
 
 impl Default for Object {

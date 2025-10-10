@@ -57,7 +57,7 @@ impl StubsVerificationOauth {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "verification_oauth")]
@@ -69,7 +69,7 @@ impl Default for Object {
         Self::VerificationOauth
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]

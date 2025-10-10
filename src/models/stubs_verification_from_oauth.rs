@@ -46,7 +46,7 @@ impl StubsVerificationFromOauth {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "verification_from_oauth")]
@@ -58,7 +58,7 @@ impl Default for Object {
         Self::VerificationFromOauth
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "verified")]
@@ -72,7 +72,7 @@ impl Default for Status {
         Self::Verified
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "from_oauth_apple")]

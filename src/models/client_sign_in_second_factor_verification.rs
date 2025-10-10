@@ -25,7 +25,7 @@ impl Default for ClientSignInSecondFactorVerification {
         Self::StubsVerificationOtp(Default::default())
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "verification_backup_code")]
@@ -37,7 +37,7 @@ impl Default for Object {
         Self::VerificationBackupCode
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -51,7 +51,7 @@ impl Default for Status {
         Self::Unverified
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "backup_code")]

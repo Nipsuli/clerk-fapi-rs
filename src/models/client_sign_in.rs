@@ -79,22 +79,10 @@ impl ClientSignIn {
             supported_identifiers,
             supported_first_factors,
             supported_second_factors,
-            first_factor_verification: if let Some(x) = first_factor_verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            second_factor_verification: if let Some(x) = second_factor_verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            first_factor_verification: first_factor_verification.map(Box::new),
+            second_factor_verification: second_factor_verification.map(Box::new),
             identifier,
-            user_data: if let Some(x) = user_data {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            user_data: user_data.map(Box::new),
             created_session_id,
             abandon_at,
         }
@@ -112,7 +100,7 @@ impl Default for Object {
         Self::SignInAttempt
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "abandoned")]

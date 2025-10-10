@@ -50,7 +50,7 @@ fn parse_publishable_key(
         frontend_api = proxy;
     } else if instance_type != "development" {
         if let Some(d) = domain {
-            frontend_api = format!("clerk.{}", d);
+            frontend_api = format!("clerk.{d}");
         }
     }
 
@@ -179,7 +179,7 @@ impl ClerkFapiConfiguration {
         kind: ClientKind,
     ) -> Result<Self, String> {
         let parsed_key = parse_publishable_key(&key, domain.clone(), proxy_url.clone())?;
-        let user_agent = format!("{}/{}", NAME, VERSION);
+        let user_agent = format!("{NAME}/{VERSION}");
 
         let store = store.unwrap_or_else(|| Arc::new(DefaultStore::default()));
         let store_prefix = store_prefix.unwrap_or_else(|| "ClerkFapi:".to_string());
@@ -305,7 +305,7 @@ impl Default for ClerkFapiConfiguration {
             base_url: String::new(),
             instance_type: String::new(),
             frontend_api: String::new(),
-            user_agent: format!("{}/{}", NAME, VERSION),
+            user_agent: format!("{NAME}/{VERSION}"),
             store: Arc::new(DefaultStore::default()),
             store_prefix: "ClerkFapi:".to_string(),
             kind: ClientKind::NonBrowser,

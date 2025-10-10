@@ -25,16 +25,8 @@ impl ClientClientWrappedClient {
         client: Option<models::ClientClient>,
     ) -> ClientClientWrappedClient {
         ClientClientWrappedClient {
-            response: if let Some(x) = response {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            client: if let Some(x) = client {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            response: response.map(Box::new),
+            client: client.map(Box::new),
         }
     }
 }

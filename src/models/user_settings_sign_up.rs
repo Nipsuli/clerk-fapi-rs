@@ -46,7 +46,7 @@ impl UserSettingsSignUp {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum CaptchaWidgetType {
     #[serde(rename = "smart")]
@@ -60,7 +60,7 @@ impl Default for CaptchaWidgetType {
         Self::Smart
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Mode {
     #[serde(rename = "public")]

@@ -214,16 +214,8 @@ impl ClientDisplayConfig {
             terms_url,
             logo_url,
             favicon_url,
-            logo_image: if let Some(x) = logo_image {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            favicon_image: if let Some(x) = favicon_image {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            logo_image: logo_image.map(Box::new),
+            favicon_image: favicon_image.map(Box::new),
             captcha_public_key,
             captcha_widget_type,
             captcha_public_key_invisible,
@@ -233,7 +225,7 @@ impl ClientDisplayConfig {
         }
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "display_config")]
@@ -245,7 +237,7 @@ impl Default for Object {
         Self::DisplayConfig
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum InstanceEnvironmentType {
     #[serde(rename = "production")]
@@ -261,7 +253,7 @@ impl Default for InstanceEnvironmentType {
         Self::Production
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum PreferredSignInStrategy {
     #[serde(rename = "password")]
@@ -275,7 +267,7 @@ impl Default for PreferredSignInStrategy {
         Self::Password
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum CaptchaWidgetType {
     #[serde(rename = "smart")]
@@ -289,7 +281,7 @@ impl Default for CaptchaWidgetType {
         Self::Smart
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum CaptchaProvider {
     #[serde(rename = "turnstile")]

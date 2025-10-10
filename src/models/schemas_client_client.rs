@@ -62,16 +62,8 @@ impl SchemasClientClient {
             object,
             id,
             sessions,
-            sign_in: if let Some(x) = sign_in {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            sign_up: if let Some(x) = sign_up {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            sign_in: sign_in.map(Box::new),
+            sign_up: sign_up.map(Box::new),
             last_active_session_id,
             cookie_expires_at,
             captcha_bypass,

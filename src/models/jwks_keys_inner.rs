@@ -28,7 +28,7 @@ impl Default for JwksKeysInner {
         Self::JwksEd25519PublicKey(Default::default())
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Kty {
     #[serde(rename = "oct")]

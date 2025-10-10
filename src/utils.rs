@@ -66,14 +66,10 @@ pub async fn find_target_organization(
     // The organization didn't exist in the current session
     // let's try to find it from the API
     // Let's start by refreshing user
-    let user = *fapi
-        .get_user(Some(&session.id))
-        .await
-        .map_err(|e| {
-            error!("Failed to get user: {}", e);
-            ClerkOrgFindingError::ClerkApiError
-        })?
-        .response;
+    let user = fapi.get_user().await.map_err(|e| {
+        error!("Failed to get user: {}", e);
+        ClerkOrgFindingError::ClerkApiError
+    })?;
 
     if let Some(user_org_memberships) = user.organization_memberships {
         if let Some(org) = find_organization_id_from_memberships(
@@ -86,8 +82,7 @@ pub async fn find_target_organization(
 
     // Still no matching organization found!
     // let's try one more time, let's pull the org memberships!
-
-    let org_memberships = *fapi
+    let org_memberships = fapi
         .get_organization_memberships(
             None, // limit
             None, // offset
@@ -97,8 +92,7 @@ pub async fn find_target_organization(
         .map_err(|e| {
             error!("Failed to get org memberships: {}", e);
             ClerkOrgFindingError::ClerkApiError
-        })?
-        .response;
+        })?;
 
     let user_org_memberships = match org_memberships {
         ClientClientWrappedOrganizationMembershipsResponse::ArrayVecmodelsClientOrganizationMembership(memberships) => {

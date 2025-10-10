@@ -26,11 +26,7 @@ impl SchemasClientClientWrappedSignIn {
     ) -> SchemasClientClientWrappedSignIn {
         SchemasClientClientWrappedSignIn {
             response: Box::new(response),
-            client: if let Some(x) = client {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            client: client.map(Box::new),
         }
     }
 }

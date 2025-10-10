@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 pub struct ClientSamlAccount {
     #[serde(rename = "id")]
     pub id: String,
-    /// String representing the object's type. Objects of the same type share the same value. 
+    /// String representing the object's type. Objects of the same type share the same value.
     #[serde(rename = "object")]
     pub object: Object,
     #[serde(rename = "provider")]
@@ -40,7 +40,19 @@ pub struct ClientSamlAccount {
 }
 
 impl ClientSamlAccount {
-    pub fn new(id: String, object: Object, provider: String, active: bool, email_address: String, first_name: Option<String>, last_name: Option<String>, provider_user_id: Option<String>, public_metadata: std::collections::HashMap<String, serde_json::Value>, verification: Option<models::ClientSamlAccountVerification>, saml_connection: Option<models::StubsSamlConnectionSamlAccount>) -> ClientSamlAccount {
+    pub fn new(
+        id: String,
+        object: Object,
+        provider: String,
+        active: bool,
+        email_address: String,
+        first_name: Option<String>,
+        last_name: Option<String>,
+        provider_user_id: Option<String>,
+        public_metadata: std::collections::HashMap<String, serde_json::Value>,
+        verification: Option<models::ClientSamlAccountVerification>,
+        saml_connection: Option<models::StubsSamlConnectionSamlAccount>,
+    ) -> ClientSamlAccount {
         ClientSamlAccount {
             id,
             object,
@@ -51,12 +63,12 @@ impl ClientSamlAccount {
             last_name,
             provider_user_id,
             public_metadata,
-            verification: if let Some(x) = verification {Some(Box::new(x))} else {None},
-            saml_connection: if let Some(x) = saml_connection {Some(Box::new(x))} else {None},
+            verification: verification.map(Box::new),
+            saml_connection: saml_connection.map(Box::new),
         }
     }
 }
-/// String representing the object's type. Objects of the same type share the same value. 
+/// String representing the object's type. Objects of the same type share the same value.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "saml_account")]
@@ -68,4 +80,3 @@ impl Default for Object {
         Self::SamlAccount
     }
 }
-

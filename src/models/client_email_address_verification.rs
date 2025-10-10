@@ -28,7 +28,7 @@ impl Default for ClientEmailAddressVerification {
         Self::StubsVerificationOtp(Default::default())
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
     #[serde(rename = "verification_saml")]
@@ -40,7 +40,7 @@ impl Default for Object {
         Self::VerificationSaml
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "unverified")]
@@ -60,7 +60,7 @@ impl Default for Status {
         Self::Unverified
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Strategy {
     #[serde(rename = "saml")]

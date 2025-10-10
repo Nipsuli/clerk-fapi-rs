@@ -154,17 +154,14 @@ impl Clerk {
     }
 
     async fn load_client_from_api(&self) -> Result<Client, ClerkLoadError> {
-        let client_res = self
-            .api_client
+        self.api_client
             .get_client()
             .await
             .map_err(|e| {
                 error!("Clerk: Failed to load client from API: {e}");
                 ClerkLoadError::FailedToLoadClient
             })?
-            .response
-            .ok_or(ClerkLoadError::FailedToLoadClient)?;
-        Ok(*client_res)
+            .ok_or(ClerkLoadError::FailedToLoadClient)
     }
 
     /// Initializes Clerk, tries to pull Environment and Client from API
@@ -457,13 +454,13 @@ impl Clerk {
                 self.api_client
                     .remove_session(&sid)
                     .await
-                    .map_err(|e| format!("Failed to remove session: {}", e))?;
+                    .map_err(|e| format!("Failed to remove session: {e}"))?;
             }
             None => {
                 self.api_client
                     .remove_client_sessions_and_retain_cookie()
                     .await
-                    .map_err(|e| format!("Failed to remove all sessions: {}", e))?;
+                    .map_err(|e| format!("Failed to remove all sessions: {e}"))?;
             }
         };
         // The remove sessions calls will update the client state via the callback

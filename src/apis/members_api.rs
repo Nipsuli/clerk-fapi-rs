@@ -85,7 +85,7 @@ pub async fn create_organization_membership(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.query(&[("__dev_session", value)]);
@@ -96,7 +96,7 @@ pub async fn create_organization_membership(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.header("__session", value);
@@ -107,7 +107,7 @@ pub async fn create_organization_membership(
             multipart_form_params.insert("user_id", param_value.to_string());
         }
         None => {
-            multipart_form_params.insert("user_id", "");
+            multipart_form_params.insert("user_id", "".to_string());
         }
     }
     match p_form_role {
@@ -115,7 +115,7 @@ pub async fn create_organization_membership(
             multipart_form_params.insert("role", param_value.to_string());
         }
         None => {
-            multipart_form_params.insert("role", "");
+            multipart_form_params.insert("role", "".to_string());
         }
     }
     req_builder = req_builder.form(&multipart_form_params);
@@ -135,8 +135,8 @@ pub async fn create_organization_membership(
         let content = resp.text().await?;
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`"))),
-            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`")))),
+            ContentType::Text => Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`"))),
+            ContentType::Unsupported(unknown_type) => Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`")))),
         }
     } else {
         let content = resp.text().await?;
@@ -195,7 +195,7 @@ pub async fn list_organization_memberships(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.query(&[("__dev_session", value)]);
@@ -206,7 +206,7 @@ pub async fn list_organization_memberships(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.header("__session", value);
@@ -227,8 +227,8 @@ pub async fn list_organization_memberships(
         let content = resp.text().await?;
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMemberships`"))),
-            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMemberships`")))),
+            ContentType::Text => Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMemberships`"))),
+            ContentType::Unsupported(unknown_type) => Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMemberships`")))),
         }
     } else {
         let content = resp.text().await?;
@@ -265,7 +265,7 @@ pub async fn remove_organization_member(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.query(&[("__dev_session", value)]);
@@ -276,7 +276,7 @@ pub async fn remove_organization_member(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.header("__session", value);
@@ -297,8 +297,8 @@ pub async fn remove_organization_member(
         let content = resp.text().await?;
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`"))),
-            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`")))),
+            ContentType::Text => Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`"))),
+            ContentType::Unsupported(unknown_type) => Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`")))),
         }
     } else {
         let content = resp.text().await?;
@@ -339,7 +339,7 @@ pub async fn update_organization_membership(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.query(&[("__dev_session", value)]);
@@ -350,7 +350,7 @@ pub async fn update_organization_membership(
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
+            Some(ref prefix) => format!("{prefix} {key}"),
             None => key,
         };
         req_builder = req_builder.header("__session", value);
@@ -376,8 +376,8 @@ pub async fn update_organization_membership(
         let content = resp.text().await?;
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`"))),
-            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`")))),
+            ContentType::Text => Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`"))),
+            ContentType::Unsupported(unknown_type) => Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ClientClientWrappedOrganizationMembership`")))),
         }
     } else {
         let content = resp.text().await?;

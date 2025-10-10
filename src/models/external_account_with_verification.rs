@@ -110,11 +110,7 @@ impl ExternalAccountWithVerification {
             label: None,
             created_at,
             updated_at,
-            verification: if let Some(x) = verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            verification: verification.map(Box::new),
         }
     }
 }

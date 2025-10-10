@@ -68,16 +68,8 @@ impl ClientSessionReverification {
             status,
             supported_first_factors,
             supported_second_factors,
-            first_factor_verification: if let Some(x) = first_factor_verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            second_factor_verification: if let Some(x) = second_factor_verification {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            first_factor_verification: first_factor_verification.map(Box::new),
+            second_factor_verification: second_factor_verification.map(Box::new),
             session: Box::new(session),
         }
     }
@@ -94,7 +86,7 @@ impl Default for Object {
         Self::SessionReverification
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "needs_first_factor")]

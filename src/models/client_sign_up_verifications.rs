@@ -31,26 +31,10 @@ impl ClientSignUpVerifications {
         external_account: Option<models::ClientSignUpVerificationsExternalAccount>,
     ) -> ClientSignUpVerifications {
         ClientSignUpVerifications {
-            email_address: if let Some(x) = email_address {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            phone_number: if let Some(x) = phone_number {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            web3_wallet: if let Some(x) = web3_wallet {
-                Some(Box::new(x))
-            } else {
-                None
-            },
-            external_account: if let Some(x) = external_account {
-                Some(Box::new(x))
-            } else {
-                None
-            },
+            email_address: email_address.map(Box::new),
+            phone_number: phone_number.map(Box::new),
+            web3_wallet: web3_wallet.map(Box::new),
+            external_account: external_account.map(Box::new),
         }
     }
 }

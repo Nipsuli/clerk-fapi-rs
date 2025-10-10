@@ -100,6 +100,25 @@ impl ClientSession {
         }
     }
 }
+
+impl From<models::schemas_client_session::SchemasClientSession> for ClientSession {
+    fn from(schemas_client_session: models::schemas_client_session::SchemasClientSession) -> Self {
+        ClientSession::new(
+            schemas_client_session.id,
+            Object::from(schemas_client_session.object),
+            Status::from(schemas_client_session.status),
+            schemas_client_session.expire_at,
+            schemas_client_session.abandon_at,
+            schemas_client_session.last_active_at,
+            schemas_client_session.last_active_organization_id,
+            schemas_client_session.public_user_data,
+            schemas_client_session.factor_verification_age,
+            schemas_client_session.created_at,
+            schemas_client_session.updated_at,
+        )
+    }
+}
+
 /// String representing the object's type. Objects of the same type share the same value.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
@@ -107,12 +126,20 @@ pub enum Object {
     Session,
 }
 
+impl From<models::schemas_client_session::Object> for Object {
+    fn from(object: models::schemas_client_session::Object) -> Self {
+        match object {
+            models::schemas_client_session::Object::Session => Object::Session,
+        }
+    }
+}
+
 impl Default for Object {
     fn default() -> Object {
         Self::Session
     }
 }
-///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Status {
     #[serde(rename = "active")]
@@ -129,6 +156,19 @@ pub enum Status {
     Abandoned,
     #[serde(rename = "pending")]
     Pending,
+}
+
+impl From<models::schemas_client_session::Status> for Status {
+    fn from(status: models::schemas_client_session::Status) -> Self {
+        match status {
+            models::schemas_client_session::Status::Active => Status::Active,
+            models::schemas_client_session::Status::Revoked => Status::Revoked,
+            models::schemas_client_session::Status::Ended => Status::Ended,
+            models::schemas_client_session::Status::Expired => Status::Expired,
+            models::schemas_client_session::Status::Removed => Status::Removed,
+            models::schemas_client_session::Status::Abandoned => Status::Abandoned,
+        }
+    }
 }
 
 impl Default for Status {
