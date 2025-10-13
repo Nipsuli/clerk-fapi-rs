@@ -62,7 +62,7 @@ fn parse_publishable_key(
 
 fn public_key_base64_segment(key: &str) -> String {
     let mut base64_segment = key.split('_').nth(2).unwrap_or("").to_string();
-    while base64_segment.len() % 4 != 0 {
+    while !base64_segment.len().is_multiple_of(4) {
         base64_segment.push('=');
     }
     base64_segment
