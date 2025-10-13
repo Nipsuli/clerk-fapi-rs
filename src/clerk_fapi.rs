@@ -546,10 +546,8 @@ impl ClerkFapiClient {
         organization_id: &str,
         email_address: Vec<String>,
         role: &str,
-    ) -> Result<
-        ClientClientWrappedOrganizationInvitationsResponse,
-        Error<BulkCreateOrganizationInvitationsError>,
-    > {
+    ) -> Result<Vec<ClientOrganizationInvitation>, Error<BulkCreateOrganizationInvitationsError>>
+    {
         let response = invitations_api::bulk_create_organization_invitations(
             &self.clerk_config(),
             organization_id,
@@ -558,7 +556,15 @@ impl ClerkFapiClient {
         )
         .await?;
         self.handle_client_update(*response.client.clone());
-        Ok(*response.response)
+
+        let res = match *response.response {
+            ClientClientWrappedOrganizationInvitationsResponse::ArrayVecmodelsClientOrganizationInvitation(res) => res,
+            ClientClientWrappedOrganizationInvitationsResponse::ClientClientWrappedOrganizationInvitationsResponseOneOf(res) => {
+                res.data.unwrap_or(Vec::new())
+            }
+        };
+
+        Ok(res)
     }
 
     pub async fn create_organization_invitations(
@@ -581,17 +587,21 @@ impl ClerkFapiClient {
     pub async fn get_all_pending_organization_invitations(
         &self,
         organization_id: &str,
-    ) -> Result<
-        ClientClientWrappedOrganizationInvitationsResponse,
-        Error<GetAllPendingOrganizationInvitationsError>,
-    > {
+    ) -> Result<Vec<ClientOrganizationInvitation>, Error<GetAllPendingOrganizationInvitationsError>>
+    {
         let response = invitations_api::get_all_pending_organization_invitations(
             &self.clerk_config(),
             organization_id,
         )
         .await?;
         self.handle_client_update(*response.client.clone());
-        Ok(*response.response)
+        let res = match *response.response {
+            ClientClientWrappedOrganizationInvitationsResponse::ArrayVecmodelsClientOrganizationInvitation(res) => res,
+            ClientClientWrappedOrganizationInvitationsResponse::ClientClientWrappedOrganizationInvitationsResponseOneOf(res) => {
+                res.data.unwrap_or(Vec::new())
+            }
+        };
+        Ok(res)
     }
 
     pub async fn get_organization_invitations(
@@ -600,10 +610,7 @@ impl ClerkFapiClient {
         limit: Option<i32>,
         offset: Option<i32>,
         status: Option<&str>,
-    ) -> Result<
-        ClientClientWrappedOrganizationInvitationsResponse,
-        Error<GetOrganizationInvitationsError>,
-    > {
+    ) -> Result<Vec<ClientOrganizationInvitation>, Error<GetOrganizationInvitationsError>> {
         let response = invitations_api::get_organization_invitations(
             &self.clerk_config(),
             organization_id,
@@ -613,7 +620,14 @@ impl ClerkFapiClient {
         )
         .await?;
         self.handle_client_update(*response.client.clone());
-        Ok(*response.response)
+
+        let res = match *response.response {
+            ClientClientWrappedOrganizationInvitationsResponse::ArrayVecmodelsClientOrganizationInvitation(res) => res,
+            ClientClientWrappedOrganizationInvitationsResponse::ClientClientWrappedOrganizationInvitationsResponseOneOf(res) => {
+                res.data.unwrap_or(Vec::new())
+            }
+        };
+        Ok(res)
     }
 
     pub async fn revoke_pending_organization_invitation(
@@ -657,10 +671,7 @@ impl ClerkFapiClient {
         paginated: Option<bool>,
         query: Option<&str>,
         role: Option<&str>,
-    ) -> Result<
-        ClientClientWrappedOrganizationMembershipsResponse,
-        Error<ListOrganizationMembershipsError>,
-    > {
+    ) -> Result<Vec<ClientOrganizationMembership>, Error<ListOrganizationMembershipsError>> {
         let response = members_api::list_organization_memberships(
             &self.clerk_config(),
             organization_id,
@@ -672,7 +683,13 @@ impl ClerkFapiClient {
         )
         .await?;
         self.handle_client_update(*response.client.clone());
-        Ok(*response.response)
+        let res = match *response.response {
+            ClientClientWrappedOrganizationMembershipsResponse::ArrayVecmodelsClientOrganizationMembership(res) => res,
+            ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(res) => {
+                res.data.unwrap_or(Vec::new())
+            }
+        };
+        Ok(res)
     }
 
     pub async fn remove_organization_member(
@@ -972,10 +989,7 @@ impl ClerkFapiClient {
         limit: Option<i32>,
         offset: Option<i32>,
         paginated: Option<bool>,
-    ) -> Result<
-        ClientClientWrappedOrganizationMembershipsResponse,
-        Error<GetOrganizationMembershipsError>,
-    > {
+    ) -> Result<Vec<ClientOrganizationMembership>, Error<GetOrganizationMembershipsError>> {
         let response = organizations_memberships_api::get_organization_memberships(
             &self.clerk_config(),
             limit,
@@ -984,7 +998,13 @@ impl ClerkFapiClient {
         )
         .await?;
         self.handle_client_update(*response.client.clone());
-        Ok(*response.response)
+        let res = match *response.response {
+            ClientClientWrappedOrganizationMembershipsResponse::ArrayVecmodelsClientOrganizationMembership(res) => res,
+            ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(res) => {
+                res.data.unwrap_or(Vec::new())
+            }
+        };
+        Ok(res)
     }
 
     pub async fn get_organization_suggestions(

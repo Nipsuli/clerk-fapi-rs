@@ -19,9 +19,6 @@ pub struct UserSettingsRestrictionsEnabled {
 
 impl UserSettingsRestrictionsEnabled {
     pub fn new(enabled: bool) -> UserSettingsRestrictionsEnabled {
-        UserSettingsRestrictionsEnabled {
-            enabled,
-        }
+        UserSettingsRestrictionsEnabled { enabled }
     }
 }
-

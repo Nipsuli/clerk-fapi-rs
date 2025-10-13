@@ -82,7 +82,7 @@ pub async fn find_target_organization(
 
     // Still no matching organization found!
     // let's try one more time, let's pull the org memberships!
-    let org_memberships = fapi
+    let user_org_memberships = fapi
         .get_organization_memberships(
             None, // limit
             None, // offset
@@ -93,15 +93,6 @@ pub async fn find_target_organization(
             error!("Failed to get org memberships: {}", e);
             ClerkOrgFindingError::ClerkApiError
         })?;
-
-    let user_org_memberships = match org_memberships {
-        ClientClientWrappedOrganizationMembershipsResponse::ArrayVecmodelsClientOrganizationMembership(memberships) => {
-            memberships
-        },
-        ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(memberships) => {
-            memberships.data.unwrap_or(Vec::new())
-        }
-    };
 
     if let Some(org) =
         find_organization_id_from_memberships(user_org_memberships, organization_id_or_slug.clone())

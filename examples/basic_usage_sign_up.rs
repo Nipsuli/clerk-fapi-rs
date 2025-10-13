@@ -1,4 +1,6 @@
-use clerk_fapi_rs::{clerk::Clerk, configuration::ClerkFapiConfiguration};
+use clerk_fapi_rs::{
+    clerk::Clerk, configuration::ClerkFapiConfiguration, models::client_sign_up::Status,
+};
 use dotenv::dotenv;
 use std::time::Duration;
 use std::{
@@ -71,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await?;
 
-    let sign_up_id = sign_up_response.response.id;
+    let sign_up_id = sign_up_response.id;
 
     println!("We've sent a verification code to your email.");
     println!("Please check your inbox and enter the code below.");
@@ -91,15 +93,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .await?;
 
-    if verification_response.response.status
-        == clerk_fapi_rs::models::client_period_sign_up::Status::Complete
-    {
+    if verification_response.status == Status::Complete {
         println!("Sign up successful!");
     } else {
-        println!(
-            "Sign up failed. Status: {:?}",
-            verification_response.response.status
-        );
+        println!("Sign up failed. Status: {:?}", verification_response.status);
         return Ok(());
     }
 

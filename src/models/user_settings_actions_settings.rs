@@ -21,14 +21,14 @@ pub struct UserSettingsActionsSettings {
         rename = "create_organizations_limit",
         deserialize_with = "Option::deserialize"
     )]
-    pub create_organizations_limit: Option<bool>,
+    pub create_organizations_limit: Option<i32>,
 }
 
 impl UserSettingsActionsSettings {
     pub fn new(
         delete_self: bool,
         create_organization: bool,
-        create_organizations_limit: Option<bool>,
+        create_organizations_limit: Option<i32>,
     ) -> UserSettingsActionsSettings {
         UserSettingsActionsSettings {
             delete_self,

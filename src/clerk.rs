@@ -159,6 +159,7 @@ impl Clerk {
             .await
             .map_err(|e| {
                 error!("Clerk: Failed to load client from API: {e}");
+                println!("Clerk: Failed to load client from API: {e}");
                 ClerkLoadError::FailedToLoadClient
             })?
             .ok_or(ClerkLoadError::FailedToLoadClient)
