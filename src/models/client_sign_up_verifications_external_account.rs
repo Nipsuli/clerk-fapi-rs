@@ -14,17 +14,27 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientSignUpVerificationsExternalAccount {
-    StubsPeriodVerificationPeriodOauth(Box<models::StubsPeriodVerificationPeriodOauth>),
-    StubsPeriodVerificationPeriodSaml(Box<models::StubsPeriodVerificationPeriodSaml>),
-    StubsPeriodVerificationPeriodTicket(Box<models::StubsPeriodVerificationPeriodTicket>),
-    StubsPeriodVerificationPeriodGoogleOneTap(
-        Box<models::StubsPeriodVerificationPeriodGoogleOneTap>,
-    ),
+    StubsVerificationOauth(Box<models::StubsVerificationOauth>),
+    StubsVerificationSaml(Box<models::StubsVerificationSaml>),
+    StubsVerificationTicket(Box<models::StubsVerificationTicket>),
+    StubsVerificationGoogleOneTap(Box<models::StubsVerificationGoogleOneTap>),
 }
 
 impl Default for ClientSignUpVerificationsExternalAccount {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodOauth(Default::default())
+        Self::StubsVerificationOauth(Default::default())
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_google_one_tap")]
+    VerificationGoogleOneTap,
+}
+
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationGoogleOneTap
     }
 }
 

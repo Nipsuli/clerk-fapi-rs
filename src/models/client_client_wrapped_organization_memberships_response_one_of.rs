@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ClientClientWrappedOrganizationMembershipsResponseOneOf {
     #[serde(rename = "data", skip_serializing_if = "Option::is_none")]
-    pub data: Option<Vec<models::ClientPeriodOrganizationMembership>>,
+    pub data: Option<Vec<models::ClientOrganizationMembership>>,
     #[serde(rename = "total_count", skip_serializing_if = "Option::is_none")]
     pub total_count: Option<i64>,
 }

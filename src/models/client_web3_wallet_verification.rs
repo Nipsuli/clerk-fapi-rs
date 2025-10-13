@@ -14,15 +14,25 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientWeb3WalletVerification {
-    StubsPeriodVerificationPeriodWeb3Signature(
-        Box<models::StubsPeriodVerificationPeriodWeb3Signature>,
-    ),
-    StubsPeriodVerificationPeriodAdmin(Box<models::StubsPeriodVerificationPeriodAdmin>),
+    StubsVerificationWeb3Signature(Box<models::StubsVerificationWeb3Signature>),
+    StubsVerificationAdmin(Box<models::StubsVerificationAdmin>),
 }
 
 impl Default for ClientWeb3WalletVerification {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodWeb3Signature(Default::default())
+        Self::StubsVerificationWeb3Signature(Default::default())
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_admin")]
+    VerificationAdmin,
+}
+
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationAdmin
     }
 }
 

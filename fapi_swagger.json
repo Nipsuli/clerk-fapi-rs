@@ -32,16 +32,9 @@
     }
   ],
   "security": [
-    {},
     {
-      "DevBrowser": []
-    },
-    {
-      "ProductionBrowser": []
-    },
-    {
-      "ProductionNativeApp": [],
-      "ProductionNativeFlag": []
+      "DevBrowser": [],
+      "Session": []
     }
   ],
   "tags": [
@@ -127,7 +120,7 @@
     },
     {
       "name": "Organization",
-      "description": "Used to interact with the an organization and its properties. The current user must be an administrator to access them."
+      "description": "Used to interact with an organization and its properties. The current user must be an administrator to access them."
     },
     {
       "name": "Invitations",
@@ -213,6 +206,20 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/WellKnown.OpenIDConfiguration"
+          }
+        }
+      }
+    },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "summary": "OAuth 2.0 Authorization Server Metadata",
+        "description": "Get the OAuth 2.0 Authorization Server Metadata according to RFC 8414",
+        "operationId": "getOAuth2AuthorizationServerMetadata",
+        "security": [],
+        "tags": ["Well Known"],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WellKnown.OAuth2AuthorizationServerMetadata"
           }
         }
       }
@@ -382,6 +389,112 @@
           },
           "422": {
             "description": "You are currently using the legacy OAuth 2.0 provider, please migrate to the new one via Clerk Dashboard."
+          }
+        }
+      }
+    },
+    "/oauth/token/revoke": {
+      "post": {
+        "summary": "Revoke OAuth2 token",
+        "description": "Revoke OAuth2 token by token.",
+        "operationId": "revokeOAuthToken",
+        "security": [],
+        "tags": ["OAuth2 Identify Provider"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "The token to revoke.",
+                    "nullable": false
+                  },
+                  "token_type_hint": {
+                    "type": "string",
+                    "description": "A hint about the type of the token to be revoked.",
+                    "nullable": true,
+                    "enum": ["access_token", "refresh_token"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success, no content."
+          },
+          "400": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "401": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "403": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "404": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "422": {
+            "$ref": "#/components/responses/ClerkErrors"
+          }
+        }
+      }
+    },
+    "/v1/me/oauth/consent/{client_id}": {
+      "get": {
+        "summary": "Get consent information",
+        "description": "Get required consent information for a given OAuth Application Client ID",
+        "operationId": "getOAuthConsent",
+        "security": [
+          {},
+          {
+            "DevBrowser": []
+          }
+        ],
+        "tags": ["OAuth2 Identify Provider"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The OAuth Application Client ID to get consent information for."
+          },
+          {
+            "in": "query",
+            "name": "_clerk_session_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The session_id associated with the requesting user."
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/OAuth.ConsentInfo"
+          },
+          "400": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "401": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "403": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "404": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "422": {
+            "$ref": "#/components/responses/ClerkErrors"
           }
         }
       }
@@ -679,7 +792,6 @@
             }
           },
           "400": {
-            "description": "Bad request",
             "$ref": "#/components/responses/ClerkErrors"
           },
           "503": {
@@ -860,7 +972,7 @@
                   },
                   "oidc_prompt": {
                     "type": "string",
-                    "description": "Used with `oauth_[provider]`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect URL. When using shared credentials, this value might be adjusted for security reasons.",
+                    "description": "Used with `oauth_[provider]` or `enterprise_sso`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect URL. When using shared credentials, this value might be adjusted for security reasons.",
                     "nullable": true
                   }
                 }
@@ -965,7 +1077,7 @@
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Client.SignIn"
+            "$ref": "#/components/responses/responses-Client.SignIn"
           },
           "400": {
             "$ref": "#/components/responses/ClerkErrors"
@@ -1009,7 +1121,7 @@
                 "properties": {
                   "strategy": {
                     "type": "string",
-                    "description": "The strategy to be prepared for first factor authentication.\n\nCan be one of the following `email_code`, `email_link`,\n`phone_code`, `web3_metamask_signature`, `web3_coinbase_wallet_signature`,\n`web3_okx_wallet_signature`, `reset_password_phone_code`, `reset_password_email_code`,\n`oauth_[provider]`, `saml`, `passkey`"
+                    "description": "The strategy to be prepared for first factor authentication.\n\nCan be one of the following `email_code`, `email_link`,\n`phone_code`, `web3_metamask_signature`, `web3_base_signature`, `web3_coinbase_wallet_signature`,\n`web3_okx_wallet_signature`, `reset_password_phone_code`, `reset_password_email_code`,\n`oauth_[provider]`, `saml`, `passkey`"
                   },
                   "email_address_id": {
                     "type": "string",
@@ -1023,7 +1135,7 @@
                   },
                   "web3_wallet_id": {
                     "type": "string",
-                    "description": "Used with the `web3_metamask_signature`, `web3_coinbase_wallet_signature` and `web3_okx_wallet_signature` strategies.",
+                    "description": "Used with the `web3_metamask_signature`, `web3_base_signature`, `web3_coinbase_wallet_signature` and `web3_okx_wallet_signature` strategies.",
                     "nullable": true
                   },
                   "passkey_id": {
@@ -1048,7 +1160,7 @@
                   },
                   "oidc_prompt": {
                     "type": "string",
-                    "description": "Used with `oauth_[provider]`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
+                    "description": "Used with `oauth_[provider]` or `enterprise_sso`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
                     "nullable": true
                   }
                 },
@@ -1112,7 +1224,7 @@
                 "properties": {
                   "strategy": {
                     "type": "string",
-                    "description": "The strategy to be used for first factor authentication.\n\nCan be one of the following `email_code`, `email_link`, `password`, `phone_code`,\n`web3_metamask_signature`, `web3_coinbase_wallet_signature`, `web3_okx_wallet_signature`,\n`reset_password_phone_code`, `reset_password_email_code`, `passkey`, `google_one_tap`"
+                    "description": "The strategy to be used for first factor authentication.\n\nCan be one of the following `email_code`, `email_link`, `password`, `phone_code`,\n`web3_metamask_signature`, `web3_base_signature`, `web3_coinbase_wallet_signature`, `web3_okx_wallet_signature`,\n`reset_password_phone_code`, `reset_password_email_code`, `passkey`, `google_one_tap`"
                   },
                   "code": {
                     "type": "string",
@@ -1126,7 +1238,7 @@
                   },
                   "signature": {
                     "type": "string",
-                    "description": "Used with the `web3_metamask_signature`, `web3_coinbase_wallet_signature` and `web3_okx_wallet_signature` strategies.",
+                    "description": "Used with the `web3_metamask_signature`, `web3_base_signature`, `web3_coinbase_wallet_signature` and `web3_okx_wallet_signature` strategies.",
                     "nullable": true
                   },
                   "token": {
@@ -1399,7 +1511,7 @@
                   },
                   "oidc_prompt": {
                     "type": "string",
-                    "description": "Used with `oauth_[provider]`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
+                    "description": "Used with `oauth_[provider]` or `enterprise_sso`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
                     "nullable": true
                   }
                 }
@@ -1569,7 +1681,7 @@
                   },
                   "oidc_prompt": {
                     "type": "string",
-                    "description": "Used with `oauth_[provider]`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
+                    "description": "Used with `oauth_[provider]` or `enterprise_sso`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
                     "nullable": true
                   }
                 }
@@ -1633,7 +1745,7 @@
                 "properties": {
                   "strategy": {
                     "type": "string",
-                    "description": "The verification strategy\n\n- email_code\n- email_link\n- phone_code\n- web3_metamask_signature\n- web3_coinbase_wallet_signature\n- web3_okx_wallet_signature\n- saml\n- oauth"
+                    "description": "The verification strategy\n\n- email_code\n- email_link\n- phone_code\n- web3_metamask_signature\n- web3_base_signature\n- web3_coinbase_wallet_signature\n- web3_okx_wallet_signature\n- saml\n- oauth"
                   },
                   "redirect_url": {
                     "type": "string",
@@ -1650,7 +1762,7 @@
                   },
                   "oidc_prompt": {
                     "type": "string",
-                    "description": "Used with `oauth_[provider]`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
+                    "description": "Used with `oauth_[provider]` or `enterprise_sso`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
                     "nullable": true
                   }
                 }
@@ -1717,6 +1829,7 @@
                       "email_link",
                       "phone_code",
                       "web3_metamask_signature",
+                      "web3_base_signature",
                       "web3_coinbase_wallet_signature",
                       "web3_okx_wallet_signature",
                       "google_one_tap"
@@ -1867,12 +1980,24 @@
           },
           {
             "in": "query",
+            "name": "format",
+            "allowEmptyValue": false,
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["nonce", "token"],
+              "default": "token"
+            },
+            "description": "The supported format of the handshake payload."
+          },
+          {
+            "in": "query",
             "name": "organization_id",
             "schema": {
               "type": "string"
             },
             "allowEmptyValue": true,
-            "description": "The organization ID or slug to attempt to set as active for the session. If this param is present but has no value,\nthe personal workspace will be set as active. If the organization cannot be set as active (because it does not\nexist, or the user is not a member), the active organization for the session will not change.\n"
+            "description": "The organization ID or slug to attempt to set as active for the session. If this param is present but has no value,\nthe personal account will be set as active. If the organization cannot be set as active (because it does not\nexist, or the user is not a member), the active organization for the session will not change.\n"
           },
           {
             "in": "query",
@@ -1924,7 +2049,7 @@
     },
     "/v1/dev_browser/set_first_party_cookie": {
       "post": {
-        "summary": "Post Dev Broswer init set cookie",
+        "summary": "Post Dev Browser init set cookie",
         "description": "post dev_browser/set_first_party_cookie",
         "operationId": "postDevBrowserInitSetCookie",
         "responses": {
@@ -2130,7 +2255,7 @@
       "post": {
         "operationId": "touchSession",
         "summary": "Touch session",
-        "description": "Specify the active session for the client.",
+        "description": "Specify the active session for the client.\n\nWhen force organization selection is enabled and `active_organization_id` is sent as null or empty string,\nthe session will keep the previous active organization and will not attempt to switch to a personal account.",
         "tags": ["Sessions"],
         "parameters": [
           {
@@ -2151,7 +2276,7 @@
                 "properties": {
                   "active_organization_id": {
                     "type": "string",
-                    "description": "The ID or slug of the organization to activate.",
+                    "description": "The ID or slug of the organization to activate.\n\nWhen force organization selection is enabled and this value is sent as null or empty string,\nthe session will keep the previous active organization and will not attempt to switch to a personal account.",
                     "nullable": true
                   }
                 }
@@ -2215,7 +2340,7 @@
       "post": {
         "operationId": "removeSession",
         "summary": "Remove Session",
-        "description": "Delete the the given session.",
+        "description": "Delete the given session.",
         "tags": ["Sessions"],
         "parameters": [
           {
@@ -2314,7 +2439,7 @@
     "/v1/client/sessions/{session_id}/tokens": {
       "post": {
         "summary": "Create Session Token",
-        "description": "Create a session jwt for the authenticated requested user.",
+        "description": "Create a session jwt for the authenticated requested user.\n\nWhen force organization selection is enabled and `organization_id` is sent as null or empty string,\nthe token will be created with the previous active organization and will not attempt to switch to a personal account.",
         "operationId": "createSessionToken",
         "tags": ["Sessions"],
         "parameters": [
@@ -2336,7 +2461,7 @@
                 "properties": {
                   "organization_id": {
                     "type": "string",
-                    "description": "The organization id to associate with the token. The user must be a member of the organization. If present but empty, the personal workspace will be set as active. If absent, the previous active organization for the session will be used.",
+                    "description": "The organization id to associate with the token. The user must be a member of the organization.\nIf present but empty, the personal account will be set as active.\nIf absent, the previous active organization for the session will be used.\n\nWhen force organization selection is enabled and this value is sent as null or empty string,\nthe token will be created with the previous active organization and will not attempt to switch to a personal account.",
                     "nullable": true
                   }
                 }
@@ -2423,7 +2548,7 @@
     "/v1/client/sessions/{session_id}/verify": {
       "post": {
         "summary": "Start a new session reverification",
-        "description": "Start a new session reverification flow by providing a verification level.\n\nIf the requested level equals 'secondFactor' or 'multiFactor' and the associated user\ndoesn't have any available second factor, then we fallback to 'firstFactor'",
+        "description": "Start a new session reverification flow by providing a verification level.\n\nIf the requested level equals 'secondFactor' or 'multiFactor' and the associated user\ndoesn't have any available second factor, then we fall back to 'firstFactor'",
         "tags": ["Sessions"],
         "operationId": "startSessionReverification",
         "parameters": [
@@ -2896,7 +3021,7 @@
     },
     "/v1/me/email_addresses/{email_id}/prepare_verification": {
       "post": {
-        "description": "Depending on the given strategy, the API will prepare the verification for the email address.\nIn particular, * for `email_code`, the API will send a verification email to the address containing a code. * for `email_link`, the API will send a verification email to the address containg a link to the verification attempt endpoint. * for `enterprise_sso`, the API will send an external redirect URL to the browser containg a link to the SSO verification endpoint.",
+        "description": "Depending on the given strategy, the API will prepare the verification for the email address.\nIn particular, * for `email_code`, the API will send a verification email to the address containing a code. * for `email_link`, the API will send a verification email to the address containing a link to the verification attempt endpoint. * for `enterprise_sso`, the API will send an external redirect URL to the browser containing a link to the SSO verification endpoint.",
         "summary": "Prepare Email Address Verification",
         "tags": ["Email Addresses"],
         "operationId": "sendVerificationEmail",
@@ -3206,7 +3331,7 @@
     "/v1/me/phone_numbers/{phone_number_id}/prepare_verification": {
       "post": {
         "summary": "Prepare Phone Number Verification",
-        "description": "Sends an sms to the phone number with the code needed to verify it.",
+        "description": "Sends an SMS to the phone number with the code needed to verify it.",
         "tags": ["Phone Numbers"],
         "operationId": "sendVerificationSMS",
         "parameters": [
@@ -3962,7 +4087,7 @@
                   },
                   "oidc_prompt": {
                     "type": "string",
-                    "description": "Used with `oauth_[provider]`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
+                    "description": "Used with `oauth_[provider]` or `enterprise_sso`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
                     "nullable": true
                   }
                 },
@@ -4038,7 +4163,7 @@
                   },
                   "oidc_prompt": {
                     "type": "string",
-                    "description": "Used with `oauth_[provider]`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
+                    "description": "Used with `oauth_[provider]` or `enterprise_sso`. The given value will be forwarded to the OIDC `prompt` parameter of the generated redirect url. When using shared credentials this value might be adjusted for security reasons.",
                     "nullable": true
                   }
                 },
@@ -4215,7 +4340,7 @@
     "/v1/me/backup_codes": {
       "post": {
         "summary": "Create Backup Codes",
-        "description": "Create two factor authentication backup codes for the current user.\nA two factor authenitcation method must be enabled for the environment. Otherwise the endpoint will return an error.",
+        "description": "Create two factor authentication backup codes for the current user.\nA two factor authentication method must be enabled for the environment. Otherwise the endpoint will return an error.",
         "tags": ["Backup Codes"],
         "operationId": "createBackupCodes",
         "responses": {
@@ -4240,16 +4365,6 @@
         "description": "Returns all attributes of the current user.",
         "tags": ["User"],
         "operationId": "getUser",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "_clerk_session_id",
-            "description": "The session_id associated with the requesting user.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/Client.ClientWrappedUser"
@@ -4270,34 +4385,21 @@
         "description": "Update the current user with the given attributes.",
         "tags": ["User"],
         "operationId": "patchUser",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "_clerk_session_id",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/x-www-form-urlencoded": {
               "schema": {
                 "type": "object",
                 "properties": {
+                  "username": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "first_name": {
                     "nullable": true,
                     "type": "string"
                   },
                   "last_name": {
-                    "nullable": true,
-                    "type": "string"
-                  },
-                  "username": {
-                    "nullable": true,
-                    "type": "string"
-                  },
-                  "password": {
                     "nullable": true,
                     "type": "string"
                   },
@@ -4313,25 +4415,10 @@
                     "nullable": true,
                     "type": "string"
                   },
-                  "public_metadata": {
-                    "nullable": true,
-                    "type": "string",
-                    "description": "A stringified JSON containing the public metadata of the current user."
-                  },
-                  "private_metadata": {
-                    "nullable": true,
-                    "type": "string",
-                    "description": "A stringified JSON containing the private metadata of the current user."
-                  },
                   "unsafe_metadata": {
                     "nullable": true,
                     "type": "string",
                     "description": "A stringified JSON containing the unsafe metadata of the current user."
-                  },
-                  "profile_image_id": {
-                    "nullable": true,
-                    "type": "string",
-                    "description": "The profile image ID of the current user."
                   }
                 }
               }
@@ -4364,15 +4451,6 @@
         "description": "Delete the current user.",
         "tags": ["User"],
         "operationId": "deleteUser",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "_clerk_session_id",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/Client.ClientWrappedDeletedObject"
@@ -4442,18 +4520,8 @@
       "post": {
         "summary": "Update Profile Image",
         "description": "Update the current user's profile image.",
-        "operationId": "updateProfileImage",
         "tags": ["User"],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "_clerk_session_id",
-            "description": "The session_id associated with the requesting user.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "updateProfileImage",
         "requestBody": {
           "required": true,
           "content": {
@@ -4495,16 +4563,6 @@
         "description": "Remove the current user's profile image.",
         "operationId": "deleteProfileImage",
         "tags": ["User"],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "_clerk_session_id",
-            "description": "The session_id associated with the requesting user.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/Client.ClientWrappedDeletedObject"
@@ -4524,16 +4582,6 @@
         "description": "Update the current user's password.",
         "operationId": "changePassword",
         "tags": ["User"],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "_clerk_session_id",
-            "description": "The session_id associated with the requesting user.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/x-www-form-urlencoded": {
@@ -4552,15 +4600,14 @@
                     "type": "boolean",
                     "nullable": true
                   }
-                },
-                "required": ["new_password"]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Client.ClientWrappedUser"
+            "$ref": "#/components/responses/responses-Client.ClientWrappedUser"
           },
           "400": {
             "$ref": "#/components/responses/ClerkErrors"
@@ -4580,16 +4627,6 @@
         "description": "Removes the current user's password.",
         "operationId": "removePassword",
         "tags": ["User"],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "_clerk_session_id",
-            "description": "The session_id associated with the requesting user.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4601,15 +4638,14 @@
                   "current_password": {
                     "type": "string"
                   }
-                },
-                "required": ["current_password"]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Client.ClientWrappedUser"
+            "$ref": "#/components/responses/responses-Client.ClientWrappedUser"
           },
           "400": {
             "$ref": "#/components/responses/ClerkErrors"
@@ -4678,6 +4714,9 @@
             "$ref": "#/components/responses/ClerkErrors"
           },
           "404": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "422": {
             "$ref": "#/components/responses/ClerkErrors"
           }
         }
@@ -4977,6 +5016,9 @@
           },
           "404": {
             "$ref": "#/components/responses/ClerkErrors"
+          },
+          "422": {
+            "$ref": "#/components/responses/ClerkErrors"
           }
         }
       }
@@ -5021,7 +5063,7 @@
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Client.ClientWrappedOrganization"
+            "$ref": "#/components/responses/responses-Client.ClientWrappedOrganization"
           },
           "400": {
             "$ref": "#/components/responses/ClerkErrors"
@@ -5554,6 +5596,9 @@
             "$ref": "#/components/responses/ClerkErrors"
           },
           "404": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "422": {
             "$ref": "#/components/responses/ClerkErrors"
           }
         }
@@ -6127,6 +6172,52 @@
         }
       }
     },
+    "/v1/redirect": {
+      "get": {
+        "summary": "Redirect to a validated URL",
+        "description": "Validates and redirects to a safe URL. If no URL is provided, redirects to a default URL.",
+        "tags": ["Redirect"],
+        "operationId": "redirectToUrl",
+        "parameters": [
+          {
+            "name": "redirect_url",
+            "in": "query",
+            "description": "The URL to redirect to (optional). If empty or not provided, redirects to the default URL.",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "Temporary redirect to the validated URL or default URL",
+            "headers": {
+              "Location": {
+                "description": "The URL to redirect to",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "401": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "403": {
+            "$ref": "#/components/responses/ClerkErrors"
+          },
+          "422": {
+            "$ref": "#/components/responses/ClerkErrors"
+          }
+        }
+      }
+    },
     "/v1/tickets/accept": {
       "get": {
         "summary": "Accept ticket",
@@ -6251,8 +6342,7 @@
       "DevBrowser": {
         "type": "apiKey",
         "in": "query",
-        "name": "__dev_session",
-        "description": "A Dev Browser API token sent as a query parameter.\n\nUsed to authenticate only dev instances.\n\nTo generate an dev instance API token you must first make a request to `/v1/dev_browser`\nand copy it from the response."
+        "name": "__dev_session"
       },
       "ProductionNativeApp": {
         "type": "http",
@@ -6264,6 +6354,11 @@
         "in": "query",
         "name": "_is_native",
         "description": "If sent and the value is true, it instructs the server to parse the api token from the `Authorization` Header.\n\nIt should always be set to true when using `Authorization` header authentication strategy."
+      },
+      "Session": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "__session"
       }
     },
     "schemas": {
@@ -6277,7 +6372,10 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["delegate_permission/common.handle_all_urls"]
+                "enum": [
+                  "delegate_permission/common.handle_all_urls",
+                  "delegate_permission/common.get_login_creds"
+                ]
               }
             },
             "target": {
@@ -6713,6 +6811,9 @@
           "token_endpoint": {
             "type": "string"
           },
+          "revocation_endpoint": {
+            "type": "string"
+          },
           "userinfo_endpoint": {
             "type": "string"
           },
@@ -6784,6 +6885,7 @@
           "issuer",
           "authorization_endpoint",
           "token_endpoint",
+          "revocation_endpoint",
           "userinfo_endpoint",
           "jwks_uri",
           "scopes_supported",
@@ -6797,6 +6899,105 @@
           "code_challenge_methods_supported",
           "backchannel_logout_supported",
           "frontchannel_logout_supported"
+        ]
+      },
+      "WellKnown.OAuth2AuthorizationServerMetadata": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "issuer": {
+            "type": "string"
+          },
+          "authorization_endpoint": {
+            "type": "string"
+          },
+          "token_endpoint": {
+            "type": "string"
+          },
+          "revocation_endpoint": {
+            "type": "string"
+          },
+          "jwks_uri": {
+            "type": "string"
+          },
+          "registration_endpoint": {
+            "type": "string"
+          },
+          "response_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grant_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "token_endpoint_auth_methods_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopes_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subject_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "id_token_signing_alg_values_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "claims_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "service_documentation": {
+            "type": "string"
+          },
+          "ui_locales_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "op_tos_uri": {
+            "type": "string"
+          },
+          "code_challenge_methods_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "issuer",
+          "authorization_endpoint",
+          "token_endpoint",
+          "revocation_endpoint",
+          "jwks_uri",
+          "response_types_supported",
+          "grant_types_supported",
+          "token_endpoint_auth_methods_supported",
+          "scopes_supported",
+          "subject_types_supported",
+          "id_token_signing_alg_values_supported",
+          "claims_supported",
+          "code_challenge_methods_supported"
         ]
       },
       "OAuth.Token": {
@@ -6922,6 +7123,53 @@
           }
         },
         "required": ["active"]
+      },
+      "OAuth.ScopeWithDescription": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "scope": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "requires_consent": {
+            "type": "boolean",
+            "description": "Whether the scope requires user consent"
+          }
+        },
+        "required": ["scope", "requires_consent"]
+      },
+      "OAuth.ConsentInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "oauth_application_name": {
+            "type": "string"
+          },
+          "oauth_application_logo_url": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to the OAuth application's logo image"
+          },
+          "oauth_application_url": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to the OAuth application's website or homepage"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OAuth.ScopeWithDescription"
+            }
+          }
+        },
+        "required": ["oauth_application_name", "client_id", "scopes"]
       },
       "Client.AccountPortal": {
         "type": "object",
@@ -7691,22 +7939,22 @@
           "blocklist": {
             "$ref": "#/components/schemas/UserSettings.Restrictions.Enabled"
           },
+          "allowlist_blocklist_disabled_on_sign_in": {
+            "$ref": "#/components/schemas/UserSettings.Restrictions.Enabled"
+          },
           "block_email_subaddresses": {
             "$ref": "#/components/schemas/UserSettings.Restrictions.Enabled"
           },
           "block_disposable_email_domains": {
-            "$ref": "#/components/schemas/UserSettings.Restrictions.Enabled"
-          },
-          "ignore_dots_for_gmail_addresses": {
             "$ref": "#/components/schemas/UserSettings.Restrictions.Enabled"
           }
         },
         "required": [
           "allowlist",
           "blocklist",
+          "allowlist_blocklist_disabled_on_sign_in",
           "block_email_subaddresses",
-          "block_disposable_email_domains",
-          "ignore_dots_for_gmail_addresses"
+          "block_disposable_email_domains"
         ]
       },
       "UserSettings.PasswordSettings": {
@@ -7775,9 +8023,16 @@
           "max_length": {
             "type": "integer",
             "nullable": true
+          },
+          "allow_extended_special_characters": {
+            "type": "boolean"
           }
         },
-        "required": ["min_length", "max_length"]
+        "required": [
+          "min_length",
+          "max_length",
+          "allow_extended_special_characters"
+        ]
       },
       "UserSettings.ActionsSettings": {
         "type": "object",
@@ -7836,6 +8091,16 @@
         },
         "required": ["require_same_client"]
       },
+      "UserSettings.AttackProtectionSettings.EnumerationProtection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": ["enabled"]
+      },
       "UserSettings.AttackProtectionSettings": {
         "type": "object",
         "additionalProperties": false,
@@ -7848,9 +8113,17 @@
           },
           "email_link": {
             "$ref": "#/components/schemas/UserSettings.AttackProtectionSettings.EmailLink"
+          },
+          "enumeration_protection": {
+            "$ref": "#/components/schemas/UserSettings.AttackProtectionSettings.EnumerationProtection"
           }
         },
-        "required": ["user_lockout", "pii", "email_link"]
+        "required": [
+          "user_lockout",
+          "pii",
+          "email_link",
+          "enumeration_protection"
+        ]
       },
       "UserSettings.PasskeySettings": {
         "type": "object",
@@ -8035,11 +8308,46 @@
               },
               "has_paid_org_plans": {
                 "type": "boolean"
+              },
+              "user": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "has_paid_plans": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "organization": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "has_paid_plans": {
+                    "type": "boolean"
+                  }
+                }
               }
             }
           }
         },
         "required": ["billing"]
+      },
+      "Client.ApiKeysSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Indicates whether the API Keys feature is enabled."
+          }
+        },
+        "required": ["enabled"]
       },
       "Client.Environment": {
         "type": "object",
@@ -8063,6 +8371,12 @@
           "commerce_settings": {
             "$ref": "#/components/schemas/Client.CommerceSettings"
           },
+          "api_keys_settings": {
+            "$ref": "#/components/schemas/Client.ApiKeysSettings"
+          },
+          "client_debug_mode": {
+            "type": "boolean"
+          },
           "maintenance_mode": {
             "type": "boolean"
           }
@@ -8084,6 +8398,15 @@
         },
         "required": ["object", "jwt"]
       },
+      "Client.SessionTask": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          }
+        },
+        "required": ["key"]
+      },
       "Client.SessionBase": {
         "type": "object",
         "properties": {
@@ -8103,7 +8426,8 @@
               "ended",
               "expired",
               "removed",
-              "abandoned"
+              "abandoned",
+              "pending"
             ]
           },
           "expire_at": {
@@ -8131,6 +8455,13 @@
             "type": "object",
             "nullable": true,
             "additionalProperties": true
+          },
+          "tasks": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Client.SessionTask"
+            }
           }
         },
         "required": [
@@ -8146,6 +8477,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_otp"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified", "failed", "expired"]
@@ -8173,6 +8508,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_invitation"]
+          },
           "status": {
             "type": "string",
             "enum": ["verified"]
@@ -8196,6 +8535,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_email_link"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified", "failed", "expired"]
@@ -8221,6 +8564,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_ticket"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified", "expired"]
@@ -8244,6 +8591,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_admin"]
+          },
           "status": {
             "type": "string",
             "enum": ["verified"]
@@ -8267,6 +8618,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_from_oauth"]
+          },
           "status": {
             "type": "string",
             "enum": ["verified", "unverified"]
@@ -8295,6 +8650,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_saml"]
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -8507,6 +8866,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_web3"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified", "failed", "expired"]
@@ -8515,6 +8878,7 @@
             "type": "string",
             "enum": [
               "web3_metamask_signature",
+              "web3_base_signature",
               "web3_coinbase_wallet_signature",
               "web3_okx_wallet_signature"
             ]
@@ -8589,6 +8953,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_passkey"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified", "failed", "expired"]
@@ -8821,10 +9189,15 @@
           "organization"
         ]
       },
-      "Oauth": {
+      "verification_oauth": {
+        "x-speakeasy-name-override": "Oauth",
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_oauth"]
+          },
           "status": {
             "type": "string",
             "x-speakeasy-unknown-values": "allow",
@@ -8867,10 +9240,15 @@
         },
         "required": ["status", "strategy", "attempts", "expire_at"]
       },
-      "GoogleOneTap": {
+      "verification_google_one_tap": {
+        "x-speakeasy-name-override": "GoogleOneTap",
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_google_one_tap"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified"]
@@ -8977,12 +9355,15 @@
             "nullable": true,
             "oneOf": [
               {
-                "$ref": "#/components/schemas/Oauth"
+                "$ref": "#/components/schemas/verification_oauth"
               },
               {
-                "$ref": "#/components/schemas/GoogleOneTap"
+                "$ref": "#/components/schemas/verification_google_one_tap"
               }
-            ]
+            ],
+            "discriminator": {
+              "propertyName": "object"
+            }
           }
         },
         "required": [
@@ -9012,7 +9393,14 @@
             "type": "string"
           },
           "domain": {
-            "type": "string"
+            "type": "string",
+            "deprecated": true
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "active": {
             "type": "boolean"
@@ -9046,12 +9434,19 @@
         "required": [
           "id",
           "name",
-          "domain",
           "active",
           "provider",
           "sync_user_attributes",
           "created_at",
           "updated_at"
+        ],
+        "anyOf": [
+          {
+            "required": ["domain"]
+          },
+          {
+            "required": ["domains"]
+          }
         ]
       },
       "Client.SAMLAccount": {
@@ -9437,6 +9832,7 @@
               "email_link",
               "phone_code",
               "web3_metamask_signature",
+              "web3_base_signature",
               "web3_coinbase_wallet_signature",
               "web3_okx_wallet_signature",
               "totp",
@@ -9490,6 +9886,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_password"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified"]
@@ -9513,6 +9913,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_oauth"]
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -9554,6 +9958,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_google_one_tap"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified"]
@@ -9577,6 +9985,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_totp"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified"]
@@ -9600,6 +10012,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "object": {
+            "type": "string",
+            "enum": ["verification_backup_code"]
+          },
           "status": {
             "type": "string",
             "enum": ["unverified", "verified"]
@@ -10127,6 +10543,207 @@
         },
         "required": ["response", "client"]
       },
+      "schemas-Client.SessionBase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "description": "String representing the object's type. Objects of the same type share the same value.\n",
+            "enum": ["session"]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "revoked",
+              "ended",
+              "expired",
+              "removed",
+              "abandoned"
+            ]
+          },
+          "expire_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "abandon_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "last_active_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "last_active_token": {
+            "type": "object",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Token"
+              }
+            ]
+          },
+          "actor": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "object",
+          "status",
+          "expire_at",
+          "abandon_at",
+          "last_active_at"
+        ]
+      },
+      "schemas-Client.Session": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/schemas-Client.SessionBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "last_active_organization_id": {
+                "type": "string",
+                "nullable": true
+              },
+              "user": {
+                "$ref": "#/components/schemas/Client.User"
+              },
+              "public_user_data": {
+                "type": "object",
+                "nullable": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Client.PublicUserData"
+                  }
+                ]
+              },
+              "factor_verification_age": {
+                "type": "array",
+                "description": "Each item represents the minutes that have passed since the last time a first or second factor were verified.",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "created_at": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Unix timestamp of creation.",
+                "example": 1700690400000
+              },
+              "updated_at": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Unix timestamp of last update.",
+                "example": 1700690400000
+              }
+            },
+            "required": [
+              "last_active_organization_id",
+              "public_user_data",
+              "factor_verification_age",
+              "created_at",
+              "updated_at"
+            ]
+          }
+        ]
+      },
+      "schemas-Client.Client": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "String representing the object's type. Objects of the same type share the same value.",
+            "enum": ["client"]
+          },
+          "id": {
+            "type": "string",
+            "description": "String representing the identifier of the session."
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/schemas-Client.Session"
+            }
+          },
+          "sign_in": {
+            "type": "object",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Client.SignIn"
+              }
+            ]
+          },
+          "sign_up": {
+            "type": "object",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Client.SignUp"
+              }
+            ]
+          },
+          "last_active_session_id": {
+            "nullable": true,
+            "type": "string",
+            "description": "Last active session_id."
+          },
+          "cookie_expires_at": {
+            "nullable": true,
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp of the cookie expiration."
+          },
+          "captcha_bypass": {
+            "type": "boolean",
+            "description": "Whether the client can bypass CAPTCHA."
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp of creation."
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp of last update."
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "sessions",
+          "sign_in",
+          "sign_up",
+          "last_active_session_id",
+          "cookie_expires_at",
+          "captcha_bypass",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "schemas-Client.ClientWrappedSignIn": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/Client.SignIn"
+          },
+          "client": {
+            "$ref": "#/components/schemas/schemas-Client.Client"
+          }
+        },
+        "required": ["response", "client"]
+      },
       "Client.ClientWrappedSignUp": {
         "type": "object",
         "additionalProperties": false,
@@ -10644,7 +11261,32 @@
             "$ref": "#/components/schemas/Image"
           },
           "client": {
-            "$ref": "#/components/schemas/Client.Client"
+            "$ref": "#/components/schemas/schemas-Client.Client"
+          }
+        },
+        "required": ["response", "client"]
+      },
+      "schemas-Client.ClientWrappedUser": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "response": {
+            "type": "object",
+            "nullable": false,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Client.User"
+              }
+            ]
+          },
+          "client": {
+            "type": "object",
+            "nullable": false,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/schemas-Client.Client"
+              }
+            ]
           }
         },
         "required": ["response", "client"]
@@ -10977,6 +11619,31 @@
         },
         "required": ["response", "client"]
       },
+      "schemas-Client.ClientWrappedOrganization": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "response": {
+            "type": "object",
+            "nullable": false,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Client.Organization"
+              }
+            ]
+          },
+          "client": {
+            "type": "object",
+            "nullable": false,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/schemas-Client.Client"
+              }
+            ]
+          }
+        },
+        "required": ["response", "client"]
+      },
       "Client.ClientWrappedOrganizationInvitations": {
         "type": "object",
         "additionalProperties": false,
@@ -11128,6 +11795,15 @@
           },
           "total_pending_suggestions": {
             "type": "integer"
+          },
+          "public_organization_data": {
+            "type": "object",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Client.PublicOrganizationData"
+              }
+            ]
           },
           "created_at": {
             "type": "integer",
@@ -11508,6 +12184,16 @@
           }
         }
       },
+      "WellKnown.OAuth2AuthorizationServerMetadata": {
+        "description": "Get the OAuth 2.0 Authorization Server Metadata",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WellKnown.OAuth2AuthorizationServerMetadata"
+            }
+          }
+        }
+      },
       "OAuth.Token": {
         "description": "Fetch token for OAuth2 flow",
         "content": {
@@ -11534,6 +12220,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/OAuth.TokenInfo"
+            }
+          }
+        }
+      },
+      "OAuth.ConsentInfo": {
+        "description": "OAuth2 consent information for a given OAuth Application Client ID and State",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OAuth.ConsentInfo"
             }
           }
         }
@@ -11584,6 +12280,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Client.ClientWrappedSignIn"
+            }
+          }
+        }
+      },
+      "responses-Client.SignIn": {
+        "description": "Returns the sign in object, as well as the updated session object.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/schemas-Client.ClientWrappedSignIn"
             }
           }
         }
@@ -11818,6 +12524,16 @@
           }
         }
       },
+      "responses-Client.ClientWrappedUser": {
+        "description": "Returns the response for Session wrapped User object.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/schemas-Client.ClientWrappedUser"
+            }
+          }
+        }
+      },
       "Client.ClientWrappedOrganizationMemberships": {
         "description": "Returns the response for Client wrapped array of OrganizationMembership objects.",
         "content": {
@@ -11874,6 +12590,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Client.ClientWrappedOrganization"
+            }
+          }
+        }
+      },
+      "responses-Client.ClientWrappedOrganization": {
+        "description": "Returns the response for Client wrapped Organization object.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/schemas-Client.ClientWrappedOrganization"
             }
           }
         }

@@ -5,15 +5,15 @@ use log::error;
 use crate::{
     clerk_fapi::ClerkFapiClient,
     models::{
-        ClientClientWrappedOrganizationMembershipsResponse, ClientPeriodClient,
-        ClientPeriodOrganization, ClientPeriodOrganizationMembership, ClientPeriodSession,
+        ClientClient, ClientClientWrappedOrganizationMembershipsResponse, ClientOrganization,
+        ClientOrganizationMembership, ClientSession,
     },
 };
 
 pub fn find_organization_id_from_memberships(
-    memberships: Vec<ClientPeriodOrganizationMembership>,
+    memberships: Vec<ClientOrganizationMembership>,
     organization_id_or_slug: String,
-) -> Option<ClientPeriodOrganizationMembership> {
+) -> Option<ClientOrganizationMembership> {
     if organization_id_or_slug.starts_with("org_") {
         // It's an organization ID - verify it exists in memberships
         memberships
@@ -46,9 +46,9 @@ impl Error for ClerkOrgFindingError {}
 
 pub async fn find_target_organization(
     fapi: &ClerkFapiClient,
-    session: ClientPeriodSession,
+    session: ClientSession,
     organization_id_or_slug: String,
-) -> Result<ClientPeriodOrganization, ClerkOrgFindingError> {
+) -> Result<ClientOrganization, ClerkOrgFindingError> {
     let user = match session.user {
         Some(user) => *user.clone(),
         None => return Err(ClerkOrgFindingError::NoUserFound),
@@ -66,14 +66,10 @@ pub async fn find_target_organization(
     // The organization didn't exist in the current session
     // let's try to find it from the API
     // Let's start by refreshing user
-    let user = *fapi
-        .get_user(Some(&session.id))
-        .await
-        .map_err(|e| {
-            error!("Failed to get user: {}", e);
-            ClerkOrgFindingError::ClerkApiError
-        })?
-        .response;
+    let user = fapi.get_user().await.map_err(|e| {
+        error!("Failed to get user: {}", e);
+        ClerkOrgFindingError::ClerkApiError
+    })?;
 
     if let Some(user_org_memberships) = user.organization_memberships {
         if let Some(org) = find_organization_id_from_memberships(
@@ -85,9 +81,8 @@ pub async fn find_target_organization(
     }
 
     // Still no matching organization found!
-    // let's try one more time, le'ts pull the org memberships!
-
-    let org_memberships = *fapi
+    // let's try one more time, let's pull the org memberships!
+    let user_org_memberships = fapi
         .get_organization_memberships(
             None, // limit
             None, // offset
@@ -97,17 +92,7 @@ pub async fn find_target_organization(
         .map_err(|e| {
             error!("Failed to get org memberships: {}", e);
             ClerkOrgFindingError::ClerkApiError
-        })?
-        .response;
-
-    let user_org_memberships = match org_memberships {
-        ClientClientWrappedOrganizationMembershipsResponse::Array(memberships) => {
-            memberships
-        },
-        ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(memberships) => {
-            memberships.data.unwrap_or(Vec::new())
-        }
-    };
+        })?;
 
     if let Some(org) =
         find_organization_id_from_memberships(user_org_memberships, organization_id_or_slug.clone())
@@ -136,9 +121,9 @@ impl fmt::Display for ClerkSessionFindingError {
 impl Error for ClerkSessionFindingError {}
 
 pub fn find_target_session(
-    client: ClientPeriodClient,
+    client: ClientClient,
     session_id: String,
-) -> Result<ClientPeriodSession, ClerkSessionFindingError> {
+) -> Result<ClientSession, ClerkSessionFindingError> {
     client
         .sessions
         .iter()

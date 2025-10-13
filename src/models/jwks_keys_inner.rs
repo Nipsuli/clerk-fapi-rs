@@ -14,18 +14,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum JwksKeysInner {
-    JwksPeriodEd25519PeriodPublicKey(Box<models::JwksPeriodEd25519PeriodPublicKey>),
-    JwksPeriodEcdsaPeriodPublicKey(Box<models::JwksPeriodEcdsaPeriodPublicKey>),
-    JwksPeriodRsaPeriodPublicKey(Box<models::JwksPeriodRsaPeriodPublicKey>),
-    JwksPeriodEd25519PeriodPrivateKey(Box<models::JwksPeriodEd25519PeriodPrivateKey>),
-    JwksPeriodEcdsaPeriodPrivateKey(Box<models::JwksPeriodEcdsaPeriodPrivateKey>),
-    JwksPeriodRsaPeriodPrivateKey(Box<models::JwksPeriodRsaPeriodPrivateKey>),
-    JwksPeriodSymmetricPeriodKey(Box<models::JwksPeriodSymmetricPeriodKey>),
+    JwksEd25519PublicKey(Box<models::JwksEd25519PublicKey>),
+    JwksEcdsaPublicKey(Box<models::JwksEcdsaPublicKey>),
+    JwksRsaPublicKey(Box<models::JwksRsaPublicKey>),
+    JwksEd25519PrivateKey(Box<models::JwksEd25519PrivateKey>),
+    JwksEcdsaPrivateKey(Box<models::JwksEcdsaPrivateKey>),
+    JwksRsaPrivateKey(Box<models::JwksRsaPrivateKey>),
+    JwksSymmetricKey(Box<models::JwksSymmetricKey>),
 }
 
 impl Default for JwksKeysInner {
     fn default() -> Self {
-        Self::JwksPeriodEd25519PeriodPublicKey(Default::default())
+        Self::JwksEd25519PublicKey(Default::default())
     }
 }
 

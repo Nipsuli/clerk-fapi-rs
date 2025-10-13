@@ -1,4 +1,6 @@
-use clerk_fapi_rs::{clerk::Clerk, configuration::ClerkFapiConfiguration};
+use clerk_fapi_rs::{
+    clerk::Clerk, configuration::ClerkFapiConfiguration, models::client_sign_in::Status,
+};
 use dotenv::dotenv;
 use std::time::Duration;
 use std::{
@@ -8,7 +10,7 @@ use std::{
 use tokio::time::sleep;
 
 fn read_input(prompt: &str) -> String {
-    print!("{}", prompt);
+    print!("{prompt}");
     io::stdout().flush().unwrap();
     let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
@@ -68,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .await?;
 
-            let sign_in_id = sign_in_response.response.id;
+            let sign_in_id = sign_in_response.id;
 
             println!("We've sent a verification code to your email.");
             println!("Please check your inbox and enter the code below.");
@@ -91,15 +93,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .await?;
 
-            if verification_response.response.status
-                == clerk_fapi_rs::models::client_period_sign_in::Status::Complete
-            {
+            if verification_response.status == Status::Complete {
                 println!("Sign in successful!");
             } else {
-                println!(
-                    "Sign in failed. Status: {:?}",
-                    verification_response.response.status
-                );
+                println!("Sign in failed. Status: {:?}", verification_response.status);
                 return Ok(());
             }
         }
@@ -125,15 +122,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .await?;
 
-            if sign_in_response.response.status
-                == clerk_fapi_rs::models::client_period_sign_in::Status::Complete
-            {
+            if sign_in_response.status == Status::Complete {
                 println!("Sign in successful!");
             } else {
-                println!(
-                    "Sign in failed. Status: {:?}",
-                    sign_in_response.response.status
-                );
+                println!("Sign in failed. Status: {:?}", sign_in_response.status);
                 return Ok(());
             }
         }
@@ -169,27 +161,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
     println!("\nOrganizations:");
 
-    let data = *memberships.response;
-
-    match data {
-        clerk_fapi_rs::models::ClientClientWrappedOrganizationMembershipsResponse::ClientClientWrappedOrganizationMembershipsResponseOneOf(memberships) => {
-            let mems = memberships.data.unwrap();
-            println!("Found {} memberships (1): ", mems.len());
-            for membership in mems {
-                let org = membership.organization;
-                let name = org.name;
-                println!("- Organization: {}", name);
-            }
-        },
-        clerk_fapi_rs::models::ClientClientWrappedOrganizationMembershipsResponse::Array(memberships) => {
-            println!("Found {} memberships (2): ", memberships.len());
-            for membership in memberships {
-                let org = membership.organization;
-                let name = org.name;
-                println!("- Organization: {}", name);
-            }
-        },
-    };
+    for membership in memberships {
+        let org = membership.organization;
+        let name = org.name;
+        println!("- Organization: {name}");
+    }
 
     Ok(())
 }

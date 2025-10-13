@@ -50,7 +50,7 @@ fn parse_publishable_key(
         frontend_api = proxy;
     } else if instance_type != "development" {
         if let Some(d) = domain {
-            frontend_api = format!("clerk.{}", d);
+            frontend_api = format!("clerk.{d}");
         }
     }
 
@@ -62,7 +62,7 @@ fn parse_publishable_key(
 
 fn public_key_base64_segment(key: &str) -> String {
     let mut base64_segment = key.split('_').nth(2).unwrap_or("").to_string();
-    while base64_segment.len() % 4 != 0 {
+    while !base64_segment.len().is_multiple_of(4) {
         base64_segment.push('=');
     }
     base64_segment
@@ -179,7 +179,7 @@ impl ClerkFapiConfiguration {
         kind: ClientKind,
     ) -> Result<Self, String> {
         let parsed_key = parse_publishable_key(&key, domain.clone(), proxy_url.clone())?;
-        let user_agent = format!("{}/{}", NAME, VERSION);
+        let user_agent = format!("{NAME}/{VERSION}");
 
         let store = store.unwrap_or_else(|| Arc::new(DefaultStore::default()));
         let store_prefix = store_prefix.unwrap_or_else(|| "ClerkFapi:".to_string());
@@ -305,7 +305,7 @@ impl Default for ClerkFapiConfiguration {
             base_url: String::new(),
             instance_type: String::new(),
             frontend_api: String::new(),
-            user_agent: format!("{}/{}", NAME, VERSION),
+            user_agent: format!("{NAME}/{VERSION}"),
             store: Arc::new(DefaultStore::default()),
             store_prefix: "ClerkFapi:".to_string(),
             kind: ClientKind::NonBrowser,
@@ -326,7 +326,7 @@ mod tests {
         assert!(config.is_development());
         assert!(!config.is_production());
         assert!(config.base_url().starts_with("https://"));
-        assert_eq!(config.user_agent(), format!("{}/{}", NAME, VERSION));
+        assert_eq!(config.user_agent(), format!("{NAME}/{VERSION}"));
     }
 
     #[test]
@@ -519,7 +519,7 @@ mod tests {
         assert_eq!(config.base_url(), "");
         assert_eq!(config.instance_type(), "");
         assert_eq!(config.frontend_api(), "");
-        assert_eq!(config.user_agent(), format!("{}/{}", NAME, VERSION));
+        assert_eq!(config.user_agent(), format!("{NAME}/{VERSION}"));
         assert_eq!(config.store_prefix(), "ClerkFapi:");
 
         // Test that the default store works

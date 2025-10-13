@@ -3,9 +3,9 @@ use crate::clerk_fapi::ClerkFapiClient;
 use crate::clerk_state::{ClerkNotLoadedError, ClerkState};
 use crate::configuration::{ClerkFapiConfiguration, ClientKind};
 use crate::models::{
-    ClientClientWrappedOrganizationMembershipsResponse, ClientPeriodClient as Client,
-    ClientPeriodEnvironment as Environment, ClientPeriodOrganization as Organization,
-    ClientPeriodOrganizationMembership, ClientPeriodSession as Session, ClientPeriodUser as User,
+    ClientClient as Client, ClientClientWrappedOrganizationMembershipsResponse,
+    ClientEnvironment as Environment, ClientOrganization as Organization,
+    ClientOrganizationMembership, ClientSession as Session, ClientUser as User,
 };
 use crate::utils::{
     find_organization_id_from_memberships, find_target_organization, find_target_session,
@@ -154,17 +154,15 @@ impl Clerk {
     }
 
     async fn load_client_from_api(&self) -> Result<Client, ClerkLoadError> {
-        let client_res = self
-            .api_client
+        self.api_client
             .get_client()
             .await
             .map_err(|e| {
                 error!("Clerk: Failed to load client from API: {e}");
+                println!("Clerk: Failed to load client from API: {e}");
                 ClerkLoadError::FailedToLoadClient
             })?
-            .response
-            .ok_or(ClerkLoadError::FailedToLoadClient)?;
-        Ok(*client_res)
+            .ok_or(ClerkLoadError::FailedToLoadClient)
     }
 
     /// Initializes Clerk, tries to pull Environment and Client from API
@@ -457,13 +455,13 @@ impl Clerk {
                 self.api_client
                     .remove_session(&sid)
                     .await
-                    .map_err(|e| format!("Failed to remove session: {}", e))?;
+                    .map_err(|e| format!("Failed to remove session: {e}"))?;
             }
             None => {
                 self.api_client
                     .remove_client_sessions_and_retain_cookie()
                     .await
-                    .map_err(|e| format!("Failed to remove all sessions: {}", e))?;
+                    .map_err(|e| format!("Failed to remove all sessions: {e}"))?;
             }
         };
         // The remove sessions calls will update the client state via the callback

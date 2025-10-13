@@ -4,33 +4,33 @@ An unofficial Rust SDK for the Clerk REST Frontend API.
 
 ## Status
 
-Work in progress. Works and is used in production. But as [reconfigured](https://reconfigured.io)
-is using only parts of the API there might be things that are broken in other APIs.
+Works and is used in production. But historically there has been some mismatches
+with the type definitions and actual behavior, and I haven't used all endpoints,
+so if you run into issues open an issue or pr.
 
 ## Core idea
 
-This crate is quite thin wrapper on top of the REST Frontend API.
-`Clerk` is a statefull client exposing the full Clerk FAPI methods via
-`Clerk::get_fapi_client`. It does not implement similar objects with
-methods as example the Javscript Clerk does, only the direct FAPI
-endpoints. But it does keep the current state of the client in sync
-allowing one signin and call api methods as signed in user.
+This crate is quite thin wrapper on top of the REST Frontend API. `Clerk` is a
+statefull client exposing the full Clerk FAPI methods via `Clerk::get_fapi_client`.
+Clerk keeps the client state updated by piggypagging the requests with the current
+client state. The methods in the `ClerkFapiClient` will unwrap the requests and
+return only the core response and update the client state in `Clerk` stcuct.
 
-The `src/apis` and `src/models` are generated based on the `fapi_swagger.json`. There seesm to be small issues in the clerk API
-spec and it does not reflect the reality in all of the cases. Those
-cases where I've run into are fixed by hand.
+The `src/apis` and `src/models` are generated based on the `fapi_swagger.json`.
+There seems to have been small issues in the clerk API spec and it has not always
+reflected the reality in all of the cases. Those cases where I've run into are
+fixed by hand. The models and api methods are also exported so those can be used
+directly as well.
 
-By default the state is stored in in `HashMap` but if one wants to
-add some persistent state one can provide anything that implments
-the `clerk_fapi_rs::configuration::Store` trait.
+### State
 
-The main usage of the Clerk FAPI happens via the `Clerk::get_fapi_client`
-method. The returned `ClerkFapiClient` supports fully typed [Clerk FAPI](https://clerk.com/docs/reference/frontend-api).
+By default the state is stored in in `HashMap` but if one wants to add some
+persistent state, example to allow offline state, one can provide anything
+that implments the `clerk_fapi_rs::configuration::Store` trait.
 
-Clerk communicates the state of sessions back by piggybagging the requests
-and returns full `ClientPeriodClient` as part of most api calls. The
-`Clerk` updates it's own state based on the responses and triggers
-optional listeners which one can register with `clerk::add_listener`
+### Listener
+
+`Clerk` allows to pass in listere callbacks that are calld
 
 The type of lister:
 
@@ -38,6 +38,8 @@ The type of lister:
 pub type Listener =
     Arc<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
 ```
+
+### Utilities
 
 There are only few convenience methods provided directly on the `Clerk`:
 
@@ -48,10 +50,10 @@ There are only few convenience methods provided directly on the `Clerk`:
 And to read current state there are helper acccess methods:
 
 - `Clerk::environment()` for the current Clerk instance configs
-- `Clerk::client()` to access full `ClientPeriodClient`
-- `Clerk::session()` to access currently active session parsed from `ClientPeriodClient`
-- `Clerk::user()` to access current user parsed from `ClientPeriodClient`
-- `Clerk::organization()` to access current organization parsed from `ClientPeriodClient`
+- `Clerk::client()` to access full `ClientClient`
+- `Clerk::session()` to access currently active session parsed from `ClientClient`
+- `Clerk::user()` to access current user parsed from `ClientClient`
+- `Clerk::organization()` to access current organization parsed from `ClientClient`
 
 ## Basic Usage
 
@@ -101,6 +103,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ... do calls with fapi
 }
 ```
+
+## Updating types
+
+1. Get latest defintions from [Clerk docs](https://clerk.com/docs/reference/frontend-api)
+   and save as `fapi_swagger.json`
+2. use [openapi-generator](https://openapi-generator.tech/) to generate types
+
+```
+openapi-generator generate -g rust -i fapi_swagger.json \
+  --global-property models,apis,apiTests=false,modelTests=false,apiDocs=false,modelDocs=false
+```
+
+3. check that things still work as expected
 
 ## Contributing
 

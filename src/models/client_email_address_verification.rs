@@ -14,25 +14,30 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ClientEmailAddressVerification {
-    StubsPeriodVerificationPeriodAdmin(Box<models::StubsPeriodVerificationPeriodAdmin>),
-    StubsPeriodVerificationPeriodBackupCode(Box<models::StubsPeriodVerificationPeriodBackupCode>),
-    StubsPeriodVerificationPeriodCode(Box<models::StubsPeriodVerificationPeriodCode>),
-    StubsPeriodVerificationPeriodFromOauth(Box<models::StubsPeriodVerificationPeriodFromOauth>),
-    StubsPeriodVerificationPeriodGoogleOneTap(
-        Box<models::StubsPeriodVerificationPeriodGoogleOneTap>,
-    ),
-    StubsPeriodVerificationPeriodInvitation(Box<models::StubsPeriodVerificationPeriodInvitation>),
-    StubsPeriodVerificationPeriodLink(Box<models::StubsPeriodVerificationPeriodLink>),
-    StubsPeriodVerificationPeriodOauth(Box<models::StubsPeriodVerificationPeriodOauth>),
-    StubsPeriodVerificationPeriodOtp(Box<models::StubsPeriodVerificationPeriodOtp>),
-    StubsPeriodVerificationPeriodPasskey(Box<models::StubsPeriodVerificationPeriodPasskey>),
-    StubsPeriodVerificationPeriodSaml(Box<models::StubsPeriodVerificationPeriodSaml>),
-    StubsPeriodVerificationPeriodTicket(Box<models::StubsPeriodVerificationPeriodTicket>),
+    StubsVerificationOtp(Box<models::StubsVerificationOtp>),
+    StubsVerificationInvitation(Box<models::StubsVerificationInvitation>),
+    StubsVerificationLink(Box<models::StubsVerificationLink>),
+    StubsVerificationTicket(Box<models::StubsVerificationTicket>),
+    StubsVerificationAdmin(Box<models::StubsVerificationAdmin>),
+    StubsVerificationFromOauth(Box<models::StubsVerificationFromOauth>),
+    StubsVerificationSaml(Box<models::StubsVerificationSaml>),
 }
 
 impl Default for ClientEmailAddressVerification {
     fn default() -> Self {
-        Self::StubsPeriodVerificationPeriodOtp(Default::default())
+        Self::StubsVerificationOtp(Default::default())
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Object {
+    #[serde(rename = "verification_saml")]
+    VerificationSaml,
+}
+
+impl Default for Object {
+    fn default() -> Object {
+        Self::VerificationSaml
     }
 }
 
