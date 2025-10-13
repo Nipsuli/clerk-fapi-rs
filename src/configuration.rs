@@ -326,7 +326,7 @@ mod tests {
         assert!(config.is_development());
         assert!(!config.is_production());
         assert!(config.base_url().starts_with("https://"));
-        assert_eq!(config.user_agent(), format!("{}/{}", NAME, VERSION));
+        assert_eq!(config.user_agent(), format!("{NAME}/{VERSION}"));
     }
 
     #[test]
@@ -519,7 +519,7 @@ mod tests {
         assert_eq!(config.base_url(), "");
         assert_eq!(config.instance_type(), "");
         assert_eq!(config.frontend_api(), "");
-        assert_eq!(config.user_agent(), format!("{}/{}", NAME, VERSION));
+        assert_eq!(config.user_agent(), format!("{NAME}/{VERSION}"));
         assert_eq!(config.store_prefix(), "ClerkFapi:");
 
         // Test that the default store works

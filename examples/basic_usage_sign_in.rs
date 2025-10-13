@@ -10,7 +10,7 @@ use std::{
 use tokio::time::sleep;
 
 fn read_input(prompt: &str) -> String {
-    print!("{}", prompt);
+    print!("{prompt}");
     io::stdout().flush().unwrap();
     let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
@@ -164,7 +164,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for membership in memberships {
         let org = membership.organization;
         let name = org.name;
-        println!("- Organization: {}", name);
+        println!("- Organization: {name}");
     }
 
     Ok(())
