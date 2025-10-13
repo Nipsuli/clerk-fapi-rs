@@ -859,3 +859,115 @@ async fn test_listener() {
     client_mock.assert_async().await;
     env_mock.assert_async().await;
 }
+
+#[tokio::test]
+async fn test_parse_client() {
+    // smoke test with client fetched as of 2025-10-13
+    let value1 = serde_json::json!(
+        {
+            "object": "client",
+            "id": "client_341VkDKUR6iRmjWTq2tlOqfaAai",
+            "sessions": [
+              {
+                "object": "session",
+                "id": "sess_341WDeNbX9J0Odr9Krt71nou2iX",
+                "status": "active",
+                "expire_at": 1760986239785i64,
+                "abandon_at": 1762973439785i64,
+                "last_active_at": 1760381439785i64,
+                "last_active_organization_id": null,
+                "actor": null,
+                "user": {
+                  "id": "user_341V8i2RUYPv4yI1lpm2LnfUKFX",
+                  "object": "user",
+                  "username": null,
+                  "first_name": null,
+                  "last_name": null,
+                  "locale": null,
+                  "image_url": "https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18zM3NLeTc1NnRVUzNmTDU5blJzc1dqc1l2eTkiLCJyaWQiOiJ1c2VyXzM0MVY4aTJSVVlQdjR5STFscG0yTG5mVUtGWCJ9",
+                  "has_image": false,
+                  "primary_email_address_id": "idn_341V7mkigpDKBZvLlNpAI5auoxy",
+                  "primary_phone_number_id": null,
+                  "primary_web3_wallet_id": null,
+                  "password_enabled": false,
+                  "two_factor_enabled": false,
+                  "totp_enabled": false,
+                  "backup_code_enabled": false,
+                  "email_addresses": [
+                    {
+                      "id": "idn_341V7mkigpDKBZvLlNpAI5auoxy",
+                      "object": "email_address",
+                      "email_address": "niko@reconfigured.io",
+                      "reserved": false,
+                      "verification": {
+                        "object": "verification_otp",
+                        "status": "verified",
+                        "strategy": "email_code",
+                        "attempts": 1,
+                        "expire_at": 1760381499375i64
+                      },
+                      "linked_to": [],
+                      "matches_sso_connection": false,
+                      "created_at": 1760380899287i64,
+                      "updated_at": 1760380907823i64
+                    }
+                  ],
+                  "phone_numbers": [],
+                  "web3_wallets": [],
+                  "passkeys": [],
+                  "external_accounts": [],
+                  "saml_accounts": [],
+                  "enterprise_accounts": [],
+                  "public_metadata": {},
+                  "unsafe_metadata": {},
+                  "external_id": null,
+                  "last_sign_in_at": 1760381439785i64,
+                  "banned": false,
+                  "locked": false,
+                  "lockout_expires_in_seconds": null,
+                  "verification_attempts_remaining": 100,
+                  "created_at": 1760380907818i64,
+                  "updated_at": 1760381439812i64,
+                  "delete_self_enabled": true,
+                  "create_organization_enabled": true,
+                  "last_active_at": 1760380907817i64,
+                  "mfa_enabled_at": null,
+                  "mfa_disabled_at": null,
+                  "legal_accepted_at": 1760380899288i64,
+                  "profile_image_url": "https://www.gravatar.com/avatar?d=mp",
+                  "organization_memberships": []
+                },
+                "public_user_data": {
+                  "first_name": null,
+                  "last_name": null,
+                  "image_url": "https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18zM3NLeTc1NnRVUzNmTDU5blJzc1dqc1l2eTkiLCJyaWQiOiJ1c2VyXzM0MVY4aTJSVVlQdjR5STFscG0yTG5mVUtGWCJ9",
+                  "has_image": false,
+                  "identifier": "niko@reconfigured.io",
+                  "username": null,
+                  "profile_image_url": "https://www.gravatar.com/avatar?d=mp"
+                },
+                "factor_verification_age": [
+                  0,
+                  -1
+                ],
+                "created_at": 1760381439785i64,
+                "updated_at": 1760381439827i64,
+                "last_active_token": {
+                  "object": "token",
+                  "jwt": "header.payload.signature"
+                }
+              }
+            ],
+            "sign_in": null,
+            "sign_up": null,
+            "last_active_session_id": "sess_341WDeNbX9J0Odr9Krt71nou2iX",
+            "last_authentication_strategy": "email_code",
+            "cookie_expires_at": null,
+            "captcha_bypass": false,
+            "created_at": 1760381205224i64,
+            "updated_at": 1760381439822i64
+          }
+    );
+    // this is just smoke test to be able to parse real client data
+    let _client: clerk_fapi_rs::models::ClientClient = serde_json::from_value(value1).unwrap();
+}

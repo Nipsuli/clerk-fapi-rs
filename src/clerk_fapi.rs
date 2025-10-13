@@ -294,8 +294,8 @@ impl ClerkFapiClient {
     pub async fn list_organization_domains(
         &self,
         organization_id: &str,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
         verified: Option<bool>,
         enrollment_mode: Option<&str>,
     ) -> Result<ClientClientWrappedOrganizationDomainsResponse, Error<ListOrganizationDomainsError>>
@@ -607,8 +607,8 @@ impl ClerkFapiClient {
     pub async fn get_organization_invitations(
         &self,
         organization_id: &str,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
         status: Option<&str>,
     ) -> Result<Vec<ClientOrganizationInvitation>, Error<GetOrganizationInvitationsError>> {
         let response = invitations_api::get_organization_invitations(
@@ -666,8 +666,8 @@ impl ClerkFapiClient {
     pub async fn list_organization_memberships(
         &self,
         organization_id: &str,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
         paginated: Option<bool>,
         query: Option<&str>,
         role: Option<&str>,
@@ -741,8 +741,8 @@ impl ClerkFapiClient {
     pub async fn list_organization_membership_requests(
         &self,
         organization_id: &str,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
         status: Option<&str>,
     ) -> Result<
         ClientClientWrappedOrganizationMembershipRequestsResponse,
@@ -986,8 +986,8 @@ impl ClerkFapiClient {
 
     pub async fn get_organization_memberships(
         &self,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
         paginated: Option<bool>,
     ) -> Result<Vec<ClientOrganizationMembership>, Error<GetOrganizationMembershipsError>> {
         let response = organizations_memberships_api::get_organization_memberships(
@@ -1009,8 +1009,8 @@ impl ClerkFapiClient {
 
     pub async fn get_organization_suggestions(
         &self,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
         status: Option<&str>,
     ) -> Result<
         ClientClientWrappedOrganizationSuggestionsResponse,
@@ -1029,8 +1029,8 @@ impl ClerkFapiClient {
 
     pub async fn get_users_organization_invitations(
         &self,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
         status: Option<&str>,
     ) -> Result<
         ClientClientWrappedOrganizationInvitationsUserContextResponse,
@@ -1236,8 +1236,8 @@ impl ClerkFapiClient {
     pub async fn list_organization_roles(
         &self,
         organization_id: &str,
-        limit: Option<i32>,
-        offset: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
     ) -> Result<ClientClientWrappedRolesResponse, Error<ListOrganizationRolesError>> {
         let response = roles_api::list_organization_roles(
             &self.clerk_config(),

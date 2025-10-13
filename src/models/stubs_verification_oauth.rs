@@ -34,18 +34,18 @@ pub struct StubsVerificationOauth {
     )]
     pub error: Option<Option<Box<models::ClerkError>>>,
     #[serde(rename = "expire_at")]
-    pub expire_at: i32,
+    pub expire_at: i64,
     #[serde(
         rename = "attempts",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i32>>,
+    pub attempts: Option<Option<i64>>,
 }
 
 impl StubsVerificationOauth {
-    pub fn new(status: Status, strategy: String, expire_at: i32) -> StubsVerificationOauth {
+    pub fn new(status: Status, strategy: String, expire_at: i64) -> StubsVerificationOauth {
         StubsVerificationOauth {
             object: None,
             status,

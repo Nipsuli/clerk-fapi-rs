@@ -58,7 +58,7 @@ pub struct ClientSession {
     pub public_user_data: Option<serde_json::Value>,
     /// Each item represents the minutes that have passed since the last time a first or second factor were verified.
     #[serde(rename = "factor_verification_age")]
-    pub factor_verification_age: Vec<i32>,
+    pub factor_verification_age: Vec<i64>,
     /// Unix timestamp of creation.
     #[serde(rename = "created_at")]
     pub created_at: i64,
@@ -77,7 +77,7 @@ impl ClientSession {
         last_active_at: i64,
         last_active_organization_id: Option<String>,
         public_user_data: Option<serde_json::Value>,
-        factor_verification_age: Vec<i32>,
+        factor_verification_age: Vec<i64>,
         created_at: i64,
         updated_at: i64,
     ) -> ClientSession {

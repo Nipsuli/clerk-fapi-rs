@@ -280,8 +280,8 @@ pub async fn delete_organization_memberships(
 /// Get a list of the organization memberships of the current user.
 pub async fn get_organization_memberships(
     configuration: &configuration::Configuration,
-    limit: Option<i32>,
-    offset: Option<i32>,
+    limit: Option<i64>,
+    offset: Option<i64>,
     paginated: Option<bool>,
 ) -> Result<
     models::ClientClientWrappedOrganizationMemberships,
@@ -356,8 +356,8 @@ pub async fn get_organization_memberships(
 /// Get a list of the organization suggestions of the current user.
 pub async fn get_organization_suggestions(
     configuration: &configuration::Configuration,
-    limit: Option<i32>,
-    offset: Option<i32>,
+    limit: Option<i64>,
+    offset: Option<i64>,
     status: Option<&str>,
 ) -> Result<
     models::ClientClientWrappedOrganizationSuggestions,
@@ -432,8 +432,8 @@ pub async fn get_organization_suggestions(
 /// Get a list of the organization invitations of the current user.
 pub async fn get_users_organization_invitations(
     configuration: &configuration::Configuration,
-    limit: Option<i32>,
-    offset: Option<i32>,
+    limit: Option<i64>,
+    offset: Option<i64>,
     status: Option<&str>,
 ) -> Result<
     models::ClientClientWrappedOrganizationInvitationsUserContext,

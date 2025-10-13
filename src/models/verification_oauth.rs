@@ -32,9 +32,9 @@ pub struct VerificationOauth {
     )]
     pub error: Option<Option<Box<models::ClerkError>>>,
     #[serde(rename = "expire_at")]
-    pub expire_at: i32,
+    pub expire_at: i64,
     #[serde(rename = "attempts", deserialize_with = "Option::deserialize")]
-    pub attempts: Option<i32>,
+    pub attempts: Option<i64>,
     #[serde(
         rename = "verified_at_client",
         default,
@@ -48,8 +48,8 @@ impl VerificationOauth {
     pub fn new(
         status: Status,
         strategy: String,
-        expire_at: i32,
-        attempts: Option<i32>,
+        expire_at: i64,
+        attempts: Option<i64>,
     ) -> VerificationOauth {
         VerificationOauth {
             object: None,

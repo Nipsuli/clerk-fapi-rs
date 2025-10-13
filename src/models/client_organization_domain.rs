@@ -31,9 +31,9 @@ pub struct ClientOrganizationDomain {
     #[serde(rename = "verification", deserialize_with = "Option::deserialize")]
     pub verification: Option<Box<models::ClientOrganizationDomainVerification>>,
     #[serde(rename = "total_pending_invitations")]
-    pub total_pending_invitations: i32,
+    pub total_pending_invitations: i64,
     #[serde(rename = "total_pending_suggestions")]
-    pub total_pending_suggestions: i32,
+    pub total_pending_suggestions: i64,
     #[serde(
         rename = "public_organization_data",
         default,
@@ -58,8 +58,8 @@ impl ClientOrganizationDomain {
         enrollment_mode: String,
         affiliation_email_address: Option<String>,
         verification: Option<models::ClientOrganizationDomainVerification>,
-        total_pending_invitations: i32,
-        total_pending_suggestions: i32,
+        total_pending_invitations: i64,
+        total_pending_suggestions: i64,
         created_at: i64,
         updated_at: i64,
     ) -> ClientOrganizationDomain {

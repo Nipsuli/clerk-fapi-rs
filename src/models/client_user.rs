@@ -122,7 +122,7 @@ pub struct ClientUser {
         rename = "create_organizations_limit",
         skip_serializing_if = "Option::is_none"
     )]
-    pub create_organizations_limit: Option<i32>,
+    pub create_organizations_limit: Option<i64>,
     /// Unix timestamp of the latest session activity, with day precision.
     #[serde(rename = "last_active_at", deserialize_with = "Option::deserialize")]
     pub last_active_at: Option<i64>,

@@ -26,8 +26,8 @@ pub enum ListOrganizationRolesError {
 pub async fn list_organization_roles(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<i32>,
-    offset: Option<i32>,
+    limit: Option<i64>,
+    offset: Option<i64>,
 ) -> Result<models::ClientClientWrappedRoles, Error<ListOrganizationRolesError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_organization_id = organization_id;

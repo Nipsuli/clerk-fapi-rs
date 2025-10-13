@@ -27,14 +27,14 @@ pub struct ClientOrganization {
     #[serde(rename = "has_image")]
     pub has_image: bool,
     #[serde(rename = "members_count", skip_serializing_if = "Option::is_none")]
-    pub members_count: Option<i32>,
+    pub members_count: Option<i64>,
     #[serde(
         rename = "pending_invitations_count",
         skip_serializing_if = "Option::is_none"
     )]
-    pub pending_invitations_count: Option<i32>,
+    pub pending_invitations_count: Option<i64>,
     #[serde(rename = "max_allowed_memberships")]
-    pub max_allowed_memberships: i32,
+    pub max_allowed_memberships: i64,
     #[serde(rename = "admin_delete_enabled")]
     pub admin_delete_enabled: bool,
     #[serde(rename = "public_metadata")]
@@ -62,7 +62,7 @@ impl ClientOrganization {
         name: String,
         slug: String,
         has_image: bool,
-        max_allowed_memberships: i32,
+        max_allowed_memberships: i64,
         admin_delete_enabled: bool,
         public_metadata: std::collections::HashMap<String, serde_json::Value>,
         created_at: i64,

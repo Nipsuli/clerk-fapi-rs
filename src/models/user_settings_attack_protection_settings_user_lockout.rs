@@ -16,16 +16,16 @@ pub struct UserSettingsAttackProtectionSettingsUserLockout {
     #[serde(rename = "enabled")]
     pub enabled: bool,
     #[serde(rename = "max_attempts")]
-    pub max_attempts: i32,
+    pub max_attempts: i64,
     #[serde(rename = "duration_in_minutes")]
-    pub duration_in_minutes: i32,
+    pub duration_in_minutes: i64,
 }
 
 impl UserSettingsAttackProtectionSettingsUserLockout {
     pub fn new(
         enabled: bool,
-        max_attempts: i32,
-        duration_in_minutes: i32,
+        max_attempts: i64,
+        duration_in_minutes: i64,
     ) -> UserSettingsAttackProtectionSettingsUserLockout {
         UserSettingsAttackProtectionSettingsUserLockout {
             enabled,

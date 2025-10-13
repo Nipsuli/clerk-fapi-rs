@@ -25,15 +25,15 @@ pub struct StubsVerificationLink {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i32>>,
+    pub attempts: Option<Option<i64>>,
     #[serde(rename = "expire_at")]
-    pub expire_at: i32,
+    pub expire_at: i64,
     #[serde(rename = "verified_at_client", skip_serializing_if = "Option::is_none")]
     pub verified_at_client: Option<String>,
 }
 
 impl StubsVerificationLink {
-    pub fn new(status: Status, strategy: Strategy, expire_at: i32) -> StubsVerificationLink {
+    pub fn new(status: Status, strategy: Strategy, expire_at: i64) -> StubsVerificationLink {
         StubsVerificationLink {
             object: None,
             status,

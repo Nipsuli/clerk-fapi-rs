@@ -25,13 +25,13 @@ pub struct StubsVerificationOtp {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i32>>,
+    pub attempts: Option<Option<i64>>,
     #[serde(rename = "expire_at")]
-    pub expire_at: i32,
+    pub expire_at: i64,
 }
 
 impl StubsVerificationOtp {
-    pub fn new(status: Status, strategy: Strategy, expire_at: i32) -> StubsVerificationOtp {
+    pub fn new(status: Status, strategy: Strategy, expire_at: i64) -> StubsVerificationOtp {
         StubsVerificationOtp {
             object: None,
             status,

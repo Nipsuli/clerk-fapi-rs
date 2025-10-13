@@ -18,7 +18,7 @@ pub struct OAuthToken {
     #[serde(rename = "token_type")]
     pub token_type: String,
     #[serde(rename = "expires_in", skip_serializing_if = "Option::is_none")]
-    pub expires_in: Option<i32>,
+    pub expires_in: Option<i64>,
     #[serde(rename = "refresh_token", skip_serializing_if = "Option::is_none")]
     pub refresh_token: Option<String>,
     #[serde(rename = "scope", skip_serializing_if = "Option::is_none")]

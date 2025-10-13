@@ -25,14 +25,14 @@ pub struct StubsVerificationGoogleOneTap {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub expire_at: Option<Option<i32>>,
+    pub expire_at: Option<Option<i64>>,
     #[serde(
         rename = "attempts",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i32>>,
+    pub attempts: Option<Option<i64>>,
 }
 
 impl StubsVerificationGoogleOneTap {

@@ -153,8 +153,8 @@ pub async fn create_organization_membership(
 pub async fn list_organization_memberships(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<i32>,
-    offset: Option<i32>,
+    limit: Option<i64>,
+    offset: Option<i64>,
     paginated: Option<bool>,
     query: Option<&str>,
     role: Option<&str>,

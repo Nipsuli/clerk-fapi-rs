@@ -305,8 +305,8 @@ pub async fn get_all_pending_organization_invitations(
 pub async fn get_organization_invitations(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<i32>,
-    offset: Option<i32>,
+    limit: Option<i64>,
+    offset: Option<i64>,
     status: Option<&str>,
 ) -> Result<
     models::ClientClientWrappedOrganizationInvitations,

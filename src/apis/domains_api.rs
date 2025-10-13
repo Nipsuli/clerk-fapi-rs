@@ -374,8 +374,8 @@ pub async fn get_organization_domain(
 pub async fn list_organization_domains(
     configuration: &configuration::Configuration,
     organization_id: &str,
-    limit: Option<i32>,
-    offset: Option<i32>,
+    limit: Option<i64>,
+    offset: Option<i64>,
     verified: Option<bool>,
     enrollment_mode: Option<&str>,
 ) -> Result<models::ClientClientWrappedOrganizationDomains, Error<ListOrganizationDomainsError>> {

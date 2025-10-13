@@ -25,15 +25,15 @@ pub struct StubsVerificationPasskey {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub attempts: Option<Option<i32>>,
+    pub attempts: Option<Option<i64>>,
     #[serde(rename = "expire_at")]
-    pub expire_at: i32,
+    pub expire_at: i64,
     #[serde(rename = "nonce", skip_serializing_if = "Option::is_none")]
     pub nonce: Option<String>,
 }
 
 impl StubsVerificationPasskey {
-    pub fn new(status: Status, strategy: Strategy, expire_at: i32) -> StubsVerificationPasskey {
+    pub fn new(status: Status, strategy: Strategy, expire_at: i64) -> StubsVerificationPasskey {
         StubsVerificationPasskey {
             object: None,
             status,

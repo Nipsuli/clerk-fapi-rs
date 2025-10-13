@@ -16,9 +16,9 @@ pub struct UserSettingsPasswordSettings {
     #[serde(rename = "disable_hibp")]
     pub disable_hibp: bool,
     #[serde(rename = "min_length")]
-    pub min_length: i32,
+    pub min_length: i64,
     #[serde(rename = "max_length")]
-    pub max_length: i32,
+    pub max_length: i64,
     /// Denotes whether given passwords should contain at least one of the following special characters: #%$&_!
     #[serde(rename = "require_special_char")]
     pub require_special_char: bool,
@@ -31,7 +31,7 @@ pub struct UserSettingsPasswordSettings {
     #[serde(rename = "show_zxcvbn")]
     pub show_zxcvbn: bool,
     #[serde(rename = "min_zxcvbn_strength")]
-    pub min_zxcvbn_strength: i32,
+    pub min_zxcvbn_strength: i64,
     #[serde(rename = "enforce_hibp_on_sign_in")]
     pub enforce_hibp_on_sign_in: bool,
     #[serde(rename = "allowed_special_characters")]
@@ -41,14 +41,14 @@ pub struct UserSettingsPasswordSettings {
 impl UserSettingsPasswordSettings {
     pub fn new(
         disable_hibp: bool,
-        min_length: i32,
-        max_length: i32,
+        min_length: i64,
+        max_length: i64,
         require_special_char: bool,
         require_numbers: bool,
         require_uppercase: bool,
         require_lowercase: bool,
         show_zxcvbn: bool,
-        min_zxcvbn_strength: i32,
+        min_zxcvbn_strength: i64,
         enforce_hibp_on_sign_in: bool,
         allowed_special_characters: String,
     ) -> UserSettingsPasswordSettings {

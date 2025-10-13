@@ -31,7 +31,7 @@ pub struct OAuthTokenInfo {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub iat: Option<Option<i32>>,
+    pub iat: Option<Option<i64>>,
     /// A JSON string containing a space-separated list of scopes associated with this token, in the format described in Section 3.3 of OAuth 2.0 [RFC6749].
     #[serde(
         rename = "scope",

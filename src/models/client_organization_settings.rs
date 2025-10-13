@@ -16,7 +16,7 @@ pub struct ClientOrganizationSettings {
     #[serde(rename = "enabled")]
     pub enabled: bool,
     #[serde(rename = "max_allowed_memberships")]
-    pub max_allowed_memberships: i32,
+    pub max_allowed_memberships: i64,
     #[serde(rename = "actions")]
     pub actions: Box<models::OrganizationSettingsActionsSettings>,
     #[serde(rename = "domains")]
@@ -29,7 +29,7 @@ pub struct ClientOrganizationSettings {
 impl ClientOrganizationSettings {
     pub fn new(
         enabled: bool,
-        max_allowed_memberships: i32,
+        max_allowed_memberships: i64,
         actions: models::OrganizationSettingsActionsSettings,
         domains: models::OrganizationSettingsDomainsSettings,
         creator_role: String,
