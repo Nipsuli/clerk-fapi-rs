@@ -2,7 +2,7 @@ name: Checks
 
 on:
   push:
-    branches: [ '*' ]
+    branches: ["*"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -11,21 +11,21 @@ jobs:
   rust-checks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: rustfmt
+      - uses: actions/checkout@v4
 
-    - name: rust cache
-      uses: Swatinem/rust-cache@v2 
-    
-    - name: Check formatting
-      run: cargo fmt --check
-      
-    - name: Check compilation
-      run: cargo check
-      
-    - name: Run tests
-      run: cargo test 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Check compilation
+        run: cargo clippy
+
+      - name: Run tests
+        run: cargo test
