@@ -4,36 +4,33 @@ An unofficial Rust SDK for the Clerk REST Frontend API.
 
 ## Status
 
-Works and is used in production. But historically there has been some
-mismatches with the type definitions and actual behavior, and haven't
-used all endpoints, so if you run into issues open an issue or pr.
+Works and is used in production. But historically there has been some mismatches
+with the type definitions and actual behavior, and I haven't used all endpoints,
+so if you run into issues open an issue or pr.
 
 ## Core idea
 
-This crate is quite thin wrapper on top of the REST Frontend API.
-`Clerk` is a statefull client exposing the full Clerk FAPI methods via
-`Clerk::get_fapi_client` unwrapping the piggybagged client. It does
-not implement similar objects with methods as example the Javscript
-Clerk does, only the direct FAPI endpoints. But it does keep the
-current state of the client in sync allowing one signin and call api
-methods as signed in user.
+This crate is quite thin wrapper on top of the REST Frontend API. `Clerk` is a
+statefull client exposing the full Clerk FAPI methods via `Clerk::get_fapi_client`.
+Clerk keeps the client state updated by piggypagging the requests with the current
+client state. The methods in the `ClerkFapiClient` will unwrap the requests and
+return only the core response and update the client state in `Clerk` stcuct.
 
 The `src/apis` and `src/models` are generated based on the `fapi_swagger.json`.
-There seems to be small issues in the clerk API spec and it does not reflect the
-reality in all of the cases. Those cases where I've run into are fixed by hand.
+There seems to have been small issues in the clerk API spec and it has not always
+reflected the reality in all of the cases. Those cases where I've run into are
+fixed by hand. The models and api methods are also exported so those can be used
+directly as well.
 
-By default the state is stored in in `HashMap` but if one wants to
-add some persistent state one can provide anything that implments
-the `clerk_fapi_rs::configuration::Store` trait.
+### State
 
-The main usage of the Clerk FAPI happens via the `Clerk::get_fapi_client`
-method. The returned `ClerkFapiClient` supports fully typed [Clerk FAPI](https://clerk.com/docs/reference/frontend-api).
+By default the state is stored in in `HashMap` but if one wants to add some
+persistent state, example to allow offline state, one can provide anything
+that implments the `clerk_fapi_rs::configuration::Store` trait.
 
-Clerk communicates the state of sessions back by piggybagging the requests
-and returns full `ClientPeriodClient` as part of most api calls. The
-`Clerk` updates it's own state based on the responses and triggers optional
-listeners which one can register with `clerk::add_listener` and returns
-only the core response.
+### Listener
+
+`Clerk` allows to pass in listere callbacks that are calld
 
 The type of lister:
 
@@ -41,6 +38,8 @@ The type of lister:
 pub type Listener =
     Arc<dyn Fn(Client, Option<Session>, Option<User>, Option<Organization>) + Send + Sync>;
 ```
+
+### Utilities
 
 There are only few convenience methods provided directly on the `Clerk`:
 
