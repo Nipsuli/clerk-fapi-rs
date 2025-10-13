@@ -2,8 +2,8 @@
 name = "clerk-fapi-rs"
 version = "0.2.0"
 authors = ["@Nipsuli"]
-homepage = "https://github.com/TheGrowthEngineeringCompany/clerk-fapi-rs/"
-repository = "https://github.com/TheGrowthEngineeringCompany/clerk-fapi-rs/"
+homepage = "https://github.com/Nipsuli/clerk-fapi-rs/"
+repository = "https://github.com/Nipsuli/clerk-fapi-rs/"
 description = "An unofficial Rust SDK for the Clerk REST Frontend API"
 keywords = ["clerk", "auth", "frontend"]
 license = "MIT"
