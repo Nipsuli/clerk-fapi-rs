@@ -67,7 +67,11 @@ fn Home() -> Element {
                             };
 
                             let email_display = match &user.primary_email_address_id {
-                                Some(email_id) => format!("Email: {}", email_id),
+                                Some(email_id) => format!("Email: {}", user.email_addresses
+                                    .iter()
+                                    .find(|e| &e.id == email_id)
+                                    .map_or(email_id, |e| &e.email_address)
+                                ),
                                 None => "No email provided".to_string()
                             };
 
@@ -188,7 +192,7 @@ fn SignIn() -> Element {
                 )
                 .await
             {
-                sign_in_id.set(Some(sign_in_response.response.id));
+                sign_in_id.set(Some(sign_in_response.id));
 
                 status.set(Some(
                     "Code sent! Check your email and enter the code below.".to_string(),

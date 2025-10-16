@@ -1,4 +1,4 @@
-use log::{error, warn};
+use log::{debug, error, warn};
 use parking_lot::RwLock;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Client as ReqwestClient, Request, Response};
@@ -78,7 +78,7 @@ impl ClerkHttpClient {
                     }
                 }
                 None => {
-                    warn!("ClerkHttpClient: No authorization header available");
+                    debug!("ClerkHttpClient: No authorization header available");
                 }
             }
         }

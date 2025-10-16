@@ -34,6 +34,7 @@ pub struct Clerk {
 
 #[derive(Debug)]
 pub enum ClerkLoadError {
+    DevFailedToLoadDevBrowser,
     FailedToLoadEnv,
     FailedToLoadClient,
 }
@@ -42,6 +43,9 @@ impl fmt::Display for ClerkLoadError {
         match self {
             ClerkLoadError::FailedToLoadEnv => write!(f, "Failed to load Clerk environment"),
             ClerkLoadError::FailedToLoadClient => write!(f, "Failed to load Clerk client"),
+            ClerkLoadError::DevFailedToLoadDevBrowser => {
+                write!(f, "Failed to load development browser")
+            }
         }
     }
 }
@@ -169,6 +173,15 @@ impl Clerk {
     /// in case that fails tries to pull them from cache. Example if
     /// there wasn't internet connection
     pub async fn load(&self) -> Result<(), ClerkLoadError> {
+        if self.config.is_development() && self.config.kind == ClientKind::Browser {
+            let dev_browser = self
+                .api_client
+                .create_dev_browser()
+                .await
+                .map_err(|_| ClerkLoadError::DevFailedToLoadDevBrowser)?;
+            self.api_client.set_dev_browser_token_id(dev_browser.id);
+        }
+
         let mut environment = self.load_environment_from_api().await.ok();
         let mut client = self.load_client_from_api().await.ok();
 

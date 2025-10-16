@@ -35,8 +35,23 @@ dotenv = "0.15"
 mockito = "1.2"
 
 [workspace]
-members = ["examples"]
+members = [
+    "examples",
+    "examples/dioxus-example"
+]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.3", features = ["wasm_js"] }
 uuid = { version = "^1.8", features = ["serde", "v4", "rng-getrandom"] }
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"
