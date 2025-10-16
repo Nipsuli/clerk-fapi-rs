@@ -1,5 +1,4 @@
-use clerk_fapi_rs::{models::ClientPeriodUser, Clerk, ClerkFapiConfiguration};
-// No need for client_period_client import anymore
+use clerk_fapi_rs::{models::ClientUser, Clerk, ClerkFapiConfiguration};
 use dioxus::{logger::tracing::info, prelude::*};
 
 // Get the Clerk publishable key from environment
@@ -9,7 +8,7 @@ pub const CLERK_PUBLISHABLE_KEY: &str = env!("CLERK_PUBLISHABLE_KEY");
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClerkStatus {
     Loading,
-    SignedIn(ClientPeriodUser),
+    SignedIn(ClientUser),
     SignedOut,
     Error(String),
 }

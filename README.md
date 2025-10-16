@@ -8,6 +8,8 @@ Works and is used in production. But historically there has been some mismatches
 with the type definitions and actual behavior, and I haven't used all endpoints,
 so if you run into issues open an issue or pr.
 
+Can be used in browsers or non browser environments.
+
 ## Core idea
 
 This crate is quite thin wrapper on top of the REST Frontend API. `Clerk` is a
