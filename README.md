@@ -1,6 +1,6 @@
 # Rust Clerk REST Frontend API
 
-An unofficial Rust SDK for the Clerk REST Frontend API (FAPI).
+Community maintained Rust SDK for the Clerk REST Frontend API (FAPI).
 
 There's also a platfrom agnostic Rust implementation of
 [Clerk's Backend API (BAPI)](https://github.com/DarrenBaldwin07/clerk-rs)
